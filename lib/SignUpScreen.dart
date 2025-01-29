@@ -65,7 +65,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         backgroundColor: const Color(0xFFB993D6), // Match the gradient's starting color
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.blue),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.of(context).pop();
           },
