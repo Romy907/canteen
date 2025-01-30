@@ -62,6 +62,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         DatabaseReference userRef =
             FirebaseDatabase.instance.ref().child('User').child(sanitizedEmail);
         await userRef.set('student');
+        print('User created successfully!');
 
         _showMessage('Account created successfully! Please verify your email.');
       }

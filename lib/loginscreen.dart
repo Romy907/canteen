@@ -37,16 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
     Map<String, dynamic> result =
         await FirebaseManager().login(email, password);
 
-    if (result["success"] == true) {
-      _scaffoldKey.currentState?.showSnackBar(
-        const SnackBar(content: Text("Login successful!")),
-      );
-      // Navigate to the next screen
-    } else {
-      _scaffoldKey.currentState?.showSnackBar(
-        SnackBar(content: Text(result["message"] ?? "Login failed")),
-      );
-    }
+    print(result.toString());
   }
 
   @override
