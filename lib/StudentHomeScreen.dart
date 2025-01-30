@@ -8,7 +8,6 @@ class StudentHomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Student Home"),
-        backgroundColor: const Color(0xFF6C63FF),
       ),
       body: Center(
         child: Column(
