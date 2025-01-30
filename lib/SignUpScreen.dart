@@ -169,45 +169,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: screenSize.height * 0.05),
-                const Text(
-                  "or connect with",
-                  style: TextStyle(
-                    color: Colors.white70,
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.02),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.facebook, color: Colors.white),
-                      label: const Text("Facebook"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1877F2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.05, vertical: screenSize.height * 0.015),
-                      ),
-                    ),
-                    SizedBox(width: screenSize.width * 0.05),
-                    ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.g_mobiledata, color: Colors.white),
-                      label: const Text("Google"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDB4437),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.05, vertical: screenSize.height * 0.015),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: screenSize.height * 0.05),
               ],
             ),
           ),
