@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -12,12 +13,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   void _signUp() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      _showMessage('Please fill in all fields.');
+      return;
+    }
+
+    if (!email.contains('@') || !email.contains('.')) {
+      _showMessage('Invalid email format.');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showMessage('Password must be at least 6 characters long.');
+      return;
+    }
 
     if (password != confirmPassword) {
       _showMessage('Passwords do not match.');
@@ -25,27 +42,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
       User? user = userCredential.user;
-      if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-      }
+      if (user != null) {
+        // Send email verification
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
+        }
 
-      _showMessage('Account created successfully! Please verify your email.');
+        // Sanitize email for Firebase Database
+        String sanitizedEmail = email.replaceAll(RegExp(r'[.#$[\]]'), '');
+
+        // Store user under "User" node with value "student"
+        DatabaseReference userRef =
+            FirebaseDatabase.instance.ref().child('User').child(sanitizedEmail);
+        await userRef.set('student');
+
+        _showMessage('Account created successfully! Please verify your email.');
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        _showMessage('The password provided is too weak.');
+        _showMessage('The password is too weak. Try a stronger password.');
       } else if (e.code == 'email-already-in-use') {
-        _showMessage('The account already exists for that email.');
+        _showMessage('An account already exists for this email.');
       } else {
-        _showMessage(e.message ?? 'An error occurred.');
+        _showMessage(e.message ?? 'An error occurred during signup.');
       }
     } catch (e) {
-      _showMessage(e.toString());
+      _showMessage('Unexpected error: $e');
     }
   }
 
@@ -62,7 +91,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF8CA6DB),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFB993D6), // Match the gradient's starting color
+        backgroundColor:
+            const Color(0xFFB993D6), // Match the gradient's starting color
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -147,7 +177,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.02),
+                      padding: EdgeInsets.symmetric(
+                          vertical: screenSize.height * 0.02),
                       backgroundColor: const Color(0xFF6C63FF),
                     ),
                     child: const Text(

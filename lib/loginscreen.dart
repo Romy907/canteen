@@ -1,14 +1,58 @@
+import 'package:canteen/FirebaseManager.dart';
 import 'package:canteen/SignUpScreen.dart';
-import 'package:canteen/StudentHomeScreen.dart';
 import 'package:canteen/forgotPasswordScreen.dart';
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _userController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<ScaffoldMessengerState> _scaffoldKey =
+      GlobalKey<ScaffoldMessengerState>();
+
+  @override
+  void dispose() {
+    _userController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _login() async {
+    String email = _userController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _scaffoldKey.currentState?.showSnackBar(
+        const SnackBar(content: Text("Please enter email and password")),
+      );
+      return;
+    }
+
+    Map<String, dynamic> result =
+        await FirebaseManager().login(email, password);
+
+    if (result["success"] == true) {
+      _scaffoldKey.currentState?.showSnackBar(
+        const SnackBar(content: Text("Login successful!")),
+      );
+      // Navigate to the next screen
+    } else {
+      _scaffoldKey.currentState?.showSnackBar(
+        SnackBar(content: Text(result["message"] ?? "Login failed")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -32,6 +76,7 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               TextField(
+                controller: _userController,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.person),
                   hintText: "User",
@@ -41,12 +86,11 @@ class LoginScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
-                  suffixIcon:
-                      const Icon(Icons.check_circle, color: Colors.green),
                 ),
               ),
               const SizedBox(height: 20),
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.lock),
@@ -63,13 +107,7 @@ class LoginScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const StudentHomeScreen()),
-                    );
-                  },
+                  onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -109,21 +147,18 @@ class LoginScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.white70),
                   ),
                   GestureDetector(
-                    onTap: () {},
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SignUpScreen()),
-                        );
-                      },
-                      child: const Text(
-                        "Sign up!",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SignUpScreen()),
+                      );
+                    },
+                    child: const Text(
+                      "Sign up!",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
