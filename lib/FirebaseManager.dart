@@ -3,7 +3,6 @@ import 'package:firebase_database/firebase_database.dart';
 
 class FirebaseManager {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       email = email.trim(); 
