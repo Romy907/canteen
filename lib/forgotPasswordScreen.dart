@@ -22,7 +22,8 @@ class ForgotPasswordScreen extends StatelessWidget {
     final TextEditingController emailController = TextEditingController();
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Forgot Password"),
+        // title: const Text("Forgot Password"),
+        backgroundColor: const Color(0xFFB993D6),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -34,60 +35,63 @@ class ForgotPasswordScreen extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Reset Password",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 40),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email),
-                  hintText: "Email",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 50.0), // Adjust the bottom padding as needed
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Reset Password",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
-              ),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final email = emailController.text;
-                    final success = await sendPasswordResetEmail(email);
-                    final message = success
-                        ? 'Password reset email sent.'
-                        : 'Failed to send password reset email.';
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message)),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
+                const SizedBox(height: 40),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.email),
+                    hintText: "Email",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: const Color(0xFF6C63FF),
-                  ),
-                  child: const Text(
-                    "Send Reset Link",
-                    style: TextStyle(fontSize: 18),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final email = emailController.text;
+                      final success = await sendPasswordResetEmail(email);
+                      final message = success
+                          ? 'Password reset email sent.'
+                          : 'Failed to send password reset email.';
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message)),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      backgroundColor: const Color(0xFF6C63FF),
+                    ),
+                    child: const Text(
+                      "Send Reset Link",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
