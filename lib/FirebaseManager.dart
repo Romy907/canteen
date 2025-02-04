@@ -3,11 +3,22 @@ import 'package:firebase_database/firebase_database.dart';
 
 class FirebaseManager {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<void> logout() async {
     try {
+      await _auth.signOut();
+      print('User logged out successfully');
+    } catch (e) {
+      print('An error occurred during logout: $e');
+    }
+  }
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    print('Login attempt with email: $email');
+    try {
+      print('Login attempt with email: $email');
       email = email.trim(); 
 
       if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+        print('Invalid email address: $email');
         return {
           'status': 'error',
           'message': 'Please enter a valid email address',
@@ -19,17 +30,21 @@ class FirebaseManager {
         email: email,
         password: password,
       );
+      print('Firebase authentication successful for user: ${userCredential.user?.uid}');
 
       // Sanitize email for Firebase Realtime Database
       String sanitizedEmail = email.replaceAll(RegExp(r'[.#$[\]]'), '');
-      // String sanitizedEmail = 'romykatiyar020306gmailcom';
+      print('Sanitized email: $sanitizedEmail');
 
       // Fetch user data
+      print('Fetching user data from database for user: ${userCredential.user?.uid}');
       DatabaseReference userRef =
           FirebaseDatabase.instance.ref().child('User').child(sanitizedEmail);
       DataSnapshot snapshot = await userRef.get();
+      print('User data snapshot: ${snapshot.value}');
 
       if (snapshot.exists && snapshot.value != null) {
+        print('User data found in database for user: ${userCredential.user?.uid}');
         return {
           'status': 'success',
           'message': 'Login successful',
@@ -37,6 +52,7 @@ class FirebaseManager {
           'data': snapshot.value,
         };
       } else {
+        print('No user data found in database for user: ${userCredential.user?.uid}');
         return {
           'status': 'error',
           'message': 'No user data found in database',
@@ -54,11 +70,13 @@ class FirebaseManager {
       } else {
         errorMessage = 'Login failed: ${e.message}';
       }
+      print('FirebaseAuthException: $errorMessage');
       return {
         'status': 'error',
         'message': errorMessage,
       };
     } catch (e) {
+      print('An unexpected error occurred: $e');
       return {
         'status': 'error',
         'message': 'An unexpected error occurred: $e',

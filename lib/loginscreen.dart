@@ -1,5 +1,7 @@
 import 'package:canteen/FirebaseManager.dart';
+import 'package:canteen/ManagerHomeScreen.dart';
 import 'package:canteen/SignUpScreen.dart';
+import 'package:canteen/StudentHomeScreen.dart';
 import 'package:canteen/forgotPasswordScreen.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<ScaffoldMessengerState> _scaffoldKey =
       GlobalKey<ScaffoldMessengerState>();
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -26,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     String email = _userController.text.trim();
     String password = _passwordController.text.trim();
-
     if (email.isEmpty || password.isEmpty) {
       _scaffoldKey.currentState?.showSnackBar(
         const SnackBar(content: Text("Please enter email and password")),
@@ -34,10 +36,40 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    Map<String, dynamic> result =
-        await FirebaseManager().login(email, password);
+    try {
+      setState(() {
+        isLoading = true;
+      });
 
-    print(result.toString());
+      Map<String, dynamic> result =
+          await FirebaseManager().login(email, password);
+      
+      // Handle login result here
+      print(result.toString());
+      
+      if (result['status'] == 'success') {
+        if (result['data'] == 'student') {
+          Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => StudentHomeScreen()),
+          );
+        } else if (result['data'] == 'manager') {
+          Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => ManagerHomeScreen()),
+          );
+        }
+      }
+
+    } catch (e) {
+      _scaffoldKey.currentState?.showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -98,18 +130,29 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _login,
+                  onPressed: isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: const Color(0xFF6C63FF),
+                    backgroundColor: isLoading
+                        ? Colors.grey
+                        : const Color(0xFF6C63FF),
                   ),
-                  child: const Text(
-                    "Login",
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Login",
+                          style: TextStyle(fontSize: 18),
+                        ),
                 ),
               ),
               const SizedBox(height: 15),
