@@ -4,6 +4,7 @@ import 'package:canteen/SignUpScreen.dart';
 import 'package:canteen/StudentHomeScreen.dart';
 import 'package:canteen/forgotPasswordScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -48,12 +49,16 @@ class _LoginScreenState extends State<LoginScreen> {
       print(result.toString());
       
       if (result['status'] == 'success') {
-        if (result['data'] == 'student') {
+        String role = result['data'];
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userRole', role);
+
+        if (role == 'student') {
           Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => StudentHomeScreen()),
           );
-        } else if (result['data'] == 'manager') {
+        } else if (role == 'manager') {
           Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => ManagerHomeScreen()),
