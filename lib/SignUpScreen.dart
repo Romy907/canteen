@@ -15,14 +15,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final TextEditingController _universityController = TextEditingController();
+  String _selectedRole = 'student';
 
   void _signUp() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
+    String university = _universityController.text.trim();
 
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       _showMessage('Please fill in all fields.');
+      return;
+    }
+
+    if (_selectedRole == 'manager' && university.isEmpty) {
+      _showMessage('Please enter the university name.');
       return;
     }
 
@@ -50,20 +58,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       User? user = userCredential.user;
       if (user != null) {
-        // Send email verification
         if (!user.emailVerified) {
           await user.sendEmailVerification();
         }
 
-        // Sanitize email for Firebase Database
         String sanitizedEmail = email.replaceAll(RegExp(r'[.#$[\]]'), '');
 
-        // Store user under "User" node with value "student"
         DatabaseReference userRef =
             FirebaseDatabase.instance.ref().child('User').child(sanitizedEmail);
-        await userRef.set('student');
-        print('User created successfully!');
+        await userRef.set({
+          'role': _selectedRole,
+          'email': email,
+          'university': _selectedRole == 'manager' ? university : null,
+          'createdAt': ServerValue.timestamp
+        });
 
+        print('User created successfully!');
         _showMessage('Account created successfully! Please verify your email.');
       }
     } on FirebaseAuthException catch (e) {
@@ -92,8 +102,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF8CA6DB),
       appBar: AppBar(
-        backgroundColor:
-            const Color(0xFFB993D6), // Match the gradient's starting color
+        backgroundColor: const Color(0xFFB993D6),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -125,7 +134,86 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: screenSize.height * 0.05),
+                SizedBox(height: screenSize.height * 0.03),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedRole = 'student';
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: _selectedRole == 'student'
+                              ? Colors.white
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Text(
+                          "Student",
+                          style: TextStyle(
+                            color: _selectedRole == 'student'
+                                ? Colors.black
+                                : Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedRole = 'manager';
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: _selectedRole == 'manager'
+                              ? Colors.white
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Text(
+                          "Manager",
+                          style: TextStyle(
+                            color: _selectedRole == 'manager'
+                                ? Colors.black
+                                : Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_selectedRole == 'manager') ...[
+                  SizedBox(height: screenSize.height * 0.02),
+                  TextField(
+                    controller: _universityController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.school),
+                      hintText: "University Name",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ],
+                SizedBox(height: screenSize.height * 0.03),
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -172,32 +260,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 SizedBox(height: screenSize.height * 0.03),
                 SizedBox(
                   width: double.infinity,
+                  height: 50,
                   child: ElevatedButton(
                     onPressed: _signUp,
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      padding: EdgeInsets.symmetric(
-                          vertical: screenSize.height * 0.02),
                       backgroundColor: const Color(0xFF6C63FF),
                     ),
                     child: const Text(
                       "Sign Up",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.02),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text(
-                    "Already have an account? Login",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      decoration: TextDecoration.underline,
+                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
