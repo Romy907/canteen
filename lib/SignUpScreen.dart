@@ -19,6 +19,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String _selectedRole = 'student';
   bool _isLoading = false;
   void _signUp() async {
+    setState(() {
+      _isLoading = true;
+    });
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
