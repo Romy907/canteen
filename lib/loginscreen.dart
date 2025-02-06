@@ -46,10 +46,13 @@ class _LoginScreenState extends State<LoginScreen> {
           await FirebaseManager().login(email, password);
       
       // Handle login result here
-      print(result.toString());
+      print("login "+result.toString());
+      print(result['status']);
+      print(result['role']);
       
       if (result['status'] == 'success') {
-        String role = result['data'];
+        String role = result['role'];
+        print('role: $role');
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userRole', role);
 

@@ -49,7 +49,7 @@ class FirebaseManager {
           'status': 'success',
           'message': 'Login successful',
           'userId': userCredential.user?.uid,
-          'data': snapshot.value,
+          'role': snapshot.child('role').value.toString(),
         };
       } else {
         print('No user data found in database for user: ${userCredential.user?.uid}');

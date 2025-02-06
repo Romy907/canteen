@@ -17,7 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       TextEditingController();
   final TextEditingController _universityController = TextEditingController();
   String _selectedRole = 'student';
-
+  bool _isLoading = false;
   void _signUp() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
@@ -75,6 +75,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
         print('User created successfully!');
         _showMessage('Account created successfully! Please verify your email.');
+        setState(() {
+          _emailController.clear();
+          _passwordController.clear();
+          _confirmPasswordController.clear();
+          _universityController.clear();
+          _isLoading = false;
+        });
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
@@ -145,8 +152,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         });
                       },
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 20),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                         decoration: BoxDecoration(
                           color: _selectedRole == 'student'
                               ? Colors.white
@@ -174,8 +181,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         });
                       },
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 20),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                         decoration: BoxDecoration(
                           color: _selectedRole == 'manager'
                               ? Colors.white
@@ -269,10 +276,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       backgroundColor: const Color(0xFF6C63FF),
                     ),
-                    child: const Text(
-                      "Sign Up",
-                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
+                    child: _isLoading
+                        ? CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          )
+                        : const Text(
+                            "Sign Up",
+                            style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
               ],
