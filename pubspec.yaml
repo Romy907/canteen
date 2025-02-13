@@ -40,6 +40,7 @@ dependencies:
   shared_preferences: ^2.5.1
  
  
+ 
 
 dev_dependencies:
   flutter_test:
@@ -74,9 +75,26 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+   - assets/img/rajmachawal.jpeg
+   - assets/img/momo.jpeg
+   - assets/img/chholebhature.jpeg
+   - assets/img/fried_rice.jpeg
+   - assets/img/pizza.jpeg
+   - assets/img/salad.jpeg
+   - assets/img/chilli potato.jpeg
+   - assets/img/manchurian.jpeg
+   - assets/img/samosa.jpeg
+   - assets/img/spring rolls.jpeg
+   - assets/img/veg noodles.jpeg
+   - assets/img/veg rolls.jpeg
+   - assets/img/chocolate shakes.jpeg
+   - assets/img/cold drinks.jpeg
+   - assets/img/icecream.jpeg
+   - assets/img/lassi.jpeg
+   - assets/img/paneer.jpeg
+   - assets/img/pastry.jpeg
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
