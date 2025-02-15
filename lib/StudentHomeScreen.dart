@@ -1,4 +1,5 @@
 import 'package:canteen/CartScreen.dart';
+import 'package:canteen/FavouriteScreen.dart';
 import 'package:canteen/FirebaseManager.dart';
 import 'package:canteen/loginscreen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,9 +15,20 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   List<Map<String, dynamic>> cartItems = [];
+  List<Map<String, dynamic>> favoriteItems = [];
   
   // ✅ Selected category (default = All)
   String selectedCategory = "All";
+
+  void _toggleFavorite(Map<String, dynamic> item) {
+    setState(() {
+      if (favoriteItems.contains(item)) {
+        favoriteItems.remove(item);
+      } else {
+        favoriteItems.add(item);
+      }
+    });
+  }
 
   // ✅ Food Items with Category Tags
   List<Map<String, dynamic>> foodItems = [
@@ -362,14 +374,12 @@ body: LayoutBuilder(
               top: 8,
               right: 8,
               child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    item["isFavorite"] = !item["isFavorite"];
-                  });
-                },
+                 onTap: () => _toggleFavorite(item), // ✅ Toggle favorite
                 child: Icon(
-                  item["isFavorite"] ? Icons.favorite : Icons.favorite_border,
-                  color: item["isFavorite"] ? Colors.red : Colors.grey,
+                  favoriteItems.contains(item)
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  color: item["isFavorite"] ? const Color.fromARGB(255, 211, 103, 96) : const Color.fromARGB(255, 222, 10, 10),
                 ),
               ),
             ),
@@ -465,33 +475,44 @@ body: LayoutBuilder(
   );
 }
 
-  Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      selectedItemColor: Colors.deepPurple,
-      unselectedItemColor: const Color.fromARGB(255, 65, 63, 63),
-      showUnselectedLabels: true,
-      onTap: (index) {
-        if (index == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CartScreen()),
-          );
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: "Home",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart),
-          label: "Cart",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: "Profile",
-        ),
-      ],
-    );
-  }
+ Widget _buildBottomNavBar() {
+  return BottomNavigationBar(
+    selectedItemColor: Colors.deepPurple,
+    unselectedItemColor: const Color.fromARGB(255, 65, 63, 63),
+    showUnselectedLabels: true,
+    onTap: (index) {
+      if (index == 1) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CartScreen()),
+        );
+      } else if (index == 2) {  // ✅ Navigate to Favorite Screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FavouriteScreen(favoriteItems: favoriteItems),
+          ),
+        );
+      }
+    },
+    items: const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: "Home",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.shopping_cart),
+        label: "Cart",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.favorite),
+        label: "Favorites", // ✅ Added Favorites tab
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person),
+        label: "Profile",
+      ),
+    ],
+  );
+}
 }
