@@ -1,6 +1,7 @@
 import 'package:canteen/CartScreen.dart';
 import 'package:canteen/FavouriteScreen.dart';
 import 'package:canteen/FirebaseManager.dart';
+import 'package:canteen/ProfileScreen.dart';
 import 'package:canteen/loginscreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -195,6 +196,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       "category": "Dessert",
     },
   ];
+  
+  get updatedCartItems => null;
 
 
   @override
@@ -259,22 +262,38 @@ body: LayoutBuilder(
       ),
       bottomNavigationBar: _buildBottomNavBar(),
        // ✅ Persistent Floating "View Cart" Button
-    floatingActionButton: cartItems.isNotEmpty
+  floatingActionButton: cartItems.isNotEmpty
         ? FloatingActionButton.extended(
             backgroundColor: Colors.deepPurple,
             icon: const Icon(Icons.shopping_cart, color: Colors.white),
             label: Text("View Cart (${cartItems.length})"),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              // ✅ Navigate to CartScreen and wait for updates
+              final updatedCart = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) =>  CartScreen(cartItems: cartItems)),
+                MaterialPageRoute(
+                  builder: (_) => CartScreen(
+                    cartItems: cartItems,
+                    onCartUpdated: (updatedCartItems) {
+                      setState(() {
+                        cartItems = updatedCartItems; // ✅ Sync cart in HomeScreen
+                      });
+                    },
+                  ),
+                ),
               );
+
+              // ✅ Update cartItems after returning from CartScreen
+              if (updatedCart != null) {
+                setState(() {
+                  cartItems = updatedCart;
+                });
+              }
             },
           )
-        : null, // Hide if cart is empty
+        : null, // ✅ Hide FAB if cart is empty
   );
-}
-    
+} 
   
 
   Widget _buildCategoryChips() {
@@ -449,7 +468,7 @@ body: LayoutBuilder(
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => CartScreen(cartItems: cartItems),
+                                      builder: (_) => CartScreen(cartItems: cartItems,onCartUpdated: updatedCartItems),
                                     ),
                                   );
                                 },
@@ -488,7 +507,14 @@ body: LayoutBuilder(
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => CartScreen(cartItems: cartItems),
+            builder: (_) => CartScreen(
+              cartItems: cartItems,
+              onCartUpdated: (updatedCartItems) {
+                setState(() {
+                  cartItems = updatedCartItems;
+                });
+              },
+            ),
           ),
         );
       } else if (index == 2) {  // ✅ Navigate to Favorite Screen
@@ -496,6 +522,13 @@ body: LayoutBuilder(
           context,
           MaterialPageRoute(
             builder: (_) => FavouriteScreen(favoriteItems: favoriteItems),
+          ),
+        );
+      } else if (index == 3) {  // ✅ Navigate to Profile Screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ProfileScreen(),
           ),
         );
       }
@@ -511,7 +544,7 @@ body: LayoutBuilder(
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.favorite),
-        label: "Favorites", // ✅ Added Favorites tab
+        label: "Favorites",
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.person),
