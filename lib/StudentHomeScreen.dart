@@ -267,7 +267,7 @@ body: LayoutBuilder(
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const CartScreen()),
+                MaterialPageRoute(builder: (_) =>  CartScreen(cartItems: cartItems)),
               );
             },
           )
@@ -437,6 +437,7 @@ body: LayoutBuilder(
                          bool isAlreadyInCart = cartItems.any((cartItem) => cartItem["name"] == item["name"]);
 
                         if (!isAlreadyInCart) {
+                           cartItems.add(item);
                        ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text("${item["name"]} added to cart"),
@@ -447,7 +448,9 @@ body: LayoutBuilder(
                                 onPressed: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const CartScreen()),
+                                    MaterialPageRoute(
+                                      builder: (_) => CartScreen(cartItems: cartItems),
+                                    ),
                                   );
                                 },
                               ),
@@ -484,7 +487,9 @@ body: LayoutBuilder(
       if (index == 1) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const CartScreen()),
+          MaterialPageRoute(
+            builder: (_) => CartScreen(cartItems: cartItems),
+          ),
         );
       } else if (index == 2) {  // ✅ Navigate to Favorite Screen
         Navigator.push(
