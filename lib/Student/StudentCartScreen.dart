@@ -101,11 +101,7 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
                               icon: const Icon(Icons.add_circle_outline, color: Colors.green),
                               onPressed: () => _increaseQuantity(index),
                             ),
-                            // ✅ Remove Item Button
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _removeItem(index),
-                            ),
+                            
                           ],
                         ),
                       ],

@@ -1,15 +1,17 @@
-import 'package:canteen/Student/StudentCartScreen.dart';
+// StudentHomeScreen.dart
 import 'package:flutter/material.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   final List<Map<String, dynamic>> favoriteItems;
-  List<Map<String, dynamic>> cartItems;
+  final List<Map<String, dynamic>> cartItems;
   final List<Map<String, dynamic>> foodItems;
+  final Function updateCounts;
 
   StudentHomeScreen({
     required this.favoriteItems,
     required this.cartItems,
     required this.foodItems,
+    required this.updateCounts,
   });
 
   @override
@@ -17,211 +19,223 @@ class StudentHomeScreen extends StatefulWidget {
 }
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
-  String selectedCategory = "All";
+  String selectedCategory = 'All';
+  late List<String> categories;
 
-  void _toggleFavorite(Map<String, dynamic> item) {
-    setState(() {
-      if (widget.favoriteItems.contains(item)) {
-        widget.favoriteItems.remove(item);
-      } else {
-        widget.favoriteItems.add(item);
-      }
-    });
-  }
-
-  Widget _buildCategoryChips() {
-    List<String> categories = [
-      "All",
-      "Main course",
-      "Fast Food",
-      "Dessert",
-      "Drinks",
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: categories.map((category) {
-          bool isSelected = selectedCategory == category;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: ChoiceChip(
-              label: Text(category),
-              selected: isSelected,
-              onSelected: (bool selected) {
-                setState(() {
-                  selectedCategory = category;
-                });
-              },
-              selectedColor: const Color.fromARGB(255, 189, 65, 182),
-              backgroundColor: Colors.purple.shade100,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+  @override
+  void initState() {
+    super.initState();
+    categories = ['All'];
+    categories.addAll(
+      widget.foodItems
+          .map((item) => item['category'] as String)
+          .toSet()
+          .toList(),
     );
   }
 
-  Widget _buildFoodGrid(BoxConstraints constraints) {
-    int crossAxisCount = constraints.maxWidth < 600 ? 2 : 4;
-    double aspectRatio = constraints.maxWidth < 600 ? 0.7 : 0.8;
-
-    List<Map<String, dynamic>> filteredItems = selectedCategory == "All"
+  List<Map<String, dynamic>> get filteredFoodItems {
+    return selectedCategory == 'All'
         ? widget.foodItems
         : widget.foodItems
-            .where((item) => item["category"] == selectedCategory)
+            .where((item) => item['category'] == selectedCategory)
             .toList();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        itemCount: filteredItems.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: aspectRatio,
-        ),
-        itemBuilder: (context, index) {
-          return _buildFoodCard(filteredItems[index]);
-        },
-      ),
-    );
   }
 
-  Widget _buildFoodCard(Map<String, dynamic> item) {
+  Widget buildFoodCard(Map<String, dynamic> foodItem) {
+    bool isFavorite =
+        widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
+    bool inCart =
+        widget.cartItems.any((item) => item['name'] == foodItem['name']);
+
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 4,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Image with Heart Icon Overlay
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-                child: Image.asset(
-                  item["image"],
-                  width: double.infinity,
-                  height: 88, // Increased height
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: GestureDetector(
-                  onTap: () => _toggleFavorite(item),
-                  child: Icon(
-                    widget.favoriteItems.contains(item)
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                    color: widget.favoriteItems.contains(item)
-                        ? const Color.fromARGB(255, 211, 103, 96)
-                        : const Color.fromARGB(255, 222, 10, 10),
+          // Image Section
+          SizedBox(
+            height: 130,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Image.asset(
+                    foodItem['image'],
+                    height: 130,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
                 ),
-              ),
-            ],
-          ),
-          // Expanded Column to Avoid Overflow
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Name
-                  Text(
-                    item["name"],
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  // Rating & Price Row
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.orange, size: 16),
-                      Text(
-                        item["rating"],
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        "• ${item["price"]}",
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const Spacer(), // Pushes button to bottom
-                  // Centered Add to Cart Button
-                  Align(
-                    alignment: Alignment.center,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(174, 216, 153, 236),
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(150),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.white,
+                        size: 18,
                       ),
                       onPressed: () {
                         setState(() {
-                          bool isAlreadyInCart = widget.cartItems.any(
-                              (cartItem) => cartItem["name"] == item["name"]);
-
-                          if (!isAlreadyInCart) {
-                            widget.cartItems.add(item);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("${item["name"]} added to cart"),
-                                duration: const Duration(seconds: 2),
-                                action: SnackBarAction(
-                                  label: "View Cart",
-                                  textColor:
-                                      const Color.fromARGB(255, 247, 247, 247),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => StudentCartScreen(
-                                          cartItems: widget.cartItems,
-                                          onCartUpdated: (updatedCartItems) {
-                                            setState(() {
-                                              widget.cartItems =
-                                                  updatedCartItems;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
+                          if (isFavorite) {
+                            widget.favoriteItems.removeWhere(
+                                (item) => item['name'] == foodItem['name']);
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    "${item["name"]} is already in the cart!"),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
+                            widget.favoriteItems.add(foodItem);
                           }
+                          widget.updateCounts();
                         });
                       },
-                      child: const Text("Add to Cart"),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withAlpha(175),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 6,
+                  left: 6,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(150),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      foodItem['category'],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 6,
+                  right: 6,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(150),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.circle,
+                      color:
+                          foodItem['type'] == 'Veg' ? Colors.green : Colors.red,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Content Section
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Food Name & Price
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          foodItem['name'],
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "₹${foodItem['price']}",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Add to Cart Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        backgroundColor: inCart
+                            ? Colors.green
+                            : const Color.fromARGB(255, 20, 22, 131),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (inCart) {
+                            widget.cartItems.removeWhere(
+                                (item) => item['name'] == foodItem['name']);
+                          } else {
+                            widget.cartItems.add(foodItem);
+                          }
+                          widget.updateCounts();
+                        });
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            inCart ? Icons.check_circle : Icons.shopping_cart,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            inCart ? 'Added' : 'Add to Cart',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -236,52 +250,61 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-              _buildCategoryChips(),
-              const SizedBox(height: 10),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildFoodGrid(constraints),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: widget.cartItems.isNotEmpty
-          ? FloatingActionButton.extended(
-              backgroundColor: Colors.deepPurple,
-              icon: const Icon(Icons.shopping_cart, color: Colors.white),
-              label: Text("View Cart (${widget.cartItems.length})"),
-              onPressed: () async {
-                final updatedCart = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => StudentCartScreen(
-                      cartItems: widget.cartItems,
-                      onCartUpdated: (updatedCartItems) {
-                        setState(() {
-                          widget.cartItems = updatedCartItems;
-                        });
-                      },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: categories.map((String category) {
+                  bool isSelected = selectedCategory == category;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedCategory = category;
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.blue : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(
+                            16), // Increased border radius
+                      ),
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
+                      ),
                     ),
-                  ),
-                );
-
-                if (updatedCart != null) {
-                  setState(() {
-                    widget.cartItems = updatedCart;
-                  });
-                }
-              },
-            )
-          : null,
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.7, // Adjusted aspect ratio
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: filteredFoodItems.length,
+                itemBuilder: (context, index) =>
+                    buildFoodCard(filteredFoodItems[index]),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
