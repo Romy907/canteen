@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 
-class FavouriteScreen extends StatelessWidget {
+class StudentFavouriteScreen extends StatelessWidget {
   final List<Map<String, dynamic>> favoriteItems;
 
-  const FavouriteScreen({super.key, required this.favoriteItems});
+  const StudentFavouriteScreen({super.key, required this.favoriteItems});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Favorites"),
-        backgroundColor: Colors.deepPurple,
-      ),
       body: favoriteItems.isEmpty
           ? const Center(child: Text("No favorites added yet!"))
           : GridView.builder(

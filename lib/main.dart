@@ -1,6 +1,6 @@
-import 'package:canteen/ManagerHomeScreen.dart';
-import 'package:canteen/StudentHomeScreen.dart';
-import 'package:canteen/loginscreen.dart';
+import 'package:canteen/Manager/ManagerScreen.dart';
+import 'package:canteen/Student/StudentScreen.dart';
+import 'package:canteen/Login/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,9 +33,9 @@ class MyApp extends StatelessWidget {
       final prefs = snapshot.data as SharedPreferences;
       final role = prefs.getString('userRole');
       if (role == 'student') {
-        return StudentHomeScreen();
+        return StudentScreen();
       } else if (role == 'manager') {
-        return ManagerHomeScreen();
+        return ManagerScreen();
       } else {
         return LoginScreen();
       }

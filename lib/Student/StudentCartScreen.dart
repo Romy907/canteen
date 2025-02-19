@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-class CartScreen extends StatefulWidget {
+class StudentCartScreen extends StatefulWidget {
   final List<Map<String, dynamic>> cartItems;
   final Function(List<Map<String, dynamic>>) onCartUpdated; // ✅ Callback
 
-  const CartScreen({super.key, required this.cartItems, required this.onCartUpdated});
+  const StudentCartScreen({super.key, required this.cartItems, required this.onCartUpdated});
 
   @override
-  _CartScreenState createState() => _CartScreenState();
+  _StudentCartScreenState createState() => _StudentCartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
+class _StudentCartScreenState extends State<StudentCartScreen> {
   late List<Map<String, dynamic>> cartItems;
 
   @override
@@ -64,10 +64,6 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("My Cart"),
-        backgroundColor: Colors.deepPurple,
-      ),
       body: cartItems.isEmpty
           ? const Center(child: Text("Your cart is empty!"))
           : ListView.builder(

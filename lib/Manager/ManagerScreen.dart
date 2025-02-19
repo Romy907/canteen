@@ -1,8 +1,8 @@
-import 'package:canteen/FirebaseManager.dart';
-import 'package:canteen/loginscreen.dart';
+import 'package:canteen/Firebase/FirebaseManager.dart';
+import 'package:canteen/Login/loginscreen.dart';
 import 'package:flutter/material.dart';
 
-class ManagerHomeScreen extends StatelessWidget {
+class ManagerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

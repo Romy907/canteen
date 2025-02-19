@@ -1,8 +1,8 @@
-import 'package:canteen/FirebaseManager.dart';
-import 'package:canteen/ManagerHomeScreen.dart';
-import 'package:canteen/SignUpScreen.dart';
-import 'package:canteen/StudentHomeScreen.dart';
-import 'package:canteen/forgotPasswordScreen.dart';
+import 'package:canteen/Firebase/FirebaseManager.dart';
+import 'package:canteen/Manager/ManagerScreen.dart';
+import 'package:canteen/Login/SignUpScreen.dart';
+import 'package:canteen/Student/StudentScreen.dart';
+import 'package:canteen/Login/forgotPasswordScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -59,12 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
         if (role == 'student') {
           Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => StudentHomeScreen()),
+        MaterialPageRoute(builder: (_) => StudentScreen()),
           );
         } else if (role == 'manager') {
           Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => ManagerHomeScreen()),
+        MaterialPageRoute(builder: (_) => ManagerScreen()),
           );
         }
       }
@@ -134,35 +134,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
-              SizedBox(
+                const SizedBox(height: 30),
+                SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: isLoading
-                        ? Colors.grey
-                        : const Color(0xFF6C63FF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: isLoading
+                    ? Colors.grey
+                    : const Color(0xFF6C63FF),
                   ),
                   child: isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          "Login",
-                          style: TextStyle(fontSize: 18),
-                        ),
+                    ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                      ),
+                    )
+                    : const Text(
+                      "Login",
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
                 ),
-              ),
+                ),
               const SizedBox(height: 15),
               GestureDetector(
                 onTap: () {

@@ -1,24 +1,20 @@
-import 'package:canteen/loginscreen.dart';
+import 'package:canteen/Login/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class StudentProfileScreen extends StatelessWidget {
+  const StudentProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Profile"),
-        backgroundColor: Colors.deepPurple,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             const CircleAvatar(
               radius: 50,
-              backgroundImage: AssetImage("assets/img/profile.png"), // ✅ Profile Image
+              backgroundImage: AssetImage("assets/images/logo.png"), // ✅ Profile Image
             ),
             const SizedBox(height: 16),
             const Text(
