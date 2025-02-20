@@ -46,6 +46,13 @@ class _StudentScreenState extends State<StudentScreen> {
       "category": "Dessert",
       "type": "Veg"
     },
+    {
+      "image": "assets/img/fried_rice.jpeg",
+      "name": "Fried Rice",
+      "price": "60",
+      "category": "Main Course",
+      "type": "Veg"
+    },
   ];
 
   void _updateCounts() {
