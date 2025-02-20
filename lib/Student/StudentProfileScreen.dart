@@ -1,4 +1,5 @@
 
+import 'package:canteen/Student/PurchaseHistoryScreen.dart';
 import 'package:flutter/material.dart';
 
 class StudentProfileScreen extends StatelessWidget {
@@ -85,9 +86,9 @@ class StudentProfileScreen extends StatelessWidget {
             break;
           case 'Purchase History':
             // Navigate to Purchase History screen
-            // Navigator.of(context).push(
-            //   MaterialPageRoute(builder: (context) => ManagerPurchaseHistory()),
-            // );
+            Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => PurchaseHistoryScreen()),
+             );
             break;
           case 'Help & Support':
             // Navigate to Help & Support screen
