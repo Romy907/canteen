@@ -1,6 +1,5 @@
-import 'package:canteen/Login/loginscreen.dart';
+
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentProfileScreen extends StatelessWidget {
   const StudentProfileScreen({super.key});
@@ -8,53 +7,112 @@ class StudentProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          children: [
-            const CircleAvatar(
+            children: [
+            CircleAvatar(
               radius: 50,
-              backgroundImage: AssetImage("assets/images/logo.png"), // ✅ Profile Image
+              backgroundImage: AssetImage('assets/images/logo.png'), // Replace with actual image path
             ),
-            const SizedBox(height: 16),
-            const Text(
-              "John Doe",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            SizedBox(height: 10),
+            Text(
+              'Nicolas Adams',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const Text("johndoe@example.com", style: TextStyle(fontSize: 16, color: Colors.grey)),
-            const SizedBox(height: 20),
-
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text("Edit Profile"),
-              onTap: () {
-                // ✅ Add Edit Profile functionality
-              },
+            Text(
+              'nicolasadams@gmail.com',
+              style: TextStyle(color: Colors.grey),
             ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text("Settings"),
-              onTap: () {
-                // ✅ Add Settings functionality
-              },
+            SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+              ),
+              onPressed: () {},
+              child: Text(
+              'Edit Profile',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Logout", style: TextStyle(color: Colors.red)),
-              onTap: () async {
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-                await prefs.remove('userRole');
-
-                if (context.mounted) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  );
-                }
-              },
-            ),
-          ],
+            SizedBox(height: 10),
+            _buildProfileOption(context, Icons.history, 'Purchase History'),
+            SizedBox(height: 10),
+            _buildProfileOption(context, Icons.help_outline, 'Help & Support'),
+            SizedBox(height: 10),
+            _buildProfileOption(context, Icons.settings, 'Settings'),
+            SizedBox(height: 10),
+            _buildProfileOption(context, Icons.person_add, 'Invite a Friend'),
+            SizedBox(height: 10),
+            _buildProfileOption(context, Icons.logout, 'Logout', isLogout: true),
+            ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProfileOption(BuildContext context, IconData icon, String title, {bool isLogout = false}) {
+    return Container(
+      decoration: BoxDecoration(
+      color: isLogout ? Colors.red.withAlpha(10) : Colors.black.withAlpha(15),
+      borderRadius: BorderRadius.circular(25),
+      ),
+      child: ListTile(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      leading: Icon(icon, color: isLogout ? Colors.red : Colors.black),
+      title: Text(
+        title,
+        style: TextStyle(
+        fontWeight: FontWeight.w500,
+        color: isLogout ? Colors.red : Colors.black,
+        ),
+      ),
+      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      onTap: () {
+        switch (title) {
+          case 'Privacy':
+            // Navigate to Privacy screen
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(builder: (context) => ManagerPrivacy()),
+            // );
+            break;
+          case 'Purchase History':
+            // Navigate to Purchase History screen
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(builder: (context) => ManagerPurchaseHistory()),
+            // );
+            break;
+          case 'Help & Support':
+            // Navigate to Help & Support screen
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(builder: (context) => ManagerHelpAndSupport()),
+            // );
+            break;
+          case 'Settings':
+            // Navigate to Settings screen
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(builder: (context) => ManagerSetting()),
+            // );
+            break;
+          case 'Invite a Friend':
+            // Navigate to Invite a Friend screen
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(builder: (context) => ManagerInviteFriend()),
+            // );
+            break;
+          case 'Logout':
+            // Handle logout
+            
+            break;
+        }
+      },
       ),
     );
   }
