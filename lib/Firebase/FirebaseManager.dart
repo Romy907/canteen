@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseManager {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Future<void> logout() async {
     try {
       await _auth.signOut();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove( 'userRole');
       print('User logged out successfully');
     } catch (e) {
       print('An error occurred during logout: $e');

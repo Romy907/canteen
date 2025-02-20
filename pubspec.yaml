@@ -38,6 +38,7 @@ dependencies:
   firebase_auth: 5.3.4
   firebase_database: 11.2.0
   shared_preferences: ^2.5.1
+  share_plus: ^10.1.4
  
  
  

@@ -1,7 +1,9 @@
 
+import 'package:canteen/Firebase/FirebaseManager.dart';
 import 'package:canteen/Login/loginscreen.dart';
 import 'package:canteen/Student/PurchaseHistoryScreen.dart';
 import 'package:canteen/Student/StudentHelp&SupportScreen.dart';
+import 'package:canteen/Student/StudentInviteFriendScreen.dart';
 import 'package:flutter/material.dart';
 
 class StudentProfileScreen extends StatelessWidget {
@@ -87,13 +89,11 @@ class StudentProfileScreen extends StatelessWidget {
             // );
             break;
           case 'Purchase History':
-            // Navigate to Purchase History screen
             Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => PurchaseHistoryScreen()),
              );
             break;
           case 'Help & Support':
-            // Navigate to Help & Support screen
              Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => HelpAndSupportScreen()),
              );
@@ -105,13 +105,12 @@ class StudentProfileScreen extends StatelessWidget {
             // );
             break;
           case 'Invite a Friend':
-            // Navigate to Invite a Friend screen
-            // Navigator.of(context).push(
-            //   MaterialPageRoute(builder: (context) => ManagerInviteFriend()),
-            // );
+             Navigator.of(context).push(
+             MaterialPageRoute(builder: (context) => StudentInviteFriendScreen()),
+            );
             break;
           case 'Logout':
-            // Handle logout
+            FirebaseManager().logout();
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (context) => LoginScreen()),
             );
