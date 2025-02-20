@@ -1,5 +1,7 @@
 
+import 'package:canteen/Login/loginscreen.dart';
 import 'package:canteen/Student/PurchaseHistoryScreen.dart';
+import 'package:canteen/Student/StudentHelp&SupportScreen.dart';
 import 'package:flutter/material.dart';
 
 class StudentProfileScreen extends StatelessWidget {
@@ -92,9 +94,9 @@ class StudentProfileScreen extends StatelessWidget {
             break;
           case 'Help & Support':
             // Navigate to Help & Support screen
-            // Navigator.of(context).push(
-            //   MaterialPageRoute(builder: (context) => ManagerHelpAndSupport()),
-            // );
+             Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => HelpAndSupportScreen()),
+             );
             break;
           case 'Settings':
             // Navigate to Settings screen
@@ -110,8 +112,12 @@ class StudentProfileScreen extends StatelessWidget {
             break;
           case 'Logout':
             // Handle logout
-            
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+            );
             break;
+            
+            
         }
       },
       ),
