@@ -97,7 +97,7 @@ class StudentInviteFriendScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // How Referral Works?
+            
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -144,7 +144,7 @@ class StudentInviteFriendScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              if (index != 2) // Add dotted line for steps except last one
+                              if (index != 2) 
                                 Container(
                                   height: 30,
                                   width: 2,
@@ -180,7 +180,7 @@ class StudentInviteFriendScreen extends StatelessWidget {
 
             const Spacer(),
 
-            // Invite from Contacts button at the bottom
+            
             ElevatedButton.icon(
               onPressed: () => _inviteFromContacts(context),
               icon: const Icon(Icons.contacts, color: Colors.white),

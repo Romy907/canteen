@@ -9,7 +9,7 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
   bool isDarkMode = false;
 
   void _changePassword() {
-    // Navigate to Change Password Screen
+    
   }
 
   void _deleteAccount() {
@@ -38,7 +38,6 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
   void _toggleTheme(bool value) {
     setState(() {
       isDarkMode = value;
-      // Apply theme change logic if using a theme provider
     });
   }
 

@@ -15,11 +15,14 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isKeyboardOpen = mediaQuery.viewInsets.bottom > 0;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        title: const Text('Edit Profile'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -28,7 +31,7 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Full Name'),
+                decoration: const InputDecoration(labelText: 'Full Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your name';
@@ -36,10 +39,10 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -51,10 +54,10 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: phoneController,
-                decoration: InputDecoration(labelText: 'Phone Number'),
+                decoration: const InputDecoration(labelText: 'Phone Number'),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -66,8 +69,8 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
-              Text('Meal Preference', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              const Text('Meal Preference', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               DropdownButtonFormField<String>(
                 value: selectedMealPreference,
                 items: ['Vegetarian', 'Non-Vegetarian', 'Vegan']
@@ -79,18 +82,23 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
                   });
                 },
               ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Save profile logic
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Profile updated successfully')),
-                    );
-                  }
-                },
-                child: Text('Save Changes'),
-              ),
+              const SizedBox(height: 24),
+
+              
+              if (!isKeyboardOpen)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Profile updated successfully')),
+                        );
+                      }
+                    },
+                    child: const Text('Save Changes'),
+                  ),
+                ),
             ],
           ),
         ),
