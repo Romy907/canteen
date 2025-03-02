@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 class StudentInviteFriendScreen extends StatelessWidget {
@@ -10,9 +11,17 @@ class StudentInviteFriendScreen extends StatelessWidget {
     );
   }
 
-  void _inviteViaReferralLink(BuildContext context) {
-    const referralLink = "https://example.com/referral?code=ABC123";
-    Share.share("Join using my referral link: $referralLink");
+  void _copyReferralCode(BuildContext context) {
+    const referralCode = "ABC123";
+    Clipboard.setData(const ClipboardData(text: referralCode));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Referral code copied to clipboard')),
+    );
+  }
+
+  void _shareReferralCode(BuildContext context) {
+    const referralCode = "ABC123";
+    Share.share("Join using my referral code: $referralCode");
   }
 
   @override
@@ -25,27 +34,71 @@ class StudentInviteFriendScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 130),
 
-            // Invite via Referral Link button
-            ElevatedButton.icon(
-              onPressed: () => _inviteViaReferralLink(context),
-              icon: const Icon(Icons.link, color: Color.fromARGB(255, 222, 7, 115)),
-              label: const Text(
-                "Invite via Referral Link",
-                style: TextStyle(color: Color.fromARGB(255, 222, 7, 115), fontWeight: FontWeight.bold),
+            
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 234, 192, 214),
+                borderRadius: BorderRadius.circular(12),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 234, 192, 214),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+              child: Column(
+                children: [
+                  const Text(
+                    "Your Referral Code",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: const Text(
+                      "ABC123",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _copyReferralCode(context),
+                        icon: const Icon(Icons.copy, color:  Color.fromARGB(237, 12, 1, 1)),
+                        label: const Text(
+                          "Copy Code",
+                          style: TextStyle(color: Color.fromARGB(237, 12, 1, 1)),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:  Color.fromARGB(255, 241, 237, 239),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton.icon(
+                        onPressed: () => _shareReferralCode(context),
+                        icon: const Icon(Icons.share, color: Colors.white),
+                        label: const Text(
+                          "Share Code",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 222, 7, 115),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 20),
 
             // How Referral Works?
-                        Container(
+            Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -71,7 +124,7 @@ class StudentInviteFriendScreen extends StatelessWidget {
                   Column(
                     children: List.generate(3, (index) {
                       List<String> steps = [
-                        "Share referral code or link with friends",
+                        "Share your referral code with friends",
                         "When they place their first order, you both earn rewards",
                         "Redeem your coupons at checkout to claim your rewards"
                       ];
@@ -126,7 +179,6 @@ class StudentInviteFriendScreen extends StatelessWidget {
             ),
 
             const Spacer(),
-
 
             // Invite from Contacts button at the bottom
             ElevatedButton.icon(
