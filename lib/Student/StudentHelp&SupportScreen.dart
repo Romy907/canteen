@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'ContactUsScreen.dart';
+import 'FAQScreen.dart';
+import 'FeedbackScreen.dart';
+import 'PrivacyPolicyScreen.dart';
 
 class HelpAndSupportScreen extends StatelessWidget {
   @override
@@ -13,48 +17,42 @@ class HelpAndSupportScreen extends StatelessWidget {
             context,
             icon: Icons.phone,
             title: 'Contact Us',
-            subtitle: 'Call our support team',
-            onTap: () {
-          
-            },
-          ),
-          _buildSupportOption(
-            context,
-            icon: Icons.email,
-            title: 'Email Support',
-            subtitle: 'Send us an email',
-            onTap: () {
-            
-            },
+            subtitle: 'Call or email our support team',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ContactUsScreen()),
+            ),
           ),
           _buildSupportOption(
             context,
             icon: Icons.help_outline,
             title: 'FAQs',
             subtitle: 'Frequently Asked Questions',
-            onTap: () {
-            
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => FAQScreen()),
+            ),
           ),
           _buildSupportOption(
             context,
             icon: Icons.feedback,
             title: 'Send Feedback',
             subtitle: 'Share your experience',
-            onTap: () {
-              
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => FeedbackScreen()),
+            ),
           ),
           _buildSupportOption(
             context,
             icon: Icons.policy,
             title: 'Privacy Policy',
             subtitle: 'Read our policies',
-            onTap: () {
-              
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
+            ),
           ),
-          
         ],
       ),
     );
@@ -70,7 +68,7 @@ class HelpAndSupportScreen extends StatelessWidget {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        leading: Icon(icon, color: const Color.fromARGB(255, 103, 156, 247)),
+        leading: Icon(icon, color: Colors.blue),
         title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
         trailing: Icon(Icons.arrow_forward_ios, size: 16),
