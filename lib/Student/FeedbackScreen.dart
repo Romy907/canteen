@@ -34,10 +34,19 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               maxLines: 5,
             ),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submitFeedback,
-              child: Text('Submit'),
-            ),
+ElevatedButton(
+  onPressed: _submitFeedback,
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color.fromARGB(255, 85, 151, 244), // Change this to any color you want
+    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  ),
+  child: Text(
+    'Submit',
+    style: TextStyle(color: Colors.white, fontSize: 16), // Ensures text is readable
+  ),
+),
+
           ],
         ),
       ),
