@@ -93,8 +93,8 @@ class StudentProfileScreen extends StatelessWidget {
         trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
         onTap: () {
           switch (title) {
-            case 'Privacy':
-              break;
+            //case 'Privacy':
+             // break;
             case 'Purchase History':
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => PurchaseHistoryScreen()),
