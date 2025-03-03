@@ -60,55 +60,66 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
       Navigator.pop(context, cartItems); // ✅ Return updated cart
     }
   }
+  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: cartItems.isEmpty
           ? const Center(child: Text("Your cart is empty!"))
-          : ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                final item = cartItems[index];
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  child: ListTile(
-                    leading: Image.asset(
-                      item["image"],
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    ),
-                    title: Text(item["name"]),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Price: ${item["price"]}"),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            // ✅ Decrease Quantity Button
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                              onPressed: () => _decreaseQuantity(index),
-                            ),
-                            Text(
-                              "${item["quantity"]}",
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            // ✅ Increase Quantity Button
-                            IconButton(
-                              icon: const Icon(Icons.add_circle_outline, color: Colors.green),
-                              onPressed: () => _increaseQuantity(index),
-                            ),
-                            
-                          ],
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: cartItems.length,
+                    itemBuilder: (context, index) {
+                      final item = cartItems[index];
+                      return Card(
+                        margin: const EdgeInsets.all(10),
+                        child: ListTile(
+                          leading: Image.asset(
+                            item["image"],
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          ),
+                          title: Text(item["name"]),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Price: ${item["price"]}"),
+                              const SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  // ✅ Decrease Quantity Button
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                                    onPressed: () => _decreaseQuantity(index),
+                                  ),
+                                  Text(
+                                    "${item["quantity"]}",
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  // ✅ Increase Quantity Button
+                                  IconButton(
+                                    icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                                    onPressed: () => _increaseQuantity(index),
+                                  ),
+                                  IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.black),
+                                      onPressed: () => _removeItem(index),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+                
+              ],
             ),
     );
   }

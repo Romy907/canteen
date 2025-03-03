@@ -1,3 +1,4 @@
+import 'package:canteen/Student/ChangePassword.dart';
 import 'package:flutter/material.dart';
 
 class StudentSettingScreen extends StatefulWidget {
@@ -9,7 +10,10 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
   bool isDarkMode = false;
 
   void _changePassword() {
-    
+     Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
+    );
   }
 
   void _deleteAccount() {
@@ -51,6 +55,7 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
             leading: Icon(Icons.lock),
             title: Text("Change Password"),
             onTap: _changePassword,
+             
           ),
           ListTile(
             leading: Icon(Icons.delete, color: Colors.red),
