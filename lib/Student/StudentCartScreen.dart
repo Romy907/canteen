@@ -55,16 +55,14 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
       cartItems.removeAt(index);
     });
     _updateCart();
-
-    if (cartItems.isEmpty) {
-      Navigator.pop(context, cartItems); // ✅ Return updated cart
-    }
   }
-  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Your Cart"),
+      ),
       body: cartItems.isEmpty
           ? const Center(child: Text("Your cart is empty!"))
           : Column(
@@ -106,9 +104,9 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
                                     onPressed: () => _increaseQuantity(index),
                                   ),
                                   IconButton(
-                                      icon: Icon(Icons.delete, color: Colors.black),
-                                      onPressed: () => _removeItem(index),
-                                    ),
+                                    icon: Icon(Icons.delete, color: Colors.black),
+                                    onPressed: () => _removeItem(index),
+                                  ),
                                 ],
                               ),
                             ],
@@ -118,7 +116,6 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
                     },
                   ),
                 ),
-                
               ],
             ),
     );
