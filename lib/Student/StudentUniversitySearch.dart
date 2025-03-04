@@ -12,16 +12,15 @@ class StudentUniversitySearch extends StatefulWidget {
 class _StudentUniversitySearchState extends State<StudentUniversitySearch> {
   TextEditingController _searchController = TextEditingController();
   List<String> _universityList = [
+    'California Institute of Technology',
     'Harvard University',
-    'Stanford University',
     'Massachusetts Institute of Technology',
+    'Princeton University',
+    'Stanford University',
     'University of California, Berkeley',
     'University of Oxford',
-    'California Institute of Technology',
-    'University of Cambridge',
-    'Princeton University',
+    'University of Cambridge', 
     'Yale University',
-    'University of Chicago'
   ];
   List<String> _filteredUniversityList = [];
 

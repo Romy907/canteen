@@ -54,7 +54,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             final order = _filteredHistory()[index];
             return Card(
               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              color:  Colors.grey[200],
+              color:  const Color.fromARGB(255, 241, 233, 233),
               child: ListTile(
                 leading: CircleAvatar(
                    backgroundColor:   Colors.blue ,
