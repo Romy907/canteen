@@ -20,6 +20,7 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
       return {
         ...item,
         "quantity": item.containsKey("quantity") ? item["quantity"] : 1,
+        "price": item["price"] is String ? double.parse(item["price"]) : item["price"], // Ensure price is a number
       };
     }).toList();
   }
@@ -57,6 +58,16 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
     _updateCart();
   }
 
+  // ✅ Calculate Total Amount
+  double _getTotalAmount() {
+    return cartItems.fold(0.0, (total, item) => total + (item["price"] * item["quantity"]));
+  }
+
+  // ✅ Calculate Total Items
+  int _getTotalItems() {
+    return cartItems.fold(0, (total, item) => total + (item["quantity"] as int));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +78,22 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
           ? const Center(child: Text("Your cart is empty!"))
           : Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 16.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white, backgroundColor: Colors.blue, // text color
+                      minimumSize: Size(200, 40), // button size
+                    ),
+                    onPressed: () {
+                      // Handle proceed to buy action
+                    },
+                    child: Text(
+                      "Proceed to Buy (${_getTotalItems()} items)",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: ListView.builder(
                     itemCount: cartItems.length,
@@ -85,7 +112,7 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Price: ${item["price"]}"),
+                              Text("Price: ₹${item["price"]}"),
                               const SizedBox(height: 5),
                               Row(
                                 children: [
@@ -114,6 +141,34 @@ class _StudentCartScreenState extends State<StudentCartScreen> {
                         ),
                       );
                     },
+                  ),
+                ),
+                // ✅ Total Amount
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Total Amount : ",
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          "₹${_getTotalAmount().toStringAsFixed(2)}",
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
