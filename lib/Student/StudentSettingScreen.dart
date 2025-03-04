@@ -1,4 +1,5 @@
 import 'package:canteen/Student/ChangePassword.dart';
+import 'package:canteen/Student/NotificationSettingsScreen.dart';
 import 'package:flutter/material.dart';
 
 class StudentSettingScreen extends StatefulWidget {
@@ -71,7 +72,10 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
             leading: Icon(Icons.notifications),
             title: Text("Notification Settings"),
             onTap: () {
-              // Navigate to notification settings screen
+               Navigator.push(
+               context,
+               MaterialPageRoute(builder: (context) => NotificationSettingsScreen()),
+              );
             },
           ),
         ],
