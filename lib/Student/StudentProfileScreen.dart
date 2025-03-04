@@ -1,7 +1,6 @@
-
 import 'package:canteen/Firebase/FirebaseManager.dart';
 import 'package:canteen/Login/loginscreen.dart';
-import 'package:canteen/Student/PurchaseHistoryScreen.dart';
+import 'package:canteen/Student/MyOrdersScreen.dart';
 import 'package:canteen/Student/StudentHelp&SupportScreen.dart';
 import 'package:canteen/Student/StudentInviteFriendScreen.dart';
 import 'package:canteen/Student/StudentSettingScreen.dart';
@@ -57,7 +56,7 @@ class StudentProfileScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 10),
-            _buildProfileOption(context, Icons.history, 'Purchase History'),
+            _buildProfileOption(context, Icons.history, 'My Orders'),
             SizedBox(height: 10),
             _buildProfileOption(context, Icons.help_outline, 'Help & Support'),
             SizedBox(height: 10),
@@ -95,9 +94,9 @@ class StudentProfileScreen extends StatelessWidget {
           switch (title) {
             //case 'Privacy':
              // break;
-            case 'Purchase History':
+            case 'My Orders':
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => PurchaseHistoryScreen()),
+                MaterialPageRoute(builder: (context) => MyOrdersScreen()),
               );
               break;
             case 'Help & Support':

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class Purchase {
+class Order {
   final String itemName;
   final double price;
   final String date;
   final int quantity;
 
-  Purchase({
+  Order({
     required this.itemName,
     required this.price,
     required this.date,
@@ -14,17 +14,17 @@ class Purchase {
   });
 }
 
-class PurchaseHistoryScreen extends StatefulWidget {
+class MyOrdersScreen extends StatefulWidget {
   @override
-  _PurchaseHistoryScreenState createState() => _PurchaseHistoryScreenState();
+  _MyOrdersScreenState createState() => _MyOrdersScreenState();
 }
 
-class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
-  List<Purchase> purchaseHistory = [
-    Purchase(itemName: 'Burger', price: 50, date: '2025-02-18', quantity: 2),
-    Purchase(itemName: 'Pizza', price: 110, date: '2025-02-15', quantity: 1),
-    Purchase(itemName: 'Soda', price: 70, date: '2025-02-12', quantity: 3),
-    Purchase(itemName: 'Pasta', price: 75, date: '2025-02-10', quantity: 2),
+class _MyOrdersScreenState extends State<MyOrdersScreen> {
+  List<Order> orderHistory = [
+    Order(itemName: 'Burger', price: 50, date: '2025-02-18', quantity: 2),
+    Order(itemName: 'Pizza', price: 110, date: '2025-02-15', quantity: 1),
+    Order(itemName: 'Soda', price: 70, date: '2025-02-12', quantity: 3),
+    Order(itemName: 'Pasta', price: 75, date: '2025-02-10', quantity: 2),
   ];
 
   String _selectedFilter = 'None';
@@ -34,7 +34,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Purchase History'),
+        title: Text('My Orders'),
         actions: [
           IconButton(
             icon: Icon(Icons.filter_list),
@@ -51,20 +51,20 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
         child: ListView.builder(
           itemCount: _filteredHistory().length,
           itemBuilder: (context, index) {
-            final purchase = _filteredHistory()[index];
+            final order = _filteredHistory()[index];
             return Card(
               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               color:  Colors.grey[200],
               child: ListTile(
                 leading: CircleAvatar(
                    backgroundColor:   Colors.blue ,
-                  child: Text('${purchase.quantity}',
+                  child: Text('${order.quantity}',
                   style: TextStyle(color: const Color.fromARGB(255, 19, 19, 19), fontWeight: FontWeight.bold),
                   ),
                 ),
-                title: Text(purchase.itemName,
+                title: Text(order.itemName,
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('Date: ${purchase.date} - ₹${purchase.price.toStringAsFixed(2)}'),
+                subtitle: Text('Date: ${order.date} - ₹${order.price.toStringAsFixed(2)}'),
                 trailing: Icon(Icons.arrow_forward_ios),
                 onTap: () {
                   
@@ -91,7 +91,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                 Navigator.pop(context);
                 setState(() {
                   _selectedFilter = 'Date';
-                  purchaseHistory.sort((a, b) => b.date.compareTo(a.date));
+                  orderHistory.sort((a, b) => b.date.compareTo(a.date));
                 });
               },
             ),
@@ -102,7 +102,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                 Navigator.pop(context);
                 setState(() {
                   _selectedFilter = 'Price';
-                  purchaseHistory.sort((a, b) => b.price.compareTo(a.price));
+                  orderHistory.sort((a, b) => b.price.compareTo(a.price));
                 });
               },
             ),
@@ -113,7 +113,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                 Navigator.pop(context);
                 setState(() {
                   _selectedFilter = 'Quantity';
-                  purchaseHistory.sort((a, b) => b.quantity.compareTo(a.quantity));
+                  orderHistory.sort((a, b) => b.quantity.compareTo(a.quantity));
                 });
               },
             ),
@@ -126,11 +126,11 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
   void _resetFilter() {
     setState(() {
       _selectedFilter = 'None';
-      purchaseHistory = [
-        Purchase(itemName: 'Burger', price: 50, date: '2025-02-18', quantity: 2),
-        Purchase(itemName: 'Pizza', price: 110, date: '2025-02-15', quantity: 1),
-        Purchase(itemName: 'Soda', price: 70, date: '2025-02-12', quantity: 3),
-        Purchase(itemName: 'Pasta', price: 75, date: '2025-02-10', quantity: 2),
+      orderHistory = [
+        Order(itemName: 'Burger', price: 50, date: '2025-02-18', quantity: 2),
+        Order(itemName: 'Pizza', price: 110, date: '2025-02-15', quantity: 1),
+        Order(itemName: 'Soda', price: 70, date: '2025-02-12', quantity: 3),
+        Order(itemName: 'Pasta', price: 75, date: '2025-02-10', quantity: 2),
       ];
     });
   }
@@ -139,14 +139,14 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
     setState(() => _isRefreshing = true);
     await Future.delayed(Duration(seconds: 2)); 
     setState(() {
-      purchaseHistory.add(
-        Purchase(itemName: 'New Item', price: 100, date: '2025-02-20', quantity: 1),
+      orderHistory.add(
+        Order(itemName: 'New Item', price: 100, date: '2025-02-20', quantity: 1),
       );
       _isRefreshing = false;
     });
   }
 
-  List<Purchase> _filteredHistory() {
-    return purchaseHistory;
+  List<Order> _filteredHistory() {
+    return orderHistory;
   }
 }
