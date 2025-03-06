@@ -1,5 +1,6 @@
-// StudentHomeScreen.dart
+import 'package:canteen/Student/CheckOutScreen.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class StudentHomeScreen extends StatefulWidget {
   final List<Map<String, dynamic>> favoriteItems;
@@ -7,24 +8,40 @@ class StudentHomeScreen extends StatefulWidget {
   final List<Map<String, dynamic>> foodItems;
   final Function updateCounts;
 
-  StudentHomeScreen({
+  const StudentHomeScreen({
+    Key? key,
     required this.favoriteItems,
     required this.cartItems,
     required this.foodItems,
     required this.updateCounts,
-  });
+  }) : super(key: key);
 
   @override
   _StudentHomeScreenState createState() => _StudentHomeScreenState();
 }
 
-class _StudentHomeScreenState extends State<StudentHomeScreen> {
+class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTickerProviderStateMixin {
   String selectedCategory = 'All';
   late List<String> categories;
+  String searchQuery = '';
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+  
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    _animationController.forward();
+    
     categories = ['All'];
     categories.addAll(
       widget.foodItems
@@ -34,204 +51,202 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  List<Map<String, dynamic>> get filteredFoodItems {
-    return selectedCategory == 'All'
-        ? widget.foodItems
-        : widget.foodItems
-            .where((item) => item['category'] == selectedCategory)
-            .toList();
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
-  Widget buildFoodCard(Map<String, dynamic> foodItem) {
-    bool isFavorite =
-        widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
-    bool inCart =
-        widget.cartItems.any((item) => item['name'] == foodItem['name']);
+  List<Map<String, dynamic>> get filteredFoodItems {
+    return widget.foodItems
+        .where((item) => 
+            (selectedCategory == 'All' || item['category'] == selectedCategory) &&
+            (searchQuery.isEmpty || 
+             item['name'].toString().toLowerCase().contains(searchQuery.toLowerCase()))
+        )
+        .toList();
+  }
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+  void _toggleFavorite(Map<String, dynamic> foodItem) {
+    bool isFavorite = widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
+    
+    setState(() {
+      if (isFavorite) {
+        widget.favoriteItems.removeWhere((item) => item['name'] == foodItem['name']);
+      } else {
+        widget.favoriteItems.add(foodItem);
+      }
+      widget.updateCounts();
+    });
+  }
+
+  void _toggleCart(Map<String, dynamic> foodItem) {
+    bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
+    
+    setState(() {
+      if (inCart) {
+        widget.cartItems.removeWhere((item) => item['name'] == foodItem['name']);
+      } else {
+        widget.cartItems.add(foodItem);
+      }
+      widget.updateCounts();
+    });
+  }
+  
+ void _buyNow(Map<String, dynamic> foodItem) {
+  // Add to cart if not already added
+  bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
+  if (!inCart) {
+    setState(() {
+      widget.cartItems.add(foodItem);
+      widget.updateCounts();
+    });
+  }
+  
+  // Navigate directly to checkout with this item
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (context) => CheckOutScreen(
+        items: [foodItem],
+        isBuyNow: true,
       ),
-      elevation: 4,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Image Section
-          SizedBox(
-            height: 130,
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.asset(
-                    foodItem['image'],
-                    height: 130,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(150),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? Colors.red : Colors.white,
-                        size: 18,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          if (isFavorite) {
-                            widget.favoriteItems.removeWhere(
-                                (item) => item['name'] == foodItem['name']);
-                          } else {
-                            widget.favoriteItems.add(foodItem);
-                          }
-                          widget.updateCounts();
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withAlpha(175),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 6,
-                  left: 6,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(150),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      foodItem['category'],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 6,
-                  right: 6,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(150),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.circle,
-                      color:
-                          foodItem['type'] == 'Veg' ? Colors.green : Colors.red,
-                      size: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    ),
+  );
+}
+
+  Widget _buildFoodCard(Map<String, dynamic> foodItem) {
+    bool isFavorite = widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
+    bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
+    
+    return Hero(
+      tag: 'food-${foodItem['name']}',
+      child: Material(
+        color: Colors.transparent,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-          // Content Section
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12,0,12,0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Image container with overlays
+              Stack(
                 children: [
-                  // Food Name & Price
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          foodItem['name'],
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  // Food image
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    child: AspectRatio(
+                      aspectRatio: 1.5,
+                      child: Image.asset(
+                        foodItem['image'],
+                        fit: BoxFit.cover,
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        "₹${foodItem['price']}",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 0),
-                  // Add to Cart Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  
+                  // Favorite button
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: GestureDetector(
+                      onTap: () => _toggleFavorite(foodItem),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isFavorite 
+                              ? Colors.red.withOpacity(0.9) 
+                              : Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        backgroundColor: inCart
-                            ? Colors.green
-                            : const Color.fromARGB(255, 20, 22, 131),
+                        child: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          size: 18,
+                          color: isFavorite ? Colors.white : Colors.red,
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          if (inCart) {
-                            widget.cartItems.removeWhere(
-                                (item) => item['name'] == foodItem['name']);
-                          } else {
-                            widget.cartItems.add(foodItem);
-                          }
-                          widget.updateCounts();
-                        });
-                      },
+                    ),
+                  ),
+                  
+                  // Gradient overlay at bottom
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.7),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            inCart ? Icons.check_circle : Icons.shopping_cart,
-                            color: Colors.white,
-                            size: 20,
+                          // Category pill
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              foodItem['category'],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            inCart ? 'Added' : 'Add to Cart',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          
+                          // Veg/Non-veg indicator
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.circle,
+                                  color: foodItem['type'] == 'Veg' ? Colors.green : Colors.red,
+                                  size: 12,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  foodItem['type'],
+                                  style: TextStyle(
+                                    color: foodItem['type'] == 'Veg' ? Colors.green[800] : Colors.red[800],
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -240,6 +255,151 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                 ],
               ),
+              
+              // Content area
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Food name
+                    Text(
+                      foodItem['name'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Price
+                    Text(
+                      "₹${foodItem['price']}",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    
+                    // Buy Now and Add to Cart buttons row
+                    Row(
+                      children: [
+                        // Buy Now button
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _buyNow(foodItem),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange[700],
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.orange.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                'Buy Now',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        
+                        // Add to Cart button
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _toggleCart(foodItem),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: inCart ? Colors.green : Theme.of(context).primaryColor,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (inCart ? Colors.green : Theme.of(context).primaryColor).withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    inCart ? Icons.check : Icons.shopping_cart,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    inCart ? 'Added' : 'Add',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/images/empty_state.png', // Add this image to your assets
+            height: 120,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "No food items found",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            searchQuery.isNotEmpty
+                ? "Try a different search term"
+                : "Try selecting a different category",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -250,60 +410,190 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: categories.map((String category) {
-                  bool isSelected = selectedCategory == category;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedCategory = category;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.blue : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(
-                            16), // Increased border radius
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // App bar with search
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title and user greeting
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Campus Cuisine",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "What would you like to eat today?",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        category,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isSelected ? Colors.white : Colors.black,
+                     
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Search bar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search for food...',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear, color: Colors.grey[400]),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                ],
               ),
             ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7, // Adjusted aspect ratio
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
+            
+            // Categories list
+            Container(
+              height: 60,
+              padding: const EdgeInsets.only(left: 16),
+              margin: const EdgeInsets.only(top: 16),
+              child: FadeTransition(
+                opacity: _animation,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    final isSelected = selectedCategory == category;
+                    
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedCategory = category;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                              ? Theme.of(context).primaryColor 
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: isSelected
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[300]!,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          category,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected ? Colors.white : Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                itemCount: filteredFoodItems.length,
-                itemBuilder: (context, index) =>
-                    buildFoodCard(filteredFoodItems[index]),
               ),
             ),
-          ),
-        ],
+            
+            // Food items grid
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: filteredFoodItems.isEmpty
+                    ? _buildEmptyState()
+                    : GridView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.7, // Adjusted for the new button
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                        ),
+                        itemCount: filteredFoodItems.length,
+                        itemBuilder: (context, index) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.2),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _animationController,
+                                curve: Interval(
+                                  0.4 + (index / filteredFoodItems.length) * 0.6,
+                                  1.0,
+                                  curve: Curves.easeOut,
+                                ),
+                              ),
+                            ),
+                            child: _buildFoodCard(filteredFoodItems[index]),
+                          );
+                        },
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
