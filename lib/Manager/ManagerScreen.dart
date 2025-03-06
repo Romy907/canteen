@@ -70,16 +70,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
         actions: [
           _buildIcon(Icons.notifications, pendingOrderCount, 
               () => setState(() => _selectedIndex = 2)),
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseManager().logout();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => LoginScreen()),
-              );
-            },
-          ),
         ],
       ),
       body: _widgetOptions().elementAt(_selectedIndex),
@@ -115,7 +105,6 @@ class _ManagerScreenState extends State<ManagerScreen> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],
         unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.blue,
         onTap: (index) => setState(() => _selectedIndex = index),
         type: BottomNavigationBarType.fixed,
       ),
