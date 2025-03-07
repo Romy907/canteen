@@ -627,114 +627,118 @@ class _ManagerReportState extends State<ManagerReport> {
     );
   }
 
-  Widget _buildSummaryCards() {
-    final List<Map<String, dynamic>> summaries = [
-      {
-        'title': 'Total Sales',
-        'value': 'Rs. 11,600',
-        'change': '+8.2%',
-        'isPositive': true,
-        'icon': Icons.trending_up,
-      },
-      {
-        'title': 'Orders',
-        'value': '142',
-        'change': '+12.5%',
-        'isPositive': true,
-        'icon': Icons.shopping_bag,
-      },
-      {
-        'title': 'Avg. Order Value',
-        'value': 'Rs. 816',
-        'change': '-2.1%',
-        'isPositive': false,
-        'icon': Icons.attach_money,
-      },
-    ];
+ Widget _buildSummaryCards() {
+  final List<Map<String, dynamic>> summaries = [
+    {
+      'title': 'Total Sales',
+      'value': 'Rs. 11,600',
+      'change': '+8.2%',
+      'isPositive': true,
+      'icon': Icons.trending_up,
+    },
+    {
+      'title': 'Orders',
+      'value': '142',
+      'change': '+12.5%',
+      'isPositive': true,
+      'icon': Icons.shopping_bag,
+    },
+    {
+      'title': 'Avg. Order Value',
+      'value': 'Rs. 816',
+      'change': '-2.1%',
+      'isPositive': false,
+      'icon': Icons.attach_money,
+    },
+  ];
 
-    return SizedBox(
-      height: 100,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: summaries.length,
-        itemBuilder: (context, index) {
-          final item = summaries[index];
-          return Container(
-            width: MediaQuery.of(context).size.width * 0.42,
-            margin: EdgeInsets.only(right: index < summaries.length - 1 ? 12 : 0),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+  return SizedBox(
+    height: 100,
+    child: ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: summaries.length,
+      itemBuilder: (context, index) {
+        final item = summaries[index];
+        return Container(
+          width: MediaQuery.of(context).size.width * 0.42,
+          margin: EdgeInsets.only(right: index < summaries.length - 1 ? 12 : 0),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
                       item['title'],
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Icon(
-                      item['icon'],
-                      color: Theme.of(context).primaryColor,
-                      size: 18,
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+                  ),
+                  Icon(
+                    item['icon'],
+                    color: Theme.of(context).primaryColor,
+                    size: 18,
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
                       item['value'],
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: item['isPositive']
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        item['change'],
-                        style: TextStyle(
-                          fontSize: 12,
-                          color:
-                              item['isPositive'] ? Colors.green[700] : Colors.red[700],
-                          fontWeight: FontWeight.w500,
-                        ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: item['isPositive']
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      item['change'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: item['isPositive'] ? Colors.green[700] : Colors.red[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ).animate().scale(delay: (index * 200).ms, duration: 400.ms);
-        },
-      ),
-    );
-  }
-  
-  Widget _buildCategoryStats() {
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ).animate().scale(delay: (index * 200).ms, duration: 400.ms);
+      },
+    ),
+  );
+}  
+    Widget _buildCategoryStats() {
     return Column(
       children: categories.asMap().entries.map((entry) {
         int index = entry.key;
