@@ -341,7 +341,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
             Stack(
               children: [
                 SizedBox(
-                  height: 120,
+                  height: 80,
                   width: double.infinity,
                   child: Image.asset(
                     item["image"],
