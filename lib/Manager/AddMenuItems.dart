@@ -50,7 +50,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> {
   @override
   void initState() {
     super.initState();
-    
+    _initializeService();
     // Initialize form with existing item data if editing
     if (widget.item != null) {
       _nameController.text = widget.item!['name'] as String;
@@ -61,6 +61,32 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> {
       _isVegetarian = widget.item!['isVegetarian'] as bool;
       _isPopular = widget.item!['isPopular'] as bool;
       _currentImageUrl = widget.item!['image'] as String?;
+    }
+  }
+   
+  Future<void> _initializeService() async {
+    
+    try {
+      // Initialize MenuService
+      await _menuService.initialize();
+    } catch (e) {
+      print('Error initializing service: $e');
+     ;
+      
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _initializeService,
+              textColor: Colors.white,
+            ),
+          ),
+        );
+      }
     }
   }
   
