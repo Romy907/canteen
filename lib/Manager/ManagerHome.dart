@@ -370,7 +370,7 @@ class _ManagerHomeState extends State<ManagerHome>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: gradients[index].colors.first.withOpacity(0.3),
+                color: gradients[index].colors.first.withAlpha(76),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -388,7 +388,7 @@ class _ManagerHomeState extends State<ManagerHome>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withAlpha(51),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(icons[index], color: Colors.white, size: 22),
@@ -427,7 +427,7 @@ class _ManagerHomeState extends State<ManagerHome>
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withAlpha(229),
                   ),
                 ),
               ],
@@ -520,7 +520,7 @@ class _ManagerHomeState extends State<ManagerHome>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withAlpha(25),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -595,7 +595,7 @@ class _ManagerHomeState extends State<ManagerHome>
                               dotData: FlDotData(show: false),
                               belowBarData: BarAreaData(
                                 show: true,
-                                color: Colors.blue.withOpacity(0.2),
+                                color: Colors.blue.withAlpha(51),
                               ),
                             ),
                           ],
@@ -620,7 +620,7 @@ class _ManagerHomeState extends State<ManagerHome>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withAlpha(25),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -695,7 +695,7 @@ class _ManagerHomeState extends State<ManagerHome>
                               dotData: FlDotData(show: false),
                               belowBarData: BarAreaData(
                                 show: true,
-                                color: Colors.green.withOpacity(0.2),
+                                color: Colors.green.withAlpha(51),
                               ),
                             ),
                           ],
@@ -878,7 +878,7 @@ class _ManagerHomeState extends State<ManagerHome>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withAlpha(25),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -909,8 +909,8 @@ class _ManagerHomeState extends State<ManagerHome>
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: isPositiveTrend
-                              ? Colors.green.withOpacity(0.9)
-                              : Colors.red.withOpacity(0.9),
+                              ? Colors.green.withAlpha(229)
+                              : Colors.red.withAlpha(229),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -1000,7 +1000,7 @@ class _ManagerHomeState extends State<ManagerHome>
               .shimmer(
                   duration: 1.seconds,
                   angle: 0.5,
-                  color: Colors.white.withOpacity(0.2));
+                  color: Colors.white.withAlpha(51));
         },
       ),
     );
@@ -1113,7 +1113,7 @@ class _ManagerHomeState extends State<ManagerHome>
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withAlpha(25),
                   blurRadius: 5,
                   offset: const Offset(0, 2),
                 ),
@@ -1124,7 +1124,7 @@ class _ManagerHomeState extends State<ManagerHome>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: action['color'].withOpacity(0.1),
+                    color: action['color'].withAlpha(25),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -1157,7 +1157,7 @@ class _ManagerHomeState extends State<ManagerHome>
                 onPlay: (controller) => controller.repeat(reverse: true),
                 delay: 3.seconds)
             .shimmer(
-                duration: 1.seconds, color: action['color'].withOpacity(0.2));
+                duration: 1.seconds, color: action['color'].withAlpha(51));
       }).toList(),
     );
   }

@@ -235,7 +235,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: 'Search menu items...',
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+          hintStyle: TextStyle(color: Colors.white.withAlpha(178)),
           prefixIcon: const Icon(Icons.search, color: Colors.white),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -248,7 +248,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                 )
               : null,
           filled: true,
-          fillColor: Colors.white.withOpacity(0.2),
+          fillColor: Colors.white.withAlpha(51),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide.none,
@@ -267,7 +267,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withAlpha(25),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -293,7 +293,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                   });
                 }
               },
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withAlpha(51),
               selectedColor: Colors.white,
               labelStyle: TextStyle(
                 color: isSelected
@@ -458,7 +458,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
           child: Icon(
             Icons.restaurant,
             size: 40,
-            color: _primaryColor.withOpacity(0.5),
+            color: _primaryColor.withAlpha(127),
           ),
         ),
       );
@@ -690,7 +690,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                     icon: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withAlpha(127),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.more_vert,
@@ -749,7 +749,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                 if (!isAvailable)
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withAlpha(102),
                       alignment: Alignment.center,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -1101,7 +1101,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                               child: Icon(
                                 Icons.restaurant,
                                 size: 40,
-                                color: _primaryColor.withOpacity(0.5),
+                                color: _primaryColor.withAlpha(127),
                               ),
                             ),
                           ),

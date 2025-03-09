@@ -429,7 +429,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isPending ? Colors.orange.withOpacity(0.3) : Colors.green.withOpacity(0.3),
+          color: isPending ? Colors.orange.withAlpha(76) : Colors.green.withAlpha(76),
           width: 1.0,
         ),
       ),
@@ -448,7 +448,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withAlpha(25),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -497,7 +497,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.primary.withAlpha(25),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         // child: Text(
@@ -704,7 +704,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.2),
+                      color: Colors.grey.withAlpha(51),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Center(

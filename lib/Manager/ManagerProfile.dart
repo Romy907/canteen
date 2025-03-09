@@ -163,7 +163,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _accentColor.withOpacity(0.1),
+                color: _accentColor.withAlpha(25),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: _accentColor, size: 28),
@@ -185,7 +185,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
     child: Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_primaryColor.withOpacity(0.9), _primaryColor],
+          colors: [_primaryColor.withAlpha(229), _primaryColor],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -195,7 +195,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withAlpha(51),
             blurRadius: 8,
             spreadRadius: 2,
             offset: const Offset(0, 4),
@@ -217,7 +217,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withAlpha(51),
                         blurRadius: 6,
                         spreadRadius: 1,
                         offset: const Offset(0, 3),
@@ -251,7 +251,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withAlpha(51),
                         blurRadius: 6,
                         spreadRadius: 1,
                         offset: const Offset(0, 2),
@@ -277,7 +277,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withAlpha(51),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -294,7 +294,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
             profileData['canteen']!,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withAlpha(216),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -396,7 +396,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: _primaryColor.withOpacity(0.1),
+            color: _primaryColor.withAlpha(25),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: _primaryColor, size: 22),
@@ -505,7 +505,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: (iconColor ?? _primaryColor).withOpacity(0.1),
+          color: (iconColor ?? _primaryColor).withAlpha(25),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: iconColor ?? _primaryColor, size: 22),
@@ -649,7 +649,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
       leading: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _primaryColor.withOpacity(0.1),
+          color: _primaryColor.withAlpha(25),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
@@ -675,7 +675,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: badgeColor.withOpacity(0.1),
+                color: badgeColor.withAlpha(25),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

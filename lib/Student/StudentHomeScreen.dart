@@ -130,7 +130,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha(12),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -166,8 +166,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: isFavorite 
-                              ? Colors.red.withOpacity(0.9) 
-                              : Colors.white.withOpacity(0.9),
+                              ? Colors.red.withAlpha(229) 
+                              : Colors.white.withAlpha(229),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -198,7 +198,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withOpacity(0.7),
+                            Colors.black.withAlpha(178),
                             Colors.transparent,
                           ],
                         ),
@@ -210,7 +210,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withOpacity(0.8),
+                              color: Theme.of(context).primaryColor.withAlpha(204),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -227,7 +227,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withAlpha(204),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Row(
@@ -300,7 +300,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.orange.withOpacity(0.3),
+                                    color: Colors.orange.withAlpha(76),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -332,7 +332,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (inCart ? Colors.green : Theme.of(context).primaryColor).withOpacity(0.3),
+                                    color: (inCart ? Colors.green : Theme.of(context).primaryColor).withAlpha(76),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -459,7 +459,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withAlpha(12),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -533,7 +533,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                                    color: Theme.of(context).primaryColor.withAlpha(76),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),

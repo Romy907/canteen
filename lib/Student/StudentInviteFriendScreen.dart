@@ -106,7 +106,7 @@ class StudentInviteFriendScreen extends StatelessWidget {
                 border: Border.all(color: Colors.grey.shade300),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withAlpha(25),
                     blurRadius: 5,
                     spreadRadius: 2,
                     offset: const Offset(0, 2),

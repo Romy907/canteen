@@ -209,7 +209,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -300,7 +300,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -426,7 +426,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        color: Theme.of(context).primaryColor.withAlpha(25),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -456,7 +456,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -519,7 +519,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    color: Theme.of(context).primaryColor.withAlpha(76),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -565,7 +565,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -578,7 +578,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withAlpha(25),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -641,7 +641,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -718,7 +718,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -776,7 +776,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withAlpha(25),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

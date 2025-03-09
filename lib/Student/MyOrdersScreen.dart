@@ -264,7 +264,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: _selectedFilter == option['value']
-                            ? Theme.of(context).primaryColor.withOpacity(0.1)
+                            ? Theme.of(context).primaryColor.withAlpha(25)
                             : Colors.grey[100],
                         shape: BoxShape.circle,
                       ),
@@ -391,7 +391,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(order.status).withOpacity(0.1),
+                            color: _getStatusColor(order.status).withAlpha(25),
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(
@@ -952,7 +952,7 @@ Widget _buildWideItemDetails(BuildContext context, Order order) {
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color:
-                                _getStatusColor(order.status).withOpacity(0.1),
+                                _getStatusColor(order.status).withAlpha(25),
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(
@@ -1022,7 +1022,7 @@ Widget _buildWideItemDetails(BuildContext context, Order order) {
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color:
-                                Theme.of(context).primaryColor.withOpacity(0.1),
+                                Theme.of(context).primaryColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(

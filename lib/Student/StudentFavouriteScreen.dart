@@ -148,7 +148,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -326,7 +326,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -362,7 +362,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withAlpha(178),
                           Colors.transparent,
                         ],
                       ),
@@ -376,7 +376,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
+                              color: Colors.black.withAlpha(153),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -397,7 +397,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
                           padding: const EdgeInsets.all(3),
                           margin: const EdgeInsets.only(left: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withAlpha(229),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Icon(
@@ -427,7 +427,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
                           height: 32,
                           width: 32,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withAlpha(76),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -546,7 +546,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
             Icon(
               Icons.favorite_border,
               size: 100,
-              color: Colors.red.withOpacity(0.3),
+              color: Colors.red.withAlpha(76),
             ),
             const SizedBox(height: 24),
             Text(
