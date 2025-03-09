@@ -627,30 +627,30 @@ class _ManagerReportState extends State<ManagerReport> {
     );
   }
 
-  Widget _buildSummaryCards() {
-    final List<Map<String, dynamic>> summaries = [
-      {
-        'title': 'Total Sales',
-        'value': 'Rs. 11,600',
-        'change': '+8.2%',
-        'isPositive': true,
-        'icon': Icons.trending_up,
-      },
-      {
-        'title': 'Orders',
-        'value': '142',
-        'change': '+12.5%',
-        'isPositive': true,
-        'icon': Icons.shopping_bag,
-      },
-      {
-        'title': 'Avg. Order Value',
-        'value': 'Rs. 816',
-        'change': '-2.1%',
-        'isPositive': false,
-        'icon': Icons.attach_money,
-      },
-    ];
+ Widget _buildSummaryCards() {
+  final List<Map<String, dynamic>> summaries = [
+    {
+      'title': 'Total Sales',
+      'value': 'Rs. 11,600',
+      'change': '+8.2%',
+      'isPositive': true,
+      'icon': Icons.trending_up,
+    },
+    {
+      'title': 'Orders',
+      'value': '142',
+      'change': '+12.5%',
+      'isPositive': true,
+      'icon': Icons.shopping_bag,
+    },
+    {
+      'title': 'Avg. Order Value',
+      'value': 'Rs. 816',
+      'change': '-2.1%',
+      'isPositive': false,
+      'icon': Icons.attach_money,
+    },
+  ];
 
     return SizedBox(
       height: 100,
@@ -688,18 +688,21 @@ class _ManagerReportState extends State<ManagerReport> {
                         fontSize: 14,
                         color: Colors.grey[600],
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Icon(
-                      item['icon'],
-                      color: Theme.of(context).primaryColor,
-                      size: 18,
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+                  ),
+                  Icon(
+                    item['icon'],
+                    color: Theme.of(context).primaryColor,
+                    size: 18,
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
                       item['value'],
                       style: const TextStyle(
                         fontSize: 18,

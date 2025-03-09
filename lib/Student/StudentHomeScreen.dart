@@ -205,6 +205,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        
                         children: [
                           // Category pill
                           Container(
@@ -273,7 +274,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 0),
                     
                     // Price
                     Text(

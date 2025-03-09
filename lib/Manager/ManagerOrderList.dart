@@ -29,7 +29,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
       'time': '10:15 AM',
       'status': 'Pending',
       'estimatedTime': '20-25 min',
-      'paymentMethod': 'Cash on Delivery'
+      'paymentMethod': 'COD'
     },
     {
       'id': 'ORD-002',
@@ -67,7 +67,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
       'time': '11:00 AM',
       'status': 'Pending',
       'estimatedTime': '25-30 min',
-      'paymentMethod': 'Cash on Delivery'
+      'paymentMethod': 'COD'
     },
     {
       'id': 'ORD-005',
@@ -824,6 +824,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
         _filterOrders();
       }
     });
+
         _showNotification(
       message: 'Order ${order['id']} rejected: $reason',
       isSuccess: false,
@@ -889,10 +890,10 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
     );
   }
 
-  void _showFilterOptions() {
+void _showFilterOptions() {
     final List<String> paymentMethods = ['All', 'Cash on Delivery', 'Card', 'UPI'];
     final List<String> sortOptions = ['Newest First', 'Highest Amount', 'Lowest Amount'];
-    
+
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -903,134 +904,278 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
           builder: (context, setState) {
             return Container(
               padding: EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Filter Orders',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Filter Orders',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  Divider(),
-                  
-                  // Payment Method Filter
-                  Text(
-                    'Payment Method',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                        IconButton(
+                          icon: Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: paymentMethods.map((method) {
-                      bool isSelected = _selectedPaymentFilter == (method == 'All' ? null : method);
-                      return FilterChip(
-                        label: Text(method),
-                        selected: isSelected,
-                        checkmarkColor: Colors.white,
-                        selectedColor: Theme.of(context).colorScheme.primary,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : null,
-                        ),
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedPaymentFilter = selected && method != 'All' ? method : null;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  
-                  SizedBox(height: 20),
-                  
-                  // Sort Options
-                  Text(
-                    'Sort By',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                    Divider(),
+
+                    // Payment Method Filter
+                    Text(
+                      'Payment Method',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: sortOptions.map((option) {
-                      bool isSelected = _selectedSortOption == option;
-                      return FilterChip(
-                        label: Text(option),
-                        selected: isSelected,
-                        checkmarkColor: Colors.white,
-                        selectedColor: Theme.of(context).colorScheme.primary,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : null,
-                        ),
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedSortOption = selected ? option : 'Newest First';
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  
-                  SizedBox(height: 24),
-                  
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
+                    SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      children: paymentMethods.map((method) {
+                        bool isSelected = _selectedPaymentFilter == (method == 'All' ? null : method);
+                        return FilterChip(
+                          label: Text(method),
+                          selected: isSelected,
+                          checkmarkColor: Colors.white,
+                          selectedColor: Theme.of(context).colorScheme.primary,
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : null,
+                          ),
+                          onSelected: (selected) {
                             setState(() {
-                              _selectedPaymentFilter = null;
-                              _selectedSortOption = 'Newest First';
+                              _selectedPaymentFilter = selected && method != 'All' ? method : null;
                             });
                           },
-                          child: Text('Reset Filters'),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
+                        );
+                      }).toList(),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    // Sort Options
+                    Text(
+                      'Sort By',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // Apply filters
-                            this.setState(() {
-                              _filterOrders();
+                    ),
+                    SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      children: sortOptions.map((option) {
+                        bool isSelected = _selectedSortOption == option;
+                        return FilterChip(
+                          label: Text(option),
+                          selected: isSelected,
+                          checkmarkColor: Colors.white,
+                          selectedColor: Theme.of(context).colorScheme.primary,
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : null,
+                          ),
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedSortOption = selected ? option : 'Newest First';
                             });
                           },
-                          child: Text('Apply Filters'),
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                        );
+                      }).toList(),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedPaymentFilter = null;
+                                _selectedSortOption = 'Newest First';
+                              });
+                            },
+                            child: Text('Reset Filters'),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              // Apply filters
+                              this.setState(() {
+                                _filterOrders();
+                              });
+                            },
+                            child: Text('Apply Filters'),
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           }
         );
       },
     );
-  }
+}
+  // void _showFilterOptions() {
+  //   final List<String> paymentMethods = ['All', 'Cash on Delivery', 'Card', 'UPI'];
+  //   final List<String> sortOptions = ['Newest First', 'Highest Amount', 'Lowest Amount'];
+    
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //     ),
+  //     builder: (context) {
+  //       return StatefulBuilder(
+  //         builder: (context, setState) {
+  //           return Container(
+  //             padding: EdgeInsets.all(20),
+  //             child: Column(
+  //               mainAxisSize: MainAxisSize.min,
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Row(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                   children: [
+  //                     Text(
+  //                       'Filter Orders',
+  //                       style: TextStyle(
+  //                         fontSize: 18,
+  //                         fontWeight: FontWeight.bold,
+  //                       ),
+  //                     ),
+  //                     IconButton(
+  //                       icon: Icon(Icons.close),
+  //                       onPressed: () => Navigator.pop(context),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 Divider(),
+                  
+  //                 // Payment Method Filter
+  //                 Text(
+  //                   'Payment Method',
+  //                   style: TextStyle(
+  //                     fontWeight: FontWeight.bold,
+  //                     fontSize: 16,
+  //                   ),
+  //                 ),
+  //                 SizedBox(height: 12),
+  //                 Wrap(
+  //                   spacing: 8,
+  //                   children: paymentMethods.map((method) {
+  //                     bool isSelected = _selectedPaymentFilter == (method == 'All' ? null : method);
+  //                     return FilterChip(
+  //                       label: Text(method),
+  //                       selected: isSelected,
+  //                       checkmarkColor: Colors.white,
+  //                       selectedColor: Theme.of(context).colorScheme.primary,
+  //                       labelStyle: TextStyle(
+  //                         color: isSelected ? Colors.white : null,
+  //                       ),
+  //                       onSelected: (selected) {
+  //                         setState(() {
+  //                           _selectedPaymentFilter = selected && method != 'All' ? method : null;
+  //                         });
+  //                       },
+  //                     );
+  //                   }).toList(),
+  //                 ),
+                  
+  //                 SizedBox(height: 20),
+                  
+  //                 // Sort Options
+  //                 Text(
+  //                   'Sort By',
+  //                   style: TextStyle(
+  //                     fontWeight: FontWeight.bold,
+  //                     fontSize: 16,
+  //                   ),
+  //                 ),
+  //                 SizedBox(height: 12),
+  //                 Wrap(
+  //                   spacing: 8,
+  //                   children: sortOptions.map((option) {
+  //                     bool isSelected = _selectedSortOption == option;
+  //                     return FilterChip(
+  //                       label: Text(option),
+  //                       selected: isSelected,
+  //                       checkmarkColor: Colors.white,
+  //                       selectedColor: Theme.of(context).colorScheme.primary,
+  //                       labelStyle: TextStyle(
+  //                         color: isSelected ? Colors.white : null,
+  //                       ),
+  //                       onSelected: (selected) {
+  //                         setState(() {
+  //                           _selectedSortOption = selected ? option : 'Newest First';
+  //                         });
+  //                       },
+  //                     );
+  //                   }).toList(),
+  //                 ),
+                  
+  //                 SizedBox(height: 24),
+                  
+  //                 Row(
+  //                   children: [
+  //                     Expanded(
+  //                       child: OutlinedButton(
+  //                         onPressed: () {
+  //                           setState(() {
+  //                             _selectedPaymentFilter = null;
+  //                             _selectedSortOption = 'Newest First';
+  //                           });
+  //                         },
+  //                         child: Text('Reset Filters'),
+  //                         style: OutlinedButton.styleFrom(
+  //                           padding: EdgeInsets.symmetric(vertical: 16),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     SizedBox(width: 12),
+  //                     Expanded(
+  //                       child: ElevatedButton(
+  //                         onPressed: () {
+  //                           Navigator.pop(context);
+  //                           // Apply filters
+  //                           this.setState(() {
+  //                             _filterOrders();
+  //                           });
+  //                         },
+  //                         child: Text('Apply Filters'),
+  //                         style: ElevatedButton.styleFrom(
+  //                           padding: EdgeInsets.symmetric(vertical: 16),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //             ),
+  //           );
+  //         }
+  //       );
+  //     },
+  //   );
+  // }
 
   void _showRejectDialog(Map<String, dynamic> order) {
     String rejectReason = 'Out of stock';

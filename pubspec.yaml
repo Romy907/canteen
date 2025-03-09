@@ -44,6 +44,7 @@ dependencies:
   shimmer: ^3.0.0
   fl_chart: ^0.70.2
   flutter_animate: ^4.5.2
+  image_picker: ^0.8.4+4
   image_picker: ^1.1.2
   flutter_image_compress: ^2.4.0
 dev_dependencies:
