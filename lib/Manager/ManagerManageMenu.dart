@@ -1,3 +1,5 @@
+import 'package:canteen/Manager/AddMenuItems.dart';
+import 'package:canteen/Services/MenuServices.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
@@ -8,83 +10,141 @@ class ManagerManageMenu extends StatefulWidget {
   _ManagerManageMenuState createState() => _ManagerManageMenuState();
 }
 
+// Complete implementation of the _ManagerManageMenuState class
+
 class _ManagerManageMenuState extends State<ManagerManageMenu> {
+  final MenuService _menuService = MenuService();
   final Color _primaryColor = const Color(0xFF1E88E5);
   final Color _accentColor = const Color(0xFF26C6DA);
   
-  // Simulated data
-  final List<String> _categories = [
-    'All', 'Main Course', 'Appetizers', 'Beverages', 'Desserts', 'Sides'
-  ];
-  
+  // Menu items data from Firebase
+  List<Map<String, dynamic>> _menuItems = [];
+  bool _isLoading = true;
+  bool _isError = false;
+  String _errorMessage = '';
+  bool _isGridView = false;
   String _selectedCategory = 'All';
   String _searchQuery = '';
-  bool _isGridView = false;
-  
-  // Sample menu items data
-  List<Map<String, dynamic>> _menuItems = [];
+  final List<String> _categories = ['All', 'Appetizers', 'Main Course', 'Desserts', 'Beverages'];
 
+  // Current date and user (updated with the latest values)
+  String _currentDate = "2025-03-09 19:21:27";
+  String _currentUserLogin = "navin280123";
+  
   @override
   void initState() {
     super.initState();
-    _loadMenuItems();
-    
-    // Set current date and user info
-    _currentDate = "2025-03-06 18:31:31";
-    _currentUserLogin = "navin280123";
+    _initializeService();
   }
   
-  // Simulated data loading
-  void _loadMenuItems() {
-    _menuItems = List.generate(20, (index) {
-      final random = math.Random();
-      final categories = ['Main Course', 'Appetizers', 'Beverages', 'Desserts', 'Sides'];
-      final category = categories[random.nextInt(categories.length)];
-      
-      return {
-        'id': '${category.substring(0, 3).toUpperCase()}-${100 + index}',
-        'name': _generateItemName(category, index),
-        'price': (5 + random.nextDouble() * 15).toStringAsFixed(2),
-        'category': category,
-        'description': 'Delicious ${category.toLowerCase()} prepared with fresh ingredients.',
-        'image': 'assets/food_${(index % 5) + 1}.jpg', // Placeholder for image path
-        'available': random.nextBool(),
-        'isVegetarian': random.nextBool(),
-        'isPopular': random.nextInt(10) > 7,
-        'lastUpdated': _currentDate,
-      };
+  Future<void> _initializeService() async {
+    setState(() {
+      _isLoading = true;
+      _isError = false;
     });
-  }
-  
-  // Helper to generate realistic food names
-  String _generateItemName(String category, int index) {
-    final mainCourses = ['Grilled Chicken', 'Pasta Carbonara', 'Beef Steak', 'Fish & Chips',
-                         'Vegetable Curry', 'Mushroom Risotto', 'Chicken Burger', 'Lasagna'];
-    final appetizers = ['Garlic Bread', 'Bruschetta', 'Mozzarella Sticks', 'Onion Rings',
-                        'Spring Rolls', 'Chicken Wings', 'Caesar Salad', 'Soup of the Day'];
-    final beverages = ['Fresh Orange Juice', 'Coffee', 'Iced Tea', 'Lemonade',
-                       'Strawberry Shake', 'Mango Smoothie', 'Hot Chocolate', 'Sparkling Water'];
-    final desserts = ['Chocolate Cake', 'Ice Cream', 'Apple Pie', 'Tiramisu',
-                     'Cheesecake', 'Fruit Salad', 'Brownie', 'Crème Brûlée'];
-    final sides = ['French Fries', 'Mashed Potato', 'Steamed Vegetables', 'Rice Pilaf',
-                  'Coleslaw', 'Garden Salad', 'Onion Rings', 'Garlic Bread'];
     
-    List<String> items;
-    switch (category) {
-      case 'Main Course': items = mainCourses; break;
-      case 'Appetizers': items = appetizers; break;
-      case 'Beverages': items = beverages; break;
-      case 'Desserts': items = desserts; break;
-      case 'Sides': items = sides; break;
-      default: items = mainCourses;
+    try {
+      // Initialize MenuService
+      await _menuService.initialize();
+      // Then load menu items
+      await _loadMenuItemsFromDatabase();
+    } catch (e) {
+      print('Error initializing service: $e');
+      setState(() {
+        _isLoading = false;
+        _isError = true;
+        _errorMessage = 'Failed to initialize: $e';
+      });
+      
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _initializeService,
+              textColor: Colors.white,
+            ),
+          ),
+        );
+      }
+    }
+  }
+  Widget _buildErrorView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 80,
+            color: Colors.red[300],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Something went wrong',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.red[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              _errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _initializeService,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Future<void> _loadMenuItemsFromDatabase() async {
+    if (!_menuService.isInitialized) {
+      await _initializeService();
+      return;
     }
     
-    return items[index % items.length];
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final items = await _menuService.fetchMenuItems();
+      setState(() {
+        _menuItems = items;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _isError = true;
+        _errorMessage = 'Failed to load menu items: $e';
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading menu items: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
-  
-  // Current date and user (passed from previous screen)
-  String _currentDate = '';
-  String _currentUserLogin = '';
   
   // Filter menu items based on category and search
   List<Map<String, dynamic>> get _filteredMenuItems {
@@ -93,32 +153,32 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
       if (_selectedCategory != 'All' && item['category'] != _selectedCategory) {
         return false;
       }
-      
+
       // Filter by search query
       if (_searchQuery.isNotEmpty) {
         final name = item['name'].toString().toLowerCase();
         final id = item['id'].toString().toLowerCase();
         final category = item['category'].toString().toLowerCase();
         final query = _searchQuery.toLowerCase();
-        
-        return name.contains(query) || id.contains(query) || category.contains(query);
+
+        return name.contains(query) ||
+            id.contains(query) ||
+            category.contains(query);
       }
-      
+
       return true;
     }).toList();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Menu Items', style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white)),
+        title: const Text('Manage Menu Items', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: _primaryColor,
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view,
-            color: Colors.white,),
+            icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view, color: Colors.white),
             onPressed: () {
               setState(() {
                 _isGridView = !_isGridView;
@@ -127,7 +187,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
             tooltip: _isGridView ? 'Switch to List View' : 'Switch to Grid View',
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list,color: Colors.white,),
+            icon: const Icon(Icons.filter_list, color: Colors.white),
             onPressed: () {
               _showFilterOptions();
             },
@@ -135,26 +195,32 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditItemDialog(null),
+      floatingActionButton: _isError ? null : FloatingActionButton.extended(
+        onPressed: () => _navigateToAddEditScreen(null),
         backgroundColor: _accentColor,
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Add Item'),
         tooltip: 'Add New Menu Item',
       ),
-      body: Column(
-        children: [
-          _buildSearchBar(),
-          _buildCategorySelector(),
-          _buildItemCountHeader(),
-          Expanded(
-            child: _isGridView 
-                ? _buildGridView() 
-                : _buildListView(),
-          ),
-        ],
-      ),
+      body: _isError
+          ? _buildErrorView()
+          : _isLoading
+              ? Center(child: CircularProgressIndicator(color: _primaryColor))
+              : Column(
+                  children: [
+                    _buildSearchBar(),
+                    _buildCategorySelector(),
+                    _buildItemCountHeader(),
+                    Expanded(
+                      child: _isGridView 
+                          ? _buildGridView() 
+                          : _buildListView(),
+                    ),
+                  ],
+                ),
     );
   }
+  
 
   Widget _buildSearchBar() {
     return Container(
@@ -214,7 +280,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = _selectedCategory == category;
-          
+
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: ChoiceChip(
@@ -230,7 +296,9 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
               backgroundColor: Colors.white.withOpacity(0.2),
               selectedColor: Colors.white,
               labelStyle: TextStyle(
-                color: isSelected ? _primaryColor : const Color.fromARGB(255, 2, 2, 2),
+                color: isSelected
+                    ? _primaryColor
+                    : const Color.fromARGB(255, 2, 2, 2),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -267,8 +335,12 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                 value: 'Name',
                 underline: Container(),
                 icon: const Icon(Icons.keyboard_arrow_down),
-                items: ['Name', 'Price: Low to High', 'Price: High to Low', 'Category']
-                    .map((String value) {
+                items: [
+                  'Name',
+                  'Price: Low to High',
+                  'Price: High to Low',
+                  'Category'
+                ].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -287,11 +359,11 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
 
   Widget _buildListView() {
     final filteredItems = _filteredMenuItems;
-    
+
     if (filteredItems.isEmpty) {
       return _buildEmptyState();
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 80), // Space for FAB
       itemCount: filteredItems.length,
@@ -304,11 +376,11 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
 
   Widget _buildGridView() {
     final filteredItems = _filteredMenuItems;
-    
+
     if (filteredItems.isEmpty) {
       return _buildEmptyState();
     }
-    
+
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 80), // Space for FAB
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -325,9 +397,110 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
     );
   }
 
+  Widget _buildListItemImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: 60,
+        height: 60,
+        color: Colors.grey[200],
+        child: Center(
+          child: Icon(
+            Icons.restaurant,
+            color: _primaryColor,
+            size: 30,
+          ),
+        ),
+      );
+    }
+
+    return Image.network(
+      imageUrl,
+      width: 60,
+      height: 60,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: 60,
+          height: 60,
+          color: Colors.grey[200],
+          child: Center(
+            child: Icon(Icons.broken_image, size: 30, color: Colors.grey),
+          ),
+        );
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          width: 60,
+          height: 60,
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+              strokeWidth: 2,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGridItemImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        height: 120,
+        width: double.infinity,
+        color: Colors.grey[200],
+        child: Center(
+          child: Icon(
+            Icons.restaurant,
+            size: 40,
+            color: _primaryColor.withOpacity(0.5),
+          ),
+        ),
+      );
+    }
+
+    return Image.network(
+      imageUrl,
+      height: 120,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          height: 120,
+          width: double.infinity,
+          color: Colors.grey[200],
+          child: Center(
+            child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+          ),
+        );
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          height: 120,
+          width: double.infinity,
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildListItem(Map<String, dynamic> item) {
     final bool isAvailable = item['available'] as bool;
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -335,18 +508,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
         contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Container(
-            width: 60,
-            height: 60,
-            color: Colors.grey[200],
-            child: Center(
-              child: Icon(
-                Icons.restaurant,
-                color: _primaryColor,
-                size: 30,
-              ),
-            ),
-          ),
+          child: _buildListItemImage(item['image'] as String?),
         ),
         title: Row(
           children: [
@@ -393,7 +555,8 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(4),
@@ -427,7 +590,9 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
             Row(
               children: [
                 Icon(
-                  isAvailable ? Icons.check_circle_outline : Icons.cancel_outlined,
+                  isAvailable
+                      ? Icons.check_circle_outline
+                      : Icons.cancel_outlined,
                   size: 14,
                   color: isAvailable ? Colors.green : Colors.red,
                 ),
@@ -441,7 +606,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                 ),
                 const Spacer(),
                 Text(
-                  'ID: ${item['id']}',
+                  'ID: ${item['id'].toString().substring(0, math.min(item['id'].toString().length, 8))}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[500],
@@ -455,7 +620,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
           icon: const Icon(Icons.more_vert),
           onSelected: (value) {
             if (value == 'edit') {
-              _showAddEditItemDialog(item);
+              _navigateToAddEditScreen(item);
             } else if (value == 'delete') {
               _showDeleteConfirmation(item);
             } else if (value == 'toggle') {
@@ -505,7 +670,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
 
   Widget _buildGridItem(Map<String, dynamic> item) {
     final bool isAvailable = item['available'] as bool;
-    
+
     return Card(
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -517,18 +682,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
           children: [
             Stack(
               children: [
-                Container(
-                  height: 120,
-                  width: double.infinity,
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: Icon(
-                      Icons.restaurant,
-                      size: 40,
-                      color: _primaryColor.withOpacity(0.5),
-                    ),
-                  ),
-                ),
+                _buildGridItemImage(item['image'] as String?),
                 Positioned(
                   top: 8,
                   right: 8,
@@ -539,11 +693,12 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                         color: Colors.black.withOpacity(0.5),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                      child: const Icon(Icons.more_vert,
+                          color: Colors.white, size: 20),
                     ),
                     onSelected: (value) {
                       if (value == 'edit') {
-                        _showAddEditItemDialog(item);
+                        _navigateToAddEditScreen(item);
                       } else if (value == 'delete') {
                         _showDeleteConfirmation(item);
                       } else if (value == 'toggle') {
@@ -566,11 +721,15 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                         child: Row(
                           children: [
                             Icon(
-                              isAvailable ? Icons.visibility_off : Icons.visibility,
+                              isAvailable
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
-                            Text(isAvailable ? 'Mark Unavailable' : 'Mark Available'),
+                            Text(isAvailable
+                                ? 'Mark Unavailable'
+                                : 'Mark Available'),
                           ],
                         ),
                       ),
@@ -593,7 +752,8 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                       color: Colors.black.withOpacity(0.4),
                       alignment: Alignment.center,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(4),
@@ -656,7 +816,8 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(4),
@@ -708,7 +869,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => _showAddEditItemDialog(null),
+            onPressed: () => _navigateToAddEditScreen(null),
             icon: const Icon(Icons.add),
             label: const Text('Add Menu Item'),
             style: ElevatedButton.styleFrom(
@@ -849,6 +1010,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                       child: const Text('Apply Filters'),
                     ),
                   ),
+                  // Continuing the _ManagerManageMenuState class from line 900 (completing _showFilterOptions method)
                 ],
               ),
             );
@@ -858,293 +1020,23 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
     );
   }
 
-  void _showAddEditItemDialog(Map<String, dynamic>? item) {
-    final bool isEditing = item != null;
-    
-    // Form controllers
-    final nameController = TextEditingController(text: isEditing ? item['name'] as String : '');
-    final priceController = TextEditingController(text: isEditing ? item['price'] as String : '');
-    final descriptionController = TextEditingController(text: isEditing ? item['description'] as String : '');
-    
-    // Initial values
-    String selectedCategory = isEditing ? item['category'] as String : 'Main Course';
-    bool isAvailable = isEditing ? item['available'] as bool : true;
-    bool isVegetarian = isEditing ? item['isVegetarian'] as bool : false;
-    bool isPopular = isEditing ? item['isPopular'] as bool : false;
-    
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text(isEditing ? 'Edit Menu Item' : 'Add New Menu Item'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image placeholder/picker
-                    Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            height: 120,
-                            width: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.restaurant,
-                              size: 60,
-                              color: Colors.grey[400],
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: CircleAvatar(
-                              backgroundColor: _accentColor,
-                              radius: 18,
-                              child: IconButton(
-                                icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
-                                onPressed: () {
-                                  // Image picker logic would go here
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Item ID (only for editing)
-                                        // Item ID (only for editing)
-                    if (isEditing)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Item ID: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            Text(
-                              item!['id'] as String,
-                              style: TextStyle(
-                                fontFamily: 'monospace',
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    
-                    // Name field
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Item Name*',
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter item name',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Price field
-                    TextField(
-                      controller: priceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Price*',
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter price',
-                        prefixText: '\$ ',
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Description field
-                    TextField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter item description',
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Category dropdown
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Category*',
-                        border: OutlineInputBorder(),
-                      ),
-                      value: selectedCategory,
-                      items: ['Main Course', 'Appetizers', 'Beverages', 'Desserts', 'Sides']
-                          .map((category) {
-                        return DropdownMenuItem(
-                          value: category,
-                          child: Text(category),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedCategory = value;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Availability toggle
-                    SwitchListTile(
-                      title: const Text('Available'),
-                      subtitle: const Text('Show this item on the menu'),
-                      value: isAvailable,
-                      activeColor: _primaryColor,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (value) {
-                        setState(() {
-                          isAvailable = value;
-                        });
-                      },
-                    ),
-                    
-                    // Vegetarian toggle
-                    SwitchListTile(
-                      title: const Text('Vegetarian'),
-                      subtitle: const Text('Mark as vegetarian option'),
-                      value: isVegetarian,
-                      activeColor: _primaryColor,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (value) {
-                        setState(() {
-                          isVegetarian = value;
-                        });
-                      },
-                    ),
-                    
-                    // Popular toggle
-                    SwitchListTile(
-                      title: const Text('Popular Item'),
-                      subtitle: const Text('Highlight as popular choice'),
-                      value: isPopular,
-                      activeColor: _primaryColor,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (value) {
-                        setState(() {
-                          isPopular = value;
-                        });
-                      },
-                    ),
-                    
-                    if (isEditing) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Last Updated: ${item!['lastUpdated'] as String}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // Validate inputs
-                    if (nameController.text.trim().isEmpty ||
-                        priceController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please fill all required fields'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      return;
-                    }
-                    
-                    // Process form data
-                    final Map<String, dynamic> updatedItem = {
-                      'name': nameController.text.trim(),
-                      'price': priceController.text.trim(),
-                      'description': descriptionController.text.trim(),
-                      'category': selectedCategory,
-                      'available': isAvailable,
-                      'isVegetarian': isVegetarian,
-                      'isPopular': isPopular,
-                      'lastUpdated': _currentDate,
-                    };
-                    
-                    if (isEditing) {
-                      // Update existing item
-                      updatedItem['id'] = item!['id'] as String;
-                      updatedItem['image'] = item['image'] as String;
-                      
-                      setState(() {
-                        final index = _menuItems.indexWhere(
-                          (element) => element['id'] == item['id'],
-                        );
-                        if (index != -1) {
-                          _menuItems[index] = updatedItem;
-                        }
-                      });
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${updatedItem['name']} updated successfully'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } else {
-                      // Add new item
-                      final newId = 'ITEM-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 13)}';
-                      updatedItem['id'] = newId;
-                      updatedItem['image'] = 'assets/food_placeholder.jpg';
-                      
-                      setState(() {
-                        _menuItems.add(updatedItem);
-                      });
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${updatedItem['name']} added successfully'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                    
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _accentColor,
-                  ),
-                  child: Text(isEditing ? 'Update' : 'Add'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+  // Navigate to the add/edit menu item screen
+  void _navigateToAddEditScreen(Map<String, dynamic>? item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEditMenuItemScreen(
+          item: item,
+          currentDate: _currentDate,
+          userLogin: _currentUserLogin,
+        ),
+      ),
+    ).then((result) {
+      if (result == true) {
+        // Refresh the list if changes were made
+        _loadMenuItemsFromDatabase();
+      }
+    });
   }
 
   void _showItemDetails(Map<String, dynamic> item) {
@@ -1181,18 +1073,38 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      color: Colors.grey[200],
-                      child: Center(
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 40,
-                          color: _primaryColor.withOpacity(0.5),
-                        ),
-                      ),
-                    ),
+                    child: item['image'] != null &&
+                            (item['image'] as String).isNotEmpty
+                        ? Image.network(
+                            item['image'] as String,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 100,
+                                height: 100,
+                                color: Colors.grey[200],
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 40,
+                                  color: Colors.grey[400],
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            width: 100,
+                            height: 100,
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: Icon(
+                                Icons.restaurant,
+                                size: 40,
+                                color: _primaryColor.withOpacity(0.5),
+                              ),
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -1212,7 +1124,8 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                             ),
                             if (item['isPopular'] as bool)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.orange,
                                   borderRadius: BorderRadius.circular(20),
@@ -1241,7 +1154,8 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(20),
@@ -1254,7 +1168,8 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                             const SizedBox(width: 8),
                             if (item['isVegetarian'] as bool)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.green[100],
                                   borderRadius: BorderRadius.circular(20),
@@ -1285,9 +1200,9 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Item status
               Container(
                 padding: const EdgeInsets.all(12),
@@ -1322,9 +1237,9 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Description
               const Text(
                 'Description',
@@ -1335,12 +1250,12 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
               ),
               const SizedBox(height: 8),
               Text(
-                item['description'] as String,
+                item['description'] as String? ?? 'No description available',
                 style: const TextStyle(fontSize: 16),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Item details
               const Text(
                 'Item Details',
@@ -1351,11 +1266,13 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
               ),
               const SizedBox(height: 8),
               _buildDetailRow('Item ID', item['id'] as String),
-              _buildDetailRow('Last Updated', item['lastUpdated'] as String),
-              _buildDetailRow('Updated By', _currentUserLogin),
-              
+              _buildDetailRow('Last Updated',
+                  item['lastUpdated'] as String? ?? _currentDate),
+              _buildDetailRow('Updated By',
+                  item['updatedBy'] as String? ?? _currentUserLogin),
+
               const Spacer(),
-              
+
               // Action buttons
               Row(
                 children: [
@@ -1363,7 +1280,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         Navigator.pop(context);
-                        _showAddEditItemDialog(item);
+                        _navigateToAddEditScreen(item);
                       },
                       icon: const Icon(Icons.edit),
                       label: const Text('Edit Item'),
@@ -1432,6 +1349,36 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
     );
   }
 
+  void _toggleItemAvailability(Map<String, dynamic> item) async {
+    try {
+      final bool newStatus = !(item['available'] as bool);
+      await _menuService.toggleItemAvailability(
+          item['id'],
+          newStatus,
+          _currentDate, // "2025-03-09 18:29:57"
+          _currentUserLogin // "navin280123"
+          );
+
+      // Refresh the list
+      _loadMenuItemsFromDatabase();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '${item['name']} marked as ${newStatus ? 'available' : 'unavailable'}'),
+          backgroundColor: newStatus ? Colors.green : Colors.orange,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating item: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _showDeleteConfirmation(Map<String, dynamic> item) {
     showDialog(
       context: context,
@@ -1447,29 +1394,43 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  _menuItems.removeWhere(
-                    (element) => element['id'] == item['id'],
-                  );
-                });
-                Navigator.of(context).pop();
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${item['name']} has been deleted'),
-                    backgroundColor: Colors.red,
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      textColor: Colors.white,
-                      onPressed: () {
-                        setState(() {
-                          _menuItems.add(item);
-                        });
-                      },
+              onPressed: () async {
+                try {
+                  await _menuService.deleteMenuItem(item['id']);
+                  Navigator.of(context).pop();
+
+                  // Refresh the list
+                  _loadMenuItemsFromDatabase();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${item['name']} has been deleted'),
+                      backgroundColor: Colors.red,
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          // This would require storing the deleted item and re-adding it
+                          // For now, we'll just display a message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Restore functionality would be implemented here'),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } catch (e) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting item: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red,
@@ -1480,27 +1441,5 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
         );
       },
     );
-  }
-
-  void _toggleItemAvailability(Map<String, dynamic> item) {
-    setState(() {
-      final index = _menuItems.indexWhere(
-        (element) => element['id'] == item['id'],
-      );
-      if (index != -1) {
-        final bool newStatus = !(_menuItems[index]['available'] as bool);
-        _menuItems[index]['available'] = newStatus;
-        _menuItems[index]['lastUpdated'] = _currentDate;
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${item['name']} marked as ${newStatus ? 'available' : 'unavailable'}',
-            ),
-            backgroundColor: newStatus ? Colors.green : Colors.orange,
-          ),
-        );
-      }
-    });
   }
 }

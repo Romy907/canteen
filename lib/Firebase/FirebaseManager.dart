@@ -44,6 +44,11 @@ class FirebaseManager {
       DatabaseReference userRef =
           FirebaseDatabase.instance.ref().child('User').child(sanitizedEmail);
       DataSnapshot snapshot = await userRef.get();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      Map<dynamic, dynamic> userData = snapshot.value as Map<dynamic, dynamic>;
+      userData.forEach((key, value) async {
+        await prefs.setString(key, value.toString());
+      });
       print('User data snapshot: ${snapshot.value}');
 
       if (snapshot.exists && snapshot.value != null) {
