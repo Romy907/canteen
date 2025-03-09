@@ -291,7 +291,7 @@ class _ManagerReportState extends State<ManagerReport> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withAlpha(25),
+                color: Colors.grey.withOpacity(0.1),
                 spreadRadius: 1,
                 blurRadius: 4,
                 offset: const Offset(0, 1),
@@ -333,7 +333,7 @@ class _ManagerReportState extends State<ManagerReport> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(25),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 1),
@@ -387,7 +387,7 @@ class _ManagerReportState extends State<ManagerReport> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(25),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -489,7 +489,7 @@ class _ManagerReportState extends State<ManagerReport> {
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: 6000,
-                  color: Colors.grey.withAlpha(25),
+                  color: Colors.grey.withOpacity(0.1),
                 ),
               ),
             ],
@@ -500,7 +500,7 @@ class _ManagerReportState extends State<ManagerReport> {
           checkToShowHorizontalLine: (value) => value % 1000 == 0,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.grey.withAlpha(51),
+              color: Colors.grey.withOpacity(0.2),
               strokeWidth: 1,
               dashArray: [5, 5],
             );
@@ -524,7 +524,7 @@ class _ManagerReportState extends State<ManagerReport> {
           horizontalInterval: 1000,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.grey.withAlpha(51),
+              color: Colors.grey.withOpacity(0.2),
               strokeWidth: 1,
               dashArray: [5, 5],
             );
@@ -594,7 +594,7 @@ class _ManagerReportState extends State<ManagerReport> {
             dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Theme.of(context).primaryColor.withAlpha(51),
+              color: Theme.of(context).primaryColor.withOpacity(0.2),
             ),
           ),
         ],
@@ -627,30 +627,30 @@ class _ManagerReportState extends State<ManagerReport> {
     );
   }
 
- Widget _buildSummaryCards() {
-  final List<Map<String, dynamic>> summaries = [
-    {
-      'title': 'Total Sales',
-      'value': 'Rs. 11,600',
-      'change': '+8.2%',
-      'isPositive': true,
-      'icon': Icons.trending_up,
-    },
-    {
-      'title': 'Orders',
-      'value': '142',
-      'change': '+12.5%',
-      'isPositive': true,
-      'icon': Icons.shopping_bag,
-    },
-    {
-      'title': 'Avg. Order Value',
-      'value': 'Rs. 816',
-      'change': '-2.1%',
-      'isPositive': false,
-      'icon': Icons.attach_money,
-    },
-  ];
+  Widget _buildSummaryCards() {
+    final List<Map<String, dynamic>> summaries = [
+      {
+        'title': 'Total Sales',
+        'value': 'Rs. 11,600',
+        'change': '+8.2%',
+        'isPositive': true,
+        'icon': Icons.trending_up,
+      },
+      {
+        'title': 'Orders',
+        'value': '142',
+        'change': '+12.5%',
+        'isPositive': true,
+        'icon': Icons.shopping_bag,
+      },
+      {
+        'title': 'Avg. Order Value',
+        'value': 'Rs. 816',
+        'change': '-2.1%',
+        'isPositive': false,
+        'icon': Icons.attach_money,
+      },
+    ];
 
     return SizedBox(
       height: 100,
@@ -668,7 +668,7 @@ class _ManagerReportState extends State<ManagerReport> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withAlpha(25),
+                  color: Colors.grey.withOpacity(0.1),
                   spreadRadius: 1,
                   blurRadius: 4,
                   offset: const Offset(0, 2),
@@ -688,21 +688,18 @@ class _ManagerReportState extends State<ManagerReport> {
                         fontSize: 14,
                         color: Colors.grey[600],
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  Icon(
-                    item['icon'],
-                    color: Theme.of(context).primaryColor,
-                    size: 18,
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
+                    Icon(
+                      item['icon'],
+                      color: Theme.of(context).primaryColor,
+                      size: 18,
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
                       item['value'],
                       style: const TextStyle(
                         fontSize: 18,
@@ -713,8 +710,8 @@ class _ManagerReportState extends State<ManagerReport> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: item['isPositive']
-                            ? Colors.green.withAlpha(25)
-                            : Colors.red.withAlpha(25),
+                            ? Colors.green.withOpacity(0.1)
+                            : Colors.red.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -752,7 +749,7 @@ class _ManagerReportState extends State<ManagerReport> {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withAlpha(12),
+                  color: Colors.grey.withOpacity(0.05),
                   spreadRadius: 1,
                   blurRadius: 3,
                 ),
