@@ -1,4 +1,6 @@
+import 'package:canteen/Services/UniversityServices.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentUniversitySearch extends StatefulWidget {
   final Function(String) onUniversitySelected;
@@ -6,45 +8,33 @@ class StudentUniversitySearch extends StatefulWidget {
   StudentUniversitySearch({required this.onUniversitySelected});
 
   @override
-  _StudentUniversitySearchState  createState() => _StudentUniversitySearchState ();
+  _StudentUniversitySearchState createState() =>
+      _StudentUniversitySearchState();
 }
 
 class _StudentUniversitySearchState extends State<StudentUniversitySearch> {
   TextEditingController _searchController = TextEditingController();
-  List<String> _universityList = [
-    'California Institute of Technology',
-    'Harvard University',
-    'Massachusetts Institute of Technology',
-    'Princeton University',
-    'Stanford University',
-    'University of California, Berkeley',
-    'University of Oxford',
-    'University of Cambridge', 
-    'Yale University',
-  ];
+  List<String> _universityList = [];
   List<String> _filteredUniversityList = [];
-
-  // Future<void> _fetchUniversities() async {
-  //   DatabaseReference ref = FirebaseDatabase.instance.ref().child('universities');
-  //   DatabaseEvent snapshot = await ref.once();
-  //   List<String> universities = [];
-  //   Map<dynamic, dynamic> universityData = snapshot.snapshot.value as Map<dynamic, dynamic>;
-  //   universityData.forEach((key, value) {
-  //     universities.add(value);
-  //   });
-
-  //   setState(() {
-  //     _universityList = universities;
-  //     _filteredUniversityList = universities;
-  //   });
-  // }
 
   @override
   void initState() {
+    _getUniversityList();
     super.initState();
-    // _fetchUniversities();
   }
 
+  Future<void> _getUniversityList() async {
+    final universityList = await UniversityServices().fetchUniversityNames();
+    print(universityList);
+    setState(() {
+      _universityList = universityList;
+      _filteredUniversityList = universityList;
+    });
+  }
+  Future<void> _saveToPreferences(String university) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('selectedUniversity', university);
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,17 +42,18 @@ class _StudentUniversitySearchState extends State<StudentUniversitySearch> {
         title: TextField(
           controller: _searchController,
           decoration: InputDecoration(
-        hintText: 'Search University',
-        hintStyle: TextStyle(color: Colors.white54),
-        prefixIcon: Icon(Icons.search, color: Colors.white),
-        border: InputBorder.none,
+            hintText: 'Search University',
+            hintStyle: TextStyle(color: Colors.white54),
+            prefixIcon: Icon(Icons.search, color: Colors.white),
+            border: InputBorder.none,
           ),
           onChanged: (value) {
-        setState(() {
-          _filteredUniversityList = _universityList
-          .where((university) => university.toLowerCase().contains(value.toLowerCase()))
-          .toList();
-        });
+            setState(() {
+              _filteredUniversityList = _universityList
+                  .where((university) =>
+                      university.toLowerCase().contains(value.toLowerCase()))
+                  .toList();
+            });
           },
           style: TextStyle(color: Colors.white),
         ),
@@ -76,9 +67,14 @@ class _StudentUniversitySearchState extends State<StudentUniversitySearch> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(_filteredUniversityList[index]),
-                  onTap: () {
-                    widget.onUniversitySelected(_filteredUniversityList[index]);
-                    Navigator.pop(context);
+                  onTap: () async {
+                    widget.onUniversitySelected.call(_filteredUniversityList[index]);
+
+                    // Save to SharedPreferences
+                    _saveToPreferences(_filteredUniversityList[index]);
+
+                    // Return the selected university to the previous screen
+                    Navigator.pop(context, _filteredUniversityList[index]);
                   },
                 );
               },

@@ -393,7 +393,7 @@ class _StudentCartScreenState extends State<StudentCartScreen>
             // Food image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
+              child: Image.network(
                 item["image"],
                 width: 80,
                 height: 80,

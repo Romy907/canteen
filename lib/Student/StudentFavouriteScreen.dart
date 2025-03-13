@@ -343,7 +343,7 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
                 SizedBox(
                   height: 80,
                   width: double.infinity,
-                  child: Image.asset(
+                  child: Image.network(
                     item["image"],
                     fit: BoxFit.cover,
                   ),

@@ -1,9 +1,11 @@
+import 'package:canteen/Services/StudentMenuServices.dart';
 import 'package:canteen/Student/StudentUniversitySearch.dart';
 import 'package:flutter/material.dart';
 import 'package:canteen/Student/StudentHomeScreen.dart';
 import 'package:canteen/Student/StudentCartScreen.dart';
 import 'package:canteen/Student/StudentFavouriteScreen.dart';
 import 'package:canteen/Student/StudentProfileScreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentScreen extends StatefulWidget {
   @override
@@ -14,52 +16,56 @@ class _StudentScreenState extends State<StudentScreen> {
   int _selectedIndex = 0;
   int cartCount = 0;
   int favoriteCount = 0;
-  String location = "New York"; 
+  String location = "";
   List<Map<String, dynamic>> cartItems = [];
   List<Map<String, dynamic>> favoriteItems = [];
-  List<Map<String, dynamic>> foodItems = [
-    {
-      "image": "assets/img/momo.jpeg",
-      "name": "Momos",
-      "price": "70",
-      "category": "Fast Food",
-      "type": "Non-Veg"
-    },
-    {
-      "image": "assets/img/pizza.jpeg",
-      "name": "Pizza",
-      "price": "110",
-      "category": "Fast Food",
-      "type": "Veg"
-    },
-    {
-      "image": "assets/img/lassi.jpeg",
-      "name": "Lassi",
-      "price": "80",
-      "category": "Fast Food",
-      "type": "Veg"
-    },
-    {
-      "image": "assets/img/icecream.jpeg",
-      "name": "Ice Cream",
-      "price": "40",
-      "category": "Dessert",
-      "type": "Veg"
-    },
-    {
-      "image": "assets/img/fried_rice.jpeg",
-      "name": "Fried Rice",
-      "price": "60",
-      "category": "Main Course",
-      "type": "Veg"
-    },
-  ];
+  List<Map<String, dynamic>> foodItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Load initial data
+    _setSelectedUniversity();
+    _fetchFoodItems();
+  }
 
   void _updateCounts() {
     setState(() {
       cartCount = cartItems.length;
       favoriteCount = favoriteItems.length;
     });
+  }
+
+  Future<void> _setSelectedUniversity() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      location = prefs.getString('selectedUniversity') ?? "";
+      print("Current location set to: $location");
+    });
+  }
+
+  Future<void> _saveSelectedUniversity(String university) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedUniversity', university);
+    print("Saved location to SharedPreferences: $university");
+  }
+
+  Future<void> _fetchFoodItems() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedIds = prefs.getString('stores');
+    RegExp regExp = RegExp(r'\d+');
+    List<String> ids = regExp.allMatches(storedIds!).map((match) => match.group(0)!).toList();
+    print("Store IDs: $ids");
+    
+    try {
+      List<Map<String, dynamic>> items = await StudentMenuServices().getMenuItems(ids);
+      setState(() {
+        foodItems = items;
+        print("Fetched ${foodItems.length} food items");
+      });
+    } catch (e) {
+      print("Error fetching food items: $e");
+    }
   }
 
   List<Widget> _widgetOptions() => <Widget>[
@@ -82,72 +88,72 @@ class _StudentScreenState extends State<StudentScreen> {
         StudentProfileScreen(),
       ];
 
+  void _navigateToUniversitySearch() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StudentUniversitySearch(
+          onUniversitySelected: (selectedUniversity) async {
+            // This callback might not be needed since we're handling the result below
+            // But keeping it for backward compatibility
+          },
+        ),
+      ),
+    );
+    
+    // Handle the result when returning from StudentUniversitySearch
+    if (result != null && result is String) {
+      setState(() {
+        location = result;
+      });
+      await _saveSelectedUniversity(result);
+      await _fetchFoodItems(); // Refresh food items based on new location
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Row(
-            children: [
+          children: [
             Container(
               padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                color: Colors.black26,
-                offset: Offset(0, 2),
-                blurRadius: 4,
-                ),
-              ],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    offset: Offset(0, 2),
+                    blurRadius: 4,
+                  ),
+                ],
               ),
               child: Text(
-              "Canteen",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
+                "Canteen",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
               ),
             ),
             Spacer(),
             GestureDetector(
-              onTap: () {
-              // Handle location icon tap
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => StudentUniversitySearch(
-                    onUniversitySelected: (selectedUniversity) {
-                      setState(() {
-                        location = selectedUniversity;
-                      });
-                    },
-                  )),
-                );
-              },
+              onTap: _navigateToUniversitySearch,
               child: Icon(Icons.location_on, color: const Color.fromARGB(255, 0, 0, 0)),
             ),
             SizedBox(width: 5),
             GestureDetector(
-              onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => StudentUniversitySearch(
-                onUniversitySelected: (selectedUniversity) {
-                  setState(() {
-                  location = selectedUniversity;
-                  });
-                },
-                )),
-              );
-              },
+              onTap: _navigateToUniversitySearch,
               child: Container(
-              constraints: BoxConstraints(maxWidth: 100), // Adjust the maxWidth as needed
-              child: Text(
-                location,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0), fontSize: 16),
-              ),
+                constraints: BoxConstraints(maxWidth: 100),
+                child: Text(
+                  location.isEmpty ? "Select Location" : location,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0), fontSize: 16),
+                ),
               ),
             ),
           ],

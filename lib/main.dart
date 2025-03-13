@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
             return CircularProgressIndicator();
           } else {
             final prefs = snapshot.data as SharedPreferences;
+            print('SharedPreferences data: ${prefs.getKeys().map((key) => '$key: ${prefs.get(key)}').join(', ')}');
             final role = prefs.getString('userRole');
             if (role == 'student') {
               return StudentScreen();

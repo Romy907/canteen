@@ -1,5 +1,6 @@
 import 'package:canteen/Student/CheckOutScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'dart:ui';
 
 class StudentHomeScreen extends StatefulWidget {
@@ -22,10 +23,11 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTickerProviderStateMixin {
   String selectedCategory = 'All';
-  late List<String> categories;
+  late List<String> categories = ['All'];
   String searchQuery = '';
   late AnimationController _animationController;
   late Animation<double> _animation;
+  bool _isLoading = true;
   
   final TextEditingController _searchController = TextEditingController();
 
@@ -41,14 +43,50 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
       curve: Curves.easeInOut,
     );
     _animationController.forward();
+    print("Initial food items: ${widget.foodItems.length}");
+    _updateCategories();
     
-    categories = ['All'];
-    categories.addAll(
-      widget.foodItems
-          .map((item) => item['category'] as String)
-          .toSet()
-          .toList(),
-    );
+    // Set loading state based on whether we have items
+    setState(() {
+      _isLoading = widget.foodItems.isEmpty;
+    });
+  }
+
+  void _updateCategories() {
+    if (widget.foodItems.isEmpty) {
+      setState(() {
+        categories = ['All'];
+      });
+      return;
+    }
+    
+    // Extract unique categories from food items
+    final Set<String> uniqueCategories = widget.foodItems
+        .map((item) => item['category'] as String)
+        .toSet();
+    
+    setState(() {
+      categories = ['All', ...uniqueCategories];
+      _isLoading = false; // Data is loaded
+    });
+    print("Categories updated: $categories");
+  }
+  
+  @override
+  void didUpdateWidget(StudentHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Check if food items have changed
+    if (widget.foodItems != oldWidget.foodItems) {
+      print("Food items updated: ${widget.foodItems.length}");
+      
+      setState(() {
+        // If we're getting new data, show loading state briefly
+        _isLoading = widget.foodItems.isEmpty;
+      });
+      
+      _updateCategories();
+    }
   }
 
   @override
@@ -57,7 +95,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
     _searchController.dispose();
     super.dispose();
   }
-
+  
   List<Map<String, dynamic>> get filteredFoodItems {
     return widget.foodItems
         .where((item) => 
@@ -94,26 +132,152 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
     });
   }
   
- void _buyNow(Map<String, dynamic> foodItem) {
-  // Add to cart if not already added
-  bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
-  if (!inCart) {
-    setState(() {
-      widget.cartItems.add(foodItem);
-      widget.updateCounts();
-    });
-  }
-  
-  // Navigate directly to checkout with this item
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => CheckOutScreen(
-        items: [foodItem],
-        isBuyNow: true,
+  void _buyNow(Map<String, dynamic> foodItem) {
+    // Add to cart if not already added
+    bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
+    if (!inCart) {
+      setState(() {
+        widget.cartItems.add(foodItem);
+        widget.updateCounts();
+      });
+    }
+    
+    // Navigate directly to checkout with this item
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CheckOutScreen(
+          items: [foodItem],
+          isBuyNow: true,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  // SHIMMER WIDGETS
+
+  Widget _buildCategoryShimmer() {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.only(left: 16),
+      margin: const EdgeInsets.only(top: 16),
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: 5, // Show 5 shimmer placeholders
+          itemBuilder: (_, __) => Container(
+            width: 100,
+            height: 40,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFoodCardShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Image placeholder
+            AspectRatio(
+              aspectRatio: 1.5,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+              ),
+            ),
+            
+            // Content area
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title placeholder
+                  Container(
+                    width: double.infinity,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Price placeholder
+                  Container(
+                    width: 80,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Buttons placeholder
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFoodItemsShimmer() {
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.7,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+      ),
+      itemCount: 6, // Show 6 shimmer placeholders
+      itemBuilder: (_, __) => _buildFoodCardShimmer(),
+    );
+  }
 
   Widget _buildFoodCard(Map<String, dynamic> foodItem) {
     bool isFavorite = widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
@@ -148,14 +312,30 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                     child: AspectRatio(
                       aspectRatio: 1.5,
-                      child: Image.asset(
+                      child: Image.network(
                         foodItem['image'],
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: Icon(Icons.broken_image, color: Colors.grey[400], size: 50),
+                          );
+                        },
                       ),
                     ),
                   ),
                   
-                  // Favorite button
+                  // Rest of your Stack elements...
                   Positioned(
                     top: 12,
                     right: 12,
@@ -235,18 +415,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                               children: [
                                 Icon(
                                   Icons.circle,
-                                  color: foodItem['type'] == 'Veg' ? Colors.green : Colors.red,
+                                  color: foodItem['isVegetarian'] == false ? Colors.green : Colors.red,
                                   size: 12,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  foodItem['type'],
-                                  style: TextStyle(
-                                    color: foodItem['type'] == 'Veg' ? Colors.green[800] : Colors.red[800],
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
                               ],
                             ),
                           ),
@@ -383,6 +555,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
             'assets/images/empty_state.png', // Add this image to your assets
             height: 120,
             fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.no_food, 
+              size: 100,
+              color: Colors.grey[400],
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -416,9 +593,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // App bar with search
+            // App bar with search - Always show this part
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -432,7 +609,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                           Text(
                             "Campus Cuisine",
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).primaryColor,
                               letterSpacing: -0.5,
@@ -448,7 +625,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                           ),
                         ],
                       ),
-                     
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -497,100 +673,104 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
               ),
             ),
             
-            // Categories list
-            Container(
-              height: 60,
-              padding: const EdgeInsets.only(left: 16),
-              margin: const EdgeInsets.only(top: 16),
-              child: FadeTransition(
-                opacity: _animation,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    final isSelected = selectedCategory == category;
-                    
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedCategory = category;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: isSelected 
-                              ? Theme.of(context).primaryColor 
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: isSelected
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[300]!,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: Theme.of(context).primaryColor.withAlpha(76),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          category,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected ? Colors.white : Colors.grey[700],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            
-            // Food items grid
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: filteredFoodItems.isEmpty
-                    ? _buildEmptyState()
-                    : GridView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.7, // Adjusted for the new button
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                        ),
-                        itemCount: filteredFoodItems.length,
+            // Categories list - Show shimmer or actual categories
+            _isLoading
+                ? _buildCategoryShimmer()
+                : Container(
+                    height: 30,
+                    padding: const EdgeInsets.only(left: 16),
+                    margin: const EdgeInsets.only(top: 16),
+                    child: FadeTransition(
+                      opacity: _animation,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categories.length,
                         itemBuilder: (context, index) {
-                          return SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.2),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _animationController,
-                                curve: Interval(
-                                  0.4 + (index / filteredFoodItems.length) * 0.6,
-                                  1.0,
-                                  curve: Curves.easeOut,
+                          final category = categories[index];
+                          final isSelected = selectedCategory == category;
+                          
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedCategory = category;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.only(right: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                    ? Theme.of(context).primaryColor 
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Theme.of(context).primaryColor
+                                      : Colors.grey[300]!,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: Theme.of(context).primaryColor.withAlpha(76),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                category,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  color: isSelected ? Colors.white : Colors.grey[700],
                                 ),
                               ),
                             ),
-                            child: _buildFoodCard(filteredFoodItems[index]),
                           );
                         },
                       ),
+                    ),
+                  ),
+            
+            // Food items grid - Show shimmer, empty state, or actual items
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _isLoading
+                    ? _buildFoodItemsShimmer()
+                    : filteredFoodItems.isEmpty
+                        ? _buildEmptyState()
+                        : GridView.builder(
+                            physics: const BouncingScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.7,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                            ),
+                            itemCount: filteredFoodItems.length,
+                            itemBuilder: (context, index) {
+                              return SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.2),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: _animationController,
+                                    curve: Interval(
+                                      0.4 + (index / filteredFoodItems.length) * 0.6,
+                                      1.0,
+                                      curve: Curves.easeOut,
+                                    ),
+                                  ),
+                                ),
+                                child: _buildFoodCard(filteredFoodItems[index]),
+                              );
+                            },
+                          ),
               ),
             ),
           ],
