@@ -84,6 +84,8 @@ class MenuService {
       'available': item['available'] ?? true,
       'isVegetarian': item['isVegetarian'] ?? false,
       'isPopular': item['isPopular'] ?? false,
+      'hasDiscount': item['hasDiscount'] ?? false,
+      'discount': item['hasDiscount'] ? item['discount'] ?? '0' : '0',
       'image': item['image'] ?? '',
       'lastUpdated': currentDate,
       'updatedBy': userLogin
@@ -99,9 +101,11 @@ class MenuService {
       'price': item['price'],
       'category': item['category'],
       'description': item['description'] ?? '',
-      'available': item['available'],
-      'isVegetarian': item['isVegetarian'],
-      'isPopular': item['isPopular'],
+      'available': item['available'] ?? true,
+      'isVegetarian': item['isVegetarian'] ?? false,
+      'isPopular': item['isPopular'] ?? false,
+      'hasDiscount': item['hasDiscount'] ?? false,
+      'discount': item['hasDiscount'] ? item['discount'] ?? '0' : '0',
       'image': item['image'] ?? '',
       'lastUpdated': currentDate,
       'updatedBy': userLogin

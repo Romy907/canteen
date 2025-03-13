@@ -14,9 +14,9 @@ class ManagerManageMenu extends StatefulWidget {
 
 class _ManagerManageMenuState extends State<ManagerManageMenu> {
   final MenuService _menuService = MenuService();
-  final Color _primaryColor = const Color(0xFF1E88E5);
+  final Color _primaryColor = const Color.fromARGB(255, 136, 107, 175);
   final Color _accentColor = const Color(0xFF26C6DA);
-  
+
   // Menu items data from Firebase
   List<Map<String, dynamic>> _menuItems = [];
   bool _isLoading = true;
@@ -25,24 +25,35 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
   bool _isGridView = false;
   String _selectedCategory = 'All';
   String _searchQuery = '';
-  final List<String> _categories = ['All', 'Appetizers', 'Main Course', 'Desserts', 'Beverages'];
+  final List<String> _categories = [
+    'All',
+    'Main Course',
+    'Appetizers',
+    'Beverages',
+    'Desserts',
+    'Sides',
+    'Breakfast',
+    'Lunch',
+    'Dinner',
+    'Snacks'
+  ];
 
   // Current date and user (updated with the latest values)
   String _currentDate = "2025-03-09 19:21:27";
   String _currentUserLogin = "navin280123";
-  
+
   @override
   void initState() {
     super.initState();
     _initializeService();
   }
-  
+
   Future<void> _initializeService() async {
     setState(() {
       _isLoading = true;
       _isError = false;
     });
-    
+
     try {
       // Initialize MenuService
       await _menuService.initialize();
@@ -55,7 +66,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
         _isError = true;
         _errorMessage = 'Failed to initialize: $e';
       });
-      
+
       // Show error to user
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,6 +83,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
       }
     }
   }
+
   Widget _buildErrorView() {
     return Center(
       child: Column(
@@ -114,18 +126,20 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
       ),
     );
   }
+
   Future<void> _loadMenuItemsFromDatabase() async {
     if (!_menuService.isInitialized) {
       await _initializeService();
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final items = await _menuService.fetchMenuItems();
+      print(items.toString());
       setState(() {
         _menuItems = items;
         _isLoading = false;
@@ -136,7 +150,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
         _isError = true;
         _errorMessage = 'Failed to load menu items: $e';
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error loading menu items: $e'),
@@ -145,7 +159,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
       );
     }
   }
-  
+
   // Filter menu items based on category and search
   List<Map<String, dynamic>> get _filteredMenuItems {
     return _menuItems.where((item) {
@@ -169,39 +183,39 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
       return true;
     }).toList();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Menu Items', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text('Manage Menu Items',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: _primaryColor,
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view, color: Colors.white),
+            icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view,
+                color: Colors.white),
             onPressed: () {
               setState(() {
                 _isGridView = !_isGridView;
               });
             },
-            tooltip: _isGridView ? 'Switch to List View' : 'Switch to Grid View',
+            tooltip:
+                _isGridView ? 'Switch to List View' : 'Switch to Grid View',
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () {
-              _showFilterOptions();
-            },
-            tooltip: 'Filter Options',
-          ),
+          
         ],
       ),
-      floatingActionButton: _isError ? null : FloatingActionButton.extended(
-        onPressed: () => _navigateToAddEditScreen(null),
-        backgroundColor: _accentColor,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Item'),
-        tooltip: 'Add New Menu Item',
-      ),
+      floatingActionButton: _isError
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _navigateToAddEditScreen(null),
+              backgroundColor: _accentColor,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Item'),
+              tooltip: 'Add New Menu Item',
+            ),
       body: _isError
           ? _buildErrorView()
           : _isLoading
@@ -212,19 +226,16 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                     _buildCategorySelector(),
                     _buildItemCountHeader(),
                     Expanded(
-                      child: _isGridView 
-                          ? _buildGridView() 
-                          : _buildListView(),
+                      child: _isGridView ? _buildGridView() : _buildListView(),
                     ),
                   ],
                 ),
     );
   }
-  
 
   Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
       color: _primaryColor,
       child: TextField(
         onChanged: (value) {
@@ -275,7 +286,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
       ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
@@ -312,7 +323,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
   Widget _buildItemCountHeader() {
     final itemCount = _filteredMenuItems.length;
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -347,7 +358,23 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
-                  // Implement sorting logic
+                  setState(() {
+                    if (newValue == 'Name') {
+                      _menuItems.sort((a, b) =>
+                          (a['name'] as String).compareTo(b['name'] as String));
+                    } else if (newValue == 'Price: Low to High') {
+                      _menuItems.sort((a, b) =>
+                          (num.tryParse(a['price'].toString()) ?? 0).compareTo(
+                              num.tryParse(b['price'].toString()) ?? 0));
+                    } else if (newValue == 'Price: High to Low') {
+                      _menuItems.sort((a, b) =>
+                          (num.tryParse(b['price'].toString()) ?? 0).compareTo(
+                              num.tryParse(a['price'].toString()) ?? 0));
+                    } else if (newValue == 'Category') {
+                      _menuItems.sort((a, b) => (a['category'] as String)
+                          .compareTo(b['category'] as String));
+                    }
+                  });
                 },
               ),
             ],
@@ -546,13 +573,40 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
             const SizedBox(height: 4),
             Row(
               children: [
-                Text(
-                  '\₹${item['price']}',
-                  style: TextStyle(
-                    color: _primaryColor,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(height: 8),
+                if (item.containsKey('hasDiscount') &&
+                    item['hasDiscount'] == true) ...[
+                  Row(
+                    children: [
+                      Text(
+                        '₹${item['price'] ?? 0}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          decoration: TextDecoration.lineThrough,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '\₹${((num.tryParse(item['price']?.toString() ?? '0') ?? 0) * (1 - (num.tryParse(item['discount']?.toString() ?? '0') ?? 0) / 100)).toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: _primaryColor,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ] else ...[
+                  Text(
+                    '\₹${item['price'] ?? 0}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: _primaryColor,
+                    ),
+                  ),
+                ],
                 const SizedBox(width: 8),
                 Container(
                   padding:
@@ -569,21 +623,6 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                     ),
                   ),
                 ),
-                if (item['isVegetarian'] as bool) ...[
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.eco_outlined,
-                      size: 14,
-                      color: Colors.green[800],
-                    ),
-                  ),
-                ],
               ],
             ),
             const SizedBox(height: 4),
@@ -604,6 +643,35 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                     color: isAvailable ? Colors.green : Colors.red,
                   ),
                 ),
+                if (item['isVegetarian'] as bool) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.green[100],
+                    shape: BoxShape.rectangle,
+                  ),
+                  child: Icon(
+                    Icons.circle,
+                    size: 14,
+                    color: Colors.green[800],
+                  ),
+                  ),
+                ] else ...[
+                  const SizedBox(width: 4),
+                  Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red[100],
+                    shape: BoxShape.rectangle,
+                  ),
+                  child: Icon(
+                    Icons.circle,
+                    size: 14,
+                    color: Colors.red[800],
+                  ),
+                  ),
+                ],
                 const Spacer(),
                 Text(
                   'ID: ${item['id'].toString().substring(0, math.min(item['id'].toString().length, 8))}',
@@ -805,15 +873,40 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '\₹${item['price']}',
-                    style: TextStyle(
-                      color: _primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  const SizedBox(height: 8),
+                  if (item.containsKey('hasDiscount') &&
+                      item['hasDiscount'] == true) ...[
+                    Row(
+                      children: [
+                        Text(
+                          '₹${item['price'] ?? 0}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            decoration: TextDecoration.lineThrough,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '\₹${((num.tryParse(item['price']?.toString() ?? '0') ?? 0) * (1 - (num.tryParse(item['discount']?.toString() ?? '0') ?? 0) / 100)).toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: _primaryColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ] else ...[
+                    Text(
+                      '\₹${item['price'] ?? 0}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: _primaryColor,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Container(
                     padding:
@@ -885,141 +978,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
     );
   }
 
-  void _showFilterOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'Filter Menu Items',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          // Reset all filters
-                          setModalState(() {
-                            // Reset filters logic here
-                          });
-                        },
-                        child: Text(
-                          'Reset',
-                          style: TextStyle(color: _primaryColor),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    'Availability',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('Available'),
-                        selected: true,
-                        onSelected: (selected) {
-                          // Filter logic
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: const Text('Unavailable'),
-                        selected: false,
-                        onSelected: (selected) {
-                          // Filter logic
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Dietary',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('Vegetarian'),
-                        selected: false,
-                        onSelected: (selected) {
-                          // Filter logic
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: const Text('Non-Vegetarian'),
-                        selected: false,
-                        onSelected: (selected) {
-                          // Filter logic
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Special',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  FilterChip(
-                    label: const Text('Popular Items'),
-                    selected: false,
-                    onSelected: (selected) {
-                      // Filter logic
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text('Apply Filters'),
-                    ),
-                  ),
-                  // Continuing the _ManagerManageMenuState class from line 900 (completing _showFilterOptions method)
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
+  
   // Navigate to the add/edit menu item screen
   void _navigateToAddEditScreen(Map<String, dynamic>? item) {
     Navigator.push(
@@ -1142,14 +1101,44 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          '\₹${item['price']}',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: _primaryColor,
+                        if (item.containsKey('hasDiscount') &&
+                            item['hasDiscount'] == true) ...[
+                          Text(
+                            'Discount: ${item['discount'] ?? 0}%',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Original Price: \₹${item['price'] ?? 0}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              decoration: TextDecoration.lineThrough,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Discounted Price: \₹${((num.tryParse(item['price']?.toString() ?? '0') ?? 0) * (1 - (num.tryParse(item['discount']?.toString() ?? '0') ?? 0) / 100)).toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: _primaryColor,
+                            ),
+                          ),
+                        ] else ...[
+                          Text(
+                            '\₹${item['price'] ?? 0}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: _primaryColor,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         Row(
                           children: [

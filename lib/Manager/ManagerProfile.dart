@@ -539,12 +539,6 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
             'badge': '45 items',
           },
           {
-            'icon': Icons.category_outlined,
-            'title': 'Menu Categories',
-            'subtitle': 'Organize your menu categories',
-            'badge': '8 categories',
-          },
-          {
             'icon': Icons.local_dining_outlined,
             'title': 'Special Dishes',
             'subtitle': 'Highlight special menu items',

@@ -3,8 +3,6 @@ import 'package:canteen/Manager/ManagerOrderList.dart';
 import 'package:canteen/Manager/ManagerProfile.dart';
 import 'package:canteen/Manager/ManagerReport.dart';
 import 'package:flutter/material.dart';
-import 'package:canteen/Firebase/FirebaseManager.dart';
-import 'package:canteen/Login/loginscreen.dart';
 
 class ManagerScreen extends StatefulWidget {
   @override
