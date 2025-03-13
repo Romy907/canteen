@@ -279,9 +279,9 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
         width: 110,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: _primaryColor.withOpacity(0.08),
+          color: _primaryColor.withAlpha(20),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _primaryColor.withOpacity(0.2)),
+          border: Border.all(color: _primaryColor.withAlpha(51)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -463,8 +463,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Shimmer.fromColors(
-                    baseColor: _primaryColor.withOpacity(0.4),
-                    highlightColor: _accentColor.withOpacity(0.4),
+                    baseColor: _primaryColor.withAlpha(102),
+                    highlightColor: _accentColor.withAlpha(102),
                     child: Container(
                       width: 100,
                       height: 100,
@@ -611,7 +611,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _primaryColor.withOpacity(0.1),
+                        color: _primaryColor.withAlpha(25),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -776,7 +776,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                     Icon(
                       CupertinoIcons.camera_circle_fill,
                       size: 60,
-                      color: _primaryColor.withOpacity(0.6),
+                      color: _primaryColor.withAlpha(153),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -801,7 +801,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
               // Loading indicator
               if (_isUploading)
                 Container(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withAlpha(127),
                   child: const Center(
                     child: CircularProgressIndicator(
                       color: Colors.white,
@@ -823,7 +823,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withAlpha(178),
                         ],
                       ),
                     ),
@@ -862,7 +862,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                             style: TextStyle(color: Colors.white),
                           ),
                           style: TextButton.styleFrom(
-                            backgroundColor: _primaryColor.withOpacity(0.7),
+                            backgroundColor: _primaryColor.withAlpha(178),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           ),
                           onPressed: _pickImage,
@@ -1015,9 +1015,9 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                           decoration: BoxDecoration(
-                            color: _discountColor.withOpacity(0.08),
+                            color: _discountColor.withAlpha(20),
                             borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: _discountColor.withOpacity(0.3)),
+                            border: Border.all(color: _discountColor.withAlpha(76)),
                           ),
                           child: Row(
                             children: [
@@ -1025,7 +1025,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: _discountColor.withOpacity(0.15),
+                                  color: _discountColor.withAlpha(38),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(CupertinoIcons.money_dollar_circle, color: _discountColor),
@@ -1182,7 +1182,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withAlpha(25),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 22, color: color),

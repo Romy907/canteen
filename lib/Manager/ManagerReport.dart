@@ -291,7 +291,7 @@ class _ManagerReportState extends State<ManagerReport> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withAlpha(25),
                 spreadRadius: 1,
                 blurRadius: 4,
                 offset: const Offset(0, 1),
@@ -333,7 +333,7 @@ class _ManagerReportState extends State<ManagerReport> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(25),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 1),
@@ -387,7 +387,7 @@ class _ManagerReportState extends State<ManagerReport> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(25),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -489,7 +489,7 @@ class _ManagerReportState extends State<ManagerReport> {
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: 6000,
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withAlpha(25),
                 ),
               ),
             ],
@@ -500,7 +500,7 @@ class _ManagerReportState extends State<ManagerReport> {
           checkToShowHorizontalLine: (value) => value % 1000 == 0,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.grey.withOpacity(0.2),
+              color: Colors.grey.withAlpha(51),
               strokeWidth: 1,
               dashArray: [5, 5],
             );
@@ -524,7 +524,7 @@ class _ManagerReportState extends State<ManagerReport> {
           horizontalInterval: 1000,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.grey.withOpacity(0.2),
+              color: Colors.grey.withAlpha(51),
               strokeWidth: 1,
               dashArray: [5, 5],
             );
@@ -594,7 +594,7 @@ class _ManagerReportState extends State<ManagerReport> {
             dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Theme.of(context).primaryColor.withOpacity(0.2),
+              color: Theme.of(context).primaryColor.withAlpha(51),
             ),
           ),
         ],
@@ -668,7 +668,7 @@ class _ManagerReportState extends State<ManagerReport> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withAlpha(25),
                   spreadRadius: 1,
                   blurRadius: 4,
                   offset: const Offset(0, 2),
@@ -710,8 +710,8 @@ class _ManagerReportState extends State<ManagerReport> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: item['isPositive']
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
+                            ? Colors.green.withAlpha(25)
+                            : Colors.red.withAlpha(25),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -749,7 +749,7 @@ class _ManagerReportState extends State<ManagerReport> {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.05),
+                  color: Colors.grey.withAlpha(12),
                   spreadRadius: 1,
                   blurRadius: 3,
                 ),
