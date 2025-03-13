@@ -2,6 +2,7 @@ import 'package:canteen/Manager/ManagerHome.dart';
 import 'package:canteen/Manager/ManagerOrderList.dart';
 import 'package:canteen/Manager/ManagerProfile.dart';
 import 'package:canteen/Manager/ManagerReport.dart';
+import 'package:canteen/Services/MenuServices.dart';
 import 'package:flutter/material.dart';
 
 class ManagerScreen extends StatefulWidget {
@@ -12,23 +13,20 @@ class ManagerScreen extends StatefulWidget {
 class _ManagerScreenState extends State<ManagerScreen> {
   int _selectedIndex = 0;
   int pendingOrderCount = 0;
-
+  List<Map<String, dynamic>> _menuItems = [];
   @override
   void initState() {
     super.initState();
-    // This is where you would fetch pending orders count from Firebase
-    // For demo purposes, I'm setting a static value
-    pendingOrderCount = 5;
+    _fetchMenuItems();
+    // _fetchOrders();
+    // _fetchSales();
   }
 
+  Future<void> _fetchMenuItems() async {
+    _menuItems = await MenuService().fetchMenuItems();
+  }
   List<Widget> _widgetOptions() => <Widget>[
-        ManagerHome(
-          updatePendingOrderCount: (count) {
-            setState(() {
-              pendingOrderCount = count;
-            });
-          },
-        ),
+        ManagerHome(),
         ManagerReport(),
         ManagerOrderList(),
         ManagerProfile(),
@@ -66,7 +64,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
           ],
         ),
         actions: [
-          _buildIcon(Icons.notifications, pendingOrderCount, 
+          _buildIcon(Icons.notifications, pendingOrderCount,
               () => setState(() => _selectedIndex = 2)),
         ],
       ),
@@ -74,7 +72,8 @@ class _ManagerScreenState extends State<ManagerScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Reports'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart), label: 'Reports'),
           BottomNavigationBarItem(
               icon: Stack(
                 children: [
@@ -96,8 +95,7 @@ class _ManagerScreenState extends State<ManagerScreen> {
                     )
                 ],
               ),
-              label: 'Orders'
-          ),
+              label: 'Orders'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,

@@ -5,9 +5,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class ManagerHome extends StatefulWidget {
-  final Function(int) updatePendingOrderCount;
 
-  const ManagerHome({Key? key, required this.updatePendingOrderCount})
+  const ManagerHome({Key? key, })
       : super(key: key);
 
   @override
@@ -137,9 +136,9 @@ class _ManagerHomeState extends State<ManagerHome>
     });
 
     // FIXED: Schedule updating the pending order count after the first frame is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.updatePendingOrderCount(statistics['Pending'] as int);
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   widget.updatePendingOrderCount(statistics['Pending'] as int);
+    // });
   }
 
   @override

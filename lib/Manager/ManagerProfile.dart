@@ -3,6 +3,7 @@ import 'package:canteen/Login/loginscreen.dart';
 import 'package:canteen/Manager/ManagerManageMenu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ManagerProfile extends StatefulWidget {
   const ManagerProfile({Key? key}) : super(key: key);
@@ -11,7 +12,8 @@ class ManagerProfile extends StatefulWidget {
   _ManagerProfileState createState() => _ManagerProfileState();
 }
 
-class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProviderStateMixin {
+class _ManagerProfileState extends State<ManagerProfile>
+    with SingleTickerProviderStateMixin {
   // Sample profile data
   final Map<String, String> profileData = {
     'name': 'John Manager',
@@ -28,7 +30,21 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
+    _fetchUserData();
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  Future<void> _fetchUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      profileData['name'] = prefs.getString('name') ?? 'Not Available';
+      profileData['email'] =
+          prefs.getString('email') ?? 'john.manager@example.com';
+      profileData['phone'] = prefs.getString('phone') ?? 'Not Available';
+      profileData['canteen'] =
+          prefs.getString('university') ?? 'Main Campus Canteen';
+      profileData['role'] = prefs.getString('role')?.toUpperCase() ?? 'Canteen Manager';
+    });
   }
 
   @override
@@ -58,8 +74,6 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
       ),
     );
   }
-
-  
 
   Widget _buildBody() {
     return SafeArea(
@@ -181,129 +195,129 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
   }
 
   Widget _buildProfileHeader() {
-  return SliverToBoxAdapter(
-    child: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_primaryColor.withAlpha(229), _primaryColor],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(51),
-            blurRadius: 8,
-            spreadRadius: 2,
-            offset: const Offset(0, 4),
+    return SliverToBoxAdapter(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [_primaryColor.withAlpha(229), _primaryColor],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              Hero(
-                tag: 'profile_image',
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(51),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                    border: Border.all(color: Colors.white, width: 3),
-                  ),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      profileData['name']!.substring(0, 1),
-                      style: TextStyle(
-                        fontSize: 40,
-                        color: _primaryColor,
-                        fontWeight: FontWeight.bold,
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(30),
+            bottomRight: Radius.circular(30),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(51),
+              blurRadius: 8,
+              spreadRadius: 2,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                Hero(
+                  tag: 'profile_image',
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(51),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        profileData['name']!.substring(0, 1),
+                        style: TextStyle(
+                          fontSize: 40,
+                          color: _primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  // Handle profile picture change
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _accentColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(51),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                GestureDetector(
+                  onTap: () {
+                    // Handle profile picture change
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _accentColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(51),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.camera_alt,
+                        color: Colors.white, size: 20),
                   ),
-                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              profileData['name']!,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(51),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                profileData['role']!,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            profileData['name']!,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: 1.1,
             ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(51),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              profileData['role']!,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
+            const SizedBox(height: 16),
+            Text(
+              profileData['canteen']!,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white.withAlpha(216),
+                fontStyle: FontStyle.italic,
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            profileData['canteen']!,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withAlpha(216),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildTabBar() {
     return SliverPersistentHeader(
@@ -380,9 +394,11 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
             const SizedBox(height: 16),
             _buildInfoRow(Icons.phone_outlined, 'Phone', profileData['phone']!),
             const SizedBox(height: 16),
-            _buildInfoRow(Icons.location_on_outlined, 'Location', 'Main Campus, Building A'),
+            _buildInfoRow(Icons.location_on_outlined, 'Location',
+                'Main Campus, Building A'),
             const SizedBox(height: 16),
-            _buildInfoRow(Icons.schedule_outlined, 'Working Hours', 'Mon-Fri, 8:00 AM - 5:00 PM'),
+            _buildInfoRow(Icons.schedule_outlined, 'Working Hours',
+                'Mon-Fri, 8:00 AM - 5:00 PM'),
           ],
         ),
       ),
@@ -478,12 +494,12 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
               'Sign out from your account',
               textColor: Colors.red,
               iconColor: Colors.red,
-              onTap: () async{
+              onTap: () async {
                 await FirebaseManager().logout();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => LoginScreen()),
-              );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                );
               },
             ),
           ],
@@ -526,7 +542,6 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
     );
   }
 
- 
   Widget _buildManagementTab() {
     final managementCategories = [
       {
@@ -599,12 +614,13 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
       itemBuilder: (context, categoryIndex) {
         final category = managementCategories[categoryIndex];
         final options = category['options'] as List;
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
               child: Text(
                 category['title'] as String,
                 style: TextStyle(
@@ -616,12 +632,14 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
             ),
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: ListView.separated(
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
                 itemCount: options.length,
-                separatorBuilder: (context, index) => const Divider(height: 1, indent: 70),
+                separatorBuilder: (context, index) =>
+                    const Divider(height: 1, indent: 70),
                 itemBuilder: (context, index) {
                   final option = options[index] as Map;
                   return _buildManagementOption(option);
@@ -637,7 +655,7 @@ class _ManagerProfileState extends State<ManagerProfile> with SingleTickerProvid
 
   Widget _buildManagementOption(Map option) {
     final Color badgeColor = option['badgeColor'] as Color? ?? _accentColor;
-    
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Container(
@@ -704,7 +722,8 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverAppBarDelegate(this._tabBar);
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Colors.white,
       child: _tabBar,
