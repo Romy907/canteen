@@ -21,14 +21,15 @@ class StudentHomeScreen extends StatefulWidget {
   _StudentHomeScreenState createState() => _StudentHomeScreenState();
 }
 
-class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTickerProviderStateMixin {
+class _StudentHomeScreenState extends State<StudentHomeScreen>
+    with SingleTickerProviderStateMixin {
   String selectedCategory = 'All';
   late List<String> categories = ['All'];
   String searchQuery = '';
   late AnimationController _animationController;
   late Animation<double> _animation;
   bool _isLoading = true;
-  
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -45,7 +46,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
     _animationController.forward();
     print("Initial food items: ${widget.foodItems.length}");
     _updateCategories();
-    
+
     // Set loading state based on whether we have items
     setState(() {
       _isLoading = widget.foodItems.isEmpty;
@@ -59,32 +60,31 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
       });
       return;
     }
-    
+
     // Extract unique categories from food items
-    final Set<String> uniqueCategories = widget.foodItems
-        .map((item) => item['category'] as String)
-        .toSet();
-    
+    final Set<String> uniqueCategories =
+        widget.foodItems.map((item) => item['category'] as String).toSet();
+
     setState(() {
       categories = ['All', ...uniqueCategories];
       _isLoading = false; // Data is loaded
     });
     print("Categories updated: $categories");
   }
-  
+
   @override
   void didUpdateWidget(StudentHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Check if food items have changed
     if (widget.foodItems != oldWidget.foodItems) {
       print("Food items updated: ${widget.foodItems.length}");
-      
+
       setState(() {
         // If we're getting new data, show loading state briefly
         _isLoading = widget.foodItems.isEmpty;
       });
-      
+
       _updateCategories();
     }
   }
@@ -95,23 +95,28 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
     _searchController.dispose();
     super.dispose();
   }
-  
+
   List<Map<String, dynamic>> get filteredFoodItems {
     return widget.foodItems
-        .where((item) => 
-            (selectedCategory == 'All' || item['category'] == selectedCategory) &&
-            (searchQuery.isEmpty || 
-             item['name'].toString().toLowerCase().contains(searchQuery.toLowerCase()))
-        )
+        .where((item) =>
+            (selectedCategory == 'All' ||
+                item['category'] == selectedCategory) &&
+            (searchQuery.isEmpty ||
+                item['name']
+                    .toString()
+                    .toLowerCase()
+                    .contains(searchQuery.toLowerCase())))
         .toList();
   }
 
   void _toggleFavorite(Map<String, dynamic> foodItem) {
-    bool isFavorite = widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
-    
+    bool isFavorite =
+        widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
+
     setState(() {
       if (isFavorite) {
-        widget.favoriteItems.removeWhere((item) => item['name'] == foodItem['name']);
+        widget.favoriteItems
+            .removeWhere((item) => item['name'] == foodItem['name']);
       } else {
         widget.favoriteItems.add(foodItem);
       }
@@ -120,28 +125,31 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
   }
 
   void _toggleCart(Map<String, dynamic> foodItem) {
-    bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
-    
+    bool inCart =
+        widget.cartItems.any((item) => item['name'] == foodItem['name']);
+
     setState(() {
       if (inCart) {
-        widget.cartItems.removeWhere((item) => item['name'] == foodItem['name']);
+        widget.cartItems
+            .removeWhere((item) => item['name'] == foodItem['name']);
       } else {
         widget.cartItems.add(foodItem);
       }
       widget.updateCounts();
     });
   }
-  
+
   void _buyNow(Map<String, dynamic> foodItem) {
     // Add to cart if not already added
-    bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
+    bool inCart =
+        widget.cartItems.any((item) => item['name'] == foodItem['name']);
     if (!inCart) {
       setState(() {
         widget.cartItems.add(foodItem);
         widget.updateCounts();
       });
     }
-    
+
     // Navigate directly to checkout with this item
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -203,7 +211,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                 ),
               ),
             ),
-            
+
             // Content area
             Padding(
               padding: const EdgeInsets.all(12),
@@ -220,7 +228,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                     ),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Price placeholder
                   Container(
                     width: 80,
@@ -231,7 +239,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Buttons placeholder
                   Row(
                     children: [
@@ -280,9 +288,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
   }
 
   Widget _buildFoodCard(Map<String, dynamic> foodItem) {
-    bool isFavorite = widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
-    bool inCart = widget.cartItems.any((item) => item['name'] == foodItem['name']);
-    
+    bool isFavorite =
+        widget.favoriteItems.any((item) => item['name'] == foodItem['name']);
+    bool inCart =
+        widget.cartItems.any((item) => item['name'] == foodItem['name']);
+
     return Hero(
       tag: 'food-${foodItem['name']}',
       child: Material(
@@ -309,7 +319,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                 children: [
                   // Food image
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
                     child: AspectRatio(
                       aspectRatio: 1.5,
                       child: Image.network(
@@ -328,13 +339,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey[200],
-                            child: Icon(Icons.broken_image, color: Colors.grey[400], size: 50),
+                            child: Icon(Icons.broken_image,
+                                color: Colors.grey[400], size: 50),
                           );
                         },
                       ),
                     ),
                   ),
-                  
+
                   // Rest of your Stack elements...
                   Positioned(
                     top: 12,
@@ -345,8 +357,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                         duration: const Duration(milliseconds: 300),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isFavorite 
-                              ? Colors.red.withAlpha(229) 
+                          color: isFavorite
+                              ? Colors.red.withAlpha(229)
                               : Colors.white.withAlpha(229),
                           shape: BoxShape.circle,
                           boxShadow: [
@@ -365,14 +377,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                       ),
                     ),
                   ),
-                  
+
                   // Gradient overlay at bottom
                   Positioned(
                     bottom: 0,
                     left: 0,
                     right: 0,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
@@ -385,13 +398,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        
                         children: [
                           // Category pill
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withAlpha(204),
+                              color:
+                                  Theme.of(context).primaryColor.withAlpha(204),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -403,7 +417,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                               ),
                             ),
                           ),
-                          
+
                           // Veg/Non-veg indicator
                           Container(
                             padding: const EdgeInsets.all(4),
@@ -415,7 +429,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                               children: [
                                 Icon(
                                   Icons.circle,
-                                  color: foodItem['isVegetarian'] == false ? Colors.green : Colors.red,
+                                  color: foodItem['isVegetarian'] == false
+                                      ? Colors.green
+                                      : Colors.red,
                                   size: 12,
                                 ),
                                 const SizedBox(width: 4),
@@ -428,7 +444,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                   ),
                 ],
               ),
-              
+
               // Content area
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -446,19 +462,42 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 0),
-                    
-                    // Price
-                    Text(
-                      "₹${foodItem['price']}",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Theme.of(context).primaryColor,
+                    const SizedBox(height: 8),
+                    if (foodItem.containsKey('hasDiscount') &&
+                        foodItem['hasDiscount'] == true) ...[
+                      Row(
+                        children: [
+                          Text(
+                            '₹${foodItem['price'] ?? 0}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              decoration: TextDecoration.lineThrough,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '\₹${((num.tryParse(foodItem['price']?.toString() ?? '0') ?? 0) * (1 - (num.tryParse(foodItem['discount']?.toString() ?? '0') ?? 0) / 100)).toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ] else ...[
+                      Text(
+                        '\₹${foodItem['price'] ?? 0}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 10),
-                    
+
                     // Buy Now and Add to Cart buttons row
                     Row(
                       children: [
@@ -492,7 +531,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                           ),
                         ),
                         const SizedBox(width: 8),
-                        
+
                         // Add to Cart button
                         Expanded(
                           child: GestureDetector(
@@ -501,11 +540,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                               duration: const Duration(milliseconds: 300),
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               decoration: BoxDecoration(
-                                color: inCart ? Colors.green : Theme.of(context).primaryColor,
+                                color: inCart
+                                    ? Colors.green
+                                    : Theme.of(context).primaryColor,
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (inCart ? Colors.green : Theme.of(context).primaryColor).withAlpha(76),
+                                    color: (inCart
+                                            ? Colors.green
+                                            : Theme.of(context).primaryColor)
+                                        .withAlpha(76),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -556,7 +600,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
             height: 120,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) => Icon(
-              Icons.no_food, 
+              Icons.no_food,
               size: 100,
               color: Colors.grey[400],
             ),
@@ -628,7 +672,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Search bar
                   Container(
                     decoration: BoxDecoration(
@@ -655,7 +699,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                         prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                         suffixIcon: searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: Icon(Icons.clear, color: Colors.grey[400]),
+                                icon:
+                                    Icon(Icons.clear, color: Colors.grey[400]),
                                 onPressed: () {
                                   setState(() {
                                     _searchController.clear();
@@ -665,14 +710,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                               )
                             : null,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 15),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // Categories list - Show shimmer or actual categories
             _isLoading
                 ? _buildCategoryShimmer()
@@ -688,7 +734,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                         itemBuilder: (context, index) {
                           final category = categories[index];
                           final isSelected = selectedCategory == category;
-                          
+
                           return GestureDetector(
                             onTap: () {
                               setState(() {
@@ -698,10 +744,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               margin: const EdgeInsets.only(right: 12),
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
                               decoration: BoxDecoration(
-                                color: isSelected 
-                                    ? Theme.of(context).primaryColor 
+                                color: isSelected
+                                    ? Theme.of(context).primaryColor
                                     : Colors.white,
                                 borderRadius: BorderRadius.circular(30),
                                 border: Border.all(
@@ -712,7 +759,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: Theme.of(context).primaryColor.withAlpha(76),
+                                          color: Theme.of(context)
+                                              .primaryColor
+                                              .withAlpha(76),
                                           blurRadius: 8,
                                           offset: const Offset(0, 4),
                                         ),
@@ -724,8 +773,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                                 category,
                                 style: TextStyle(
                                   fontSize: 15,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                  color: isSelected ? Colors.white : Colors.grey[700],
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.grey[700],
                                 ),
                               ),
                             ),
@@ -734,7 +787,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                       ),
                     ),
                   ),
-            
+
             // Food items grid - Show shimmer, empty state, or actual items
             Expanded(
               child: Padding(
@@ -745,7 +798,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                         ? _buildEmptyState()
                         : GridView.builder(
                             physics: const BouncingScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               childAspectRatio: 0.7,
                               mainAxisSpacing: 16,
@@ -761,7 +815,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> with SingleTicker
                                   CurvedAnimation(
                                     parent: _animationController,
                                     curve: Interval(
-                                      0.4 + (index / filteredFoodItems.length) * 0.6,
+                                      0.4 +
+                                          (index / filteredFoodItems.length) *
+                                              0.6,
                                       1.0,
                                       curve: Curves.easeOut,
                                     ),

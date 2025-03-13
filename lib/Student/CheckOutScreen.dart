@@ -1,3 +1,4 @@
+import 'package:canteen/Student/MyOrdersScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -21,7 +22,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   final TextEditingController _notesController = TextEditingController();
   
   // Current timestamp and username - using the provided details
-  final String _orderTimestamp = '2025-03-06 08:00:55';
+  final String _orderTimestamp = '2025-03-13 18:44:38';
   final String _username = 'navin280123';
   
   // Form is always considered complete now that we've removed required fields
@@ -49,8 +50,33 @@ class CheckOutScreenState extends State<CheckOutScreen> {
     return 0.0; // Default for other cases
   }
 
-  // Calculate subtotal from items
+  // Calculate the discounted price for an item
+  double _getDiscountedPrice(Map<String, dynamic> item) {
+    double originalPrice = _getPriceAsDouble(item['price']);
+    
+    // Check if item has a discount
+    if (item.containsKey('hasDiscount') && item['hasDiscount'] == true) {
+      // Get discount percentage
+      double discountPercent = _getPriceAsDouble(item['discount']);
+      // Apply discount
+      return originalPrice * (1 - discountPercent / 100);
+    }
+    
+    // Return original price if no discount
+    return originalPrice;
+  }
+
+  // Calculate subtotal from items (with discounts applied)
   double get _subtotal {
+    return widget.items.fold(0.0, (sum, item) {
+      double itemPrice = _getDiscountedPrice(item);
+      int quantity = item['quantity'] ?? 1;
+      return sum + (itemPrice * quantity);
+    });
+  }
+
+  // Original subtotal (without discounts) - for display purposes
+  double get _originalSubtotal {
     return widget.items.fold(0.0, (sum, item) {
       double itemPrice = _getPriceAsDouble(item['price']);
       int quantity = item['quantity'] ?? 1;
@@ -58,7 +84,20 @@ class CheckOutScreenState extends State<CheckOutScreen> {
     });
   }
 
-  // Calculate taxes (5% for this example)
+  // Calculate total discount amount
+  double get _totalDiscount {
+    return widget.items.fold(0.0, (sum, item) {
+      if (item.containsKey('hasDiscount') && item['hasDiscount'] == true) {
+        double originalPrice = _getPriceAsDouble(item['price']);
+        double discountedPrice = _getDiscountedPrice(item);
+        int quantity = item['quantity'] ?? 1;
+        return sum + ((originalPrice - discountedPrice) * quantity);
+      }
+      return sum;
+    });
+  }
+
+  // Calculate taxes (5% on discounted subtotal)
   double get _tax => _subtotal * 0.05;
 
   // Delivery fee
@@ -320,13 +359,35 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  _formatCurrency(_subtotal),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
+                // Display discounted subtotal if there are any discounts
+                _totalDiscount > 0
+                    ? Row(
+                        children: [
+                          Text(
+                            _formatCurrency(_originalSubtotal),
+                            style: TextStyle(
+                              decoration: TextDecoration.lineThrough,
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatCurrency(_subtotal),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        _formatCurrency(_subtotal),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
               ],
             ),
           ),
@@ -337,7 +398,9 @@ class CheckOutScreenState extends State<CheckOutScreen> {
 
   Widget _buildOrderItem(Map<String, dynamic> item) {
     // Get price as double for formatting
-    double itemPrice = _getPriceAsDouble(item['price']);
+    double originalPrice = _getPriceAsDouble(item['price']);
+    double discountedPrice = _getDiscountedPrice(item);
+    bool hasDiscount = item.containsKey('hasDiscount') && item['hasDiscount'] == true;
     int quantity = item['quantity'] ?? 1;
     
     return Padding(
@@ -348,11 +411,19 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           // Food image
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
+            child: Image.network(
               item['image'],
               width: 70,
               height: 70,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 70,
+                  height: 70,
+                  color: Colors.grey[300],
+                  child: Icon(Icons.image_not_supported, color: Colors.grey[500]),
+                );
+              },
             ),
           ),
           const SizedBox(width: 16),
@@ -384,12 +455,12 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: item['type'] == 'Veg' ? Colors.green[50] : Colors.red[50],
+                        color: item['isVegetarian'] == true ? Colors.green[50] : Colors.red[50],
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Icon(
                         Icons.circle,
-                        color: item['type'] == 'Veg' ? Colors.green : Colors.red,
+                        color: item['isVegetarian'] == true ? Colors.green : Colors.red,
                         size: 12,
                       ),
                     ),
@@ -401,7 +472,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        item['category'],
+                        item['category'] ?? '',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[800],
@@ -415,14 +486,38 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      _formatCurrency(itemPrice),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Theme.of(context).primaryColor,
+                    if (hasDiscount) ...[
+                      Row(
+                        children: [
+                          Text(
+                            '₹${originalPrice.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              decoration: TextDecoration.lineThrough,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '₹${discountedPrice.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ] else ...[
+                      Text(
+                        '₹${originalPrice.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ],
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                       decoration: BoxDecoration(
@@ -726,7 +821,21 @@ class CheckOutScreenState extends State<CheckOutScreen> {
       ),
       child: Column(
         children: [
-          _buildPriceRow("Subtotal", _formatCurrency(_subtotal)),
+          // Display original subtotal and discount if applicable
+          if (_totalDiscount > 0) ...[
+            _buildPriceRow("Original Subtotal", _formatCurrency(_originalSubtotal)),
+            const SizedBox(height: 8),
+            _buildPriceRow(
+              "Discount", 
+              "- ${_formatCurrency(_totalDiscount)}", 
+              valueColor: Colors.green[700]
+            ),
+            const SizedBox(height: 8),
+            _buildPriceRow("Subtotal", _formatCurrency(_subtotal)),
+          ] else ...[
+            _buildPriceRow("Subtotal", _formatCurrency(_subtotal)),
+          ],
+          
           const SizedBox(height: 8),
           _buildPriceRow("Tax (5%)", _formatCurrency(_tax)),
           const SizedBox(height: 8),
@@ -740,12 +849,39 @@ class CheckOutScreenState extends State<CheckOutScreen> {
             _formatCurrency(_total),
             isTotal: true,
           ),
+          // Display savings if applicable
+          if (_totalDiscount > 0) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.savings, color: Colors.green[700], size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "You saved ${_formatCurrency(_totalDiscount)} on this order!",
+                      style: TextStyle(
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildPriceRow(String label, String amount, {bool isTotal = false}) {
+  Widget _buildPriceRow(String label, String amount, {bool isTotal = false, Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -761,7 +897,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           style: TextStyle(
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             fontSize: isTotal ? 18 : 16,
-            color: isTotal ? Theme.of(context).primaryColor : null,
+            color: isTotal ? Theme.of(context).primaryColor : valueColor,
           ),
         ),
       ],
@@ -798,13 +934,28 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    "Total: ${_formatCurrency(_total)}",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Theme.of(context).primaryColor,
-                    ),
+                  // Show savings below total if discount exists
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Total: ${_formatCurrency(_total)}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      if (_totalDiscount > 0)
+                        Text(
+                          "Saved: ${_formatCurrency(_totalDiscount)}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.green[700],
+                          ),
+                        ),
+                                      ],
                   ),
                 ],
               ),
@@ -917,11 +1068,36 @@ class CheckOutScreenState extends State<CheckOutScreen> {
               ),
               textAlign: TextAlign.center,
             ),
+            if (_totalDiscount > 0) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.savings, color: Colors.green[700], size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      "You saved ${_formatCurrency(_totalDiscount)}!",
+                      style: TextStyle(
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                Navigator.of(context).pop(); // Return to previous screen
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => MyOrdersScreen()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
@@ -942,6 +1118,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () {
+                
                 Navigator.of(context).pop(); // Close dialog
                 Navigator.of(context).pop(); // Return to previous screen
               },
