@@ -53,12 +53,29 @@ class _StudentScreenState extends State<StudentScreen> {
   Future<void> _fetchFoodItems() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedIds = prefs.getString('stores');
+
+    if (storedIds == null || storedIds.isEmpty) {
+      print("No store IDs found in SharedPreferences.");
+      return; // Exit early if no data is available
+    }
+    print("Stored IDs: $storedIds");
     RegExp regExp = RegExp(r'\d+');
-    List<String> ids = regExp.allMatches(storedIds!).map((match) => match.group(0)!).toList();
+    List<String> ids = regExp
+        .allMatches(storedIds)
+        .map((match) => match.group(0) ?? '') // Avoid null values
+        .where((id) => id.isNotEmpty) // Filter out empty values
+        .toList();
+
+    if (ids.isEmpty) {
+      print("Extracted store IDs are empty.");
+      return;
+    }
+
     print("Store IDs: $ids");
-    
+
     try {
-      List<Map<String, dynamic>> items = await StudentMenuServices().getMenuItems(ids);
+      List<Map<String, dynamic>> items =
+          await StudentMenuServices().getMenuItems(ids);
       setState(() {
         foodItems = items;
         print("Fetched ${foodItems.length} food items");
@@ -100,7 +117,7 @@ class _StudentScreenState extends State<StudentScreen> {
         ),
       ),
     );
-    
+
     // Handle the result when returning from StudentUniversitySearch
     if (result != null && result is String) {
       setState(() {
@@ -142,7 +159,8 @@ class _StudentScreenState extends State<StudentScreen> {
             Spacer(),
             GestureDetector(
               onTap: _navigateToUniversitySearch,
-              child: Icon(Icons.location_on, color: const Color.fromARGB(255, 0, 0, 0)),
+              child: Icon(Icons.location_on,
+                  color: const Color.fromARGB(255, 0, 0, 0)),
             ),
             SizedBox(width: 5),
             GestureDetector(
@@ -152,7 +170,8 @@ class _StudentScreenState extends State<StudentScreen> {
                 child: Text(
                   location.isEmpty ? "Select Location" : location,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0), fontSize: 16),
+                  style: TextStyle(
+                      color: const Color.fromARGB(255, 0, 0, 0), fontSize: 16),
                 ),
               ),
             ),

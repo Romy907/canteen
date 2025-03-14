@@ -1,3 +1,4 @@
+import 'package:canteen/Firebase/FirebaseManager.dart';
 import 'package:canteen/Services/UniversityServices.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,10 +32,17 @@ class _StudentUniversitySearchState extends State<StudentUniversitySearch> {
       _filteredUniversityList = universityList;
     });
   }
+
   Future<void> _saveToPreferences(String university) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setString('selectedUniversity', university);
-}
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String list =
+        await UniversityServices().fetchStoresByUniversity(university);
+    print(list);
+    await FirebaseManager().addUniversityDetails(university, list);
+    await prefs.setString('stores', list);
+    await prefs.setString('selectedUniversity', university);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,11 +76,11 @@ class _StudentUniversitySearchState extends State<StudentUniversitySearch> {
                 return ListTile(
                   title: Text(_filteredUniversityList[index]),
                   onTap: () async {
-                    widget.onUniversitySelected.call(_filteredUniversityList[index]);
+                    widget.onUniversitySelected
+                        .call(_filteredUniversityList[index]);
 
                     // Save to SharedPreferences
                     _saveToPreferences(_filteredUniversityList[index]);
-
                     // Return the selected university to the previous screen
                     Navigator.pop(context, _filteredUniversityList[index]);
                   },

@@ -22,7 +22,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   final TextEditingController _notesController = TextEditingController();
   
   // Current timestamp and username - using the provided details
-  final String _orderTimestamp = '2025-03-13 18:44:38';
+  final String _orderTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
   final String _username = 'navin280123';
   
   // Form is always considered complete now that we've removed required fields
@@ -101,10 +101,10 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   double get _tax => _subtotal * 0.05;
 
   // Delivery fee
-  double get _deliveryFee => 20.0;
+  double get _platformcharge => 2.0;
 
   // Calculate the total amount
-  double get _total => _subtotal + _tax + _deliveryFee;
+  double get _total => _subtotal + _tax + _platformcharge;
 
   // Format currency
   String _formatCurrency(double amount) {
@@ -115,7 +115,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   String get _orderId {
     final now = DateTime.parse(_orderTimestamp);
     final formatter = DateFormat('yyyyMMddHHmmss');
-    return 'ORD-${formatter.format(now)}-${_username.substring(0, 4).toUpperCase()}';
+    return 'ORD-${formatter.format(now)}';
   }
 
   @override
@@ -839,7 +839,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           const SizedBox(height: 8),
           _buildPriceRow("Tax (5%)", _formatCurrency(_tax)),
           const SizedBox(height: 8),
-          _buildPriceRow("Delivery Fee", _formatCurrency(_deliveryFee)),
+          _buildPriceRow("Platform CHarge", _formatCurrency(_platformcharge)),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 10),
             child: Divider(thickness: 1),
