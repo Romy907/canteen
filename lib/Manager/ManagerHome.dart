@@ -1059,10 +1059,10 @@ class _ManagerHomeState extends State<ManagerHome>
         'icon': Icons.restaurant_menu,
         'color': Colors.blue[700]!,
       },
-      {
-        'title': 'View Reports',
-        'icon': Icons.insert_chart,
-        'color': Colors.purple[700]!,
+     {
+        'title': 'Manage Payment',
+        'icon': Icons.money,
+        'color': Colors.blue[700]!,
       },
     ];
 

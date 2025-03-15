@@ -276,7 +276,7 @@ class _ManagerReportState extends State<ManagerReport> {
               ),
             ),
             Text(
-              'Overview of your restaurant performance',
+              'Restaurant performance',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -631,7 +631,7 @@ class _ManagerReportState extends State<ManagerReport> {
     final List<Map<String, dynamic>> summaries = [
       {
         'title': 'Total Sales',
-        'value': 'Rs. 11,600',
+        'value': '11,600',
         'change': '+8.2%',
         'isPositive': true,
         'icon': Icons.trending_up,
@@ -836,7 +836,6 @@ class _ManagerReportState extends State<ManagerReport> {
   
   Widget _buildReportActions() {
     final List<Map<String, dynamic>> actions = [
-      {'icon': Icons.print, 'label': 'Print', 'color': Colors.blue[700]!},
       {'icon': Icons.share, 'label': 'Share', 'color': Colors.green[700]!},
       {'icon': Icons.download, 'label': 'Download', 'color': Colors.orange[700]!},
     ];

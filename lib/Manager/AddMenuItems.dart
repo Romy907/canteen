@@ -1055,7 +1055,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                                     Row(
                                       children: [
                                         Text(
-                                          'Final Price: ',
+                                          'Final: ',
                                           style: TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w500,
@@ -1066,7 +1066,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                                           '₹${_calculateDiscountedPrice()}',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 18,
+                                            fontSize: 15,
                                             color: _discountColor,
                                           ),
                                         ),

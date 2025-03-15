@@ -1111,7 +1111,7 @@ class _AddEditUPIDialogState extends State<AddEditUPIDialog> {
               Row(
                 children: [
                   const Text(
-                    'Set as Primary Account',
+                    'Primary Account',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   const Spacer(),

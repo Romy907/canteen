@@ -608,21 +608,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                   ),
                 ],
                 const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    item['category'] as String,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ),
+                
               ],
             ),
             const SizedBox(height: 4),
@@ -672,14 +658,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                   ),
                   ),
                 ],
-                const Spacer(),
-                Text(
-                  'ID: ${item['id'].toString().substring(0, math.min(item['id'].toString().length, 8))}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                ),
+                
               ],
             ),
           ],
@@ -857,6 +836,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        
                       ),
                       if (item['isVegetarian'] as bool)
                         Container(
@@ -907,22 +887,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      item['category'] as String,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ),
+                  
                 ],
               ),
             ),
@@ -1255,8 +1220,7 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
               ),
               const SizedBox(height: 8),
               _buildDetailRow('Item ID', item['id'] as String),
-              _buildDetailRow('Last Updated',
-                  item['lastUpdated'] as String? ?? _currentDate),
+              
               _buildDetailRow('Updated By',
                   item['updatedBy'] as String? ?? _currentUserLogin),
 
