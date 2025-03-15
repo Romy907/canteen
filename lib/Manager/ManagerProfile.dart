@@ -1,8 +1,10 @@
 import 'package:canteen/Firebase/FirebaseManager.dart';
 import 'package:canteen/Login/loginscreen.dart';
+import 'package:canteen/Manager/ManagerChangePassword.dart';
 import 'package:canteen/Manager/ManagerManageMenu.dart';
 import 'package:canteen/Manager/ManagerOperatingHours.dart';
 import 'package:canteen/Manager/ManagerPaymentMethods.dart';
+import 'package:canteen/Manager/ManagerSelectLanguage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -125,15 +127,8 @@ class _ManagerProfileState extends State<ManagerProfile>
   Widget _buildLoadingState() {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 60, height: 60,
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
-              strokeWidth: 3,
-            ),
-          ),
           const SizedBox(height: 24),
           Shimmer.fromColors(
             baseColor: Colors.grey.shade300,
@@ -142,19 +137,19 @@ class _ManagerProfileState extends State<ManagerProfile>
               children: [
                 Container(
                   width: 200,
-                  height: 20,
+                  height: 100,
                   color: Colors.grey.shade300,
                 ),
                 const SizedBox(height: 8),
                 Container(
                   width: 150,
-                  height: 20,
+                  height: 75,
                   color: Colors.grey.shade300,
                 ),
                 const SizedBox(height: 8),
                 Container(
                   width: 100,
-                  height: 20,
+                  height: 50,
                   color: Colors.grey.shade300,
                 ),
               ],
@@ -509,12 +504,13 @@ Widget _buildTabItem({
             child: Icon(icon, size: 20),
           ),
           SizedBox(width: 8),
-          AnimatedDefaultTextStyle(
+            AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             style: TextStyle(
               fontSize: isSelected ? 14 : 13,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               letterSpacing: isSelected ? 0.2 : 0.0,
+              color: isSelected ? Colors.white : _subtitleColor,
             ),
             child: Text(text),
           ),
@@ -674,15 +670,10 @@ Widget _buildTabItem({
         'color': Colors.blue.shade700,
         'onTap': () {
           // Handle change password
-        },
-      },
-      {
-        'icon': Icons.notifications_outlined,
-        'title': 'Notifications',
-        'subtitle': 'Manage your notification preferences',
-        'color': Colors.orange.shade700,
-        'onTap': () {
-          // Handle notifications settings
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ManagerChangePassword()),
+          );
         },
       },
       {
@@ -692,6 +683,11 @@ Widget _buildTabItem({
         'color': Colors.green.shade700,
         'onTap': () {
           // Handle language settings
+          Navigator.push(
+            context,
+            // MaterialPageRoute(builder: (context) => LanguageSettingsScreen()),
+            MaterialPageRoute(builder: (context) => ManagerSelectLanguage()),
+          );
         },
       },
       {
@@ -857,33 +853,11 @@ Widget _buildTabItem({
               );
             },
           },
-          {
-            'icon': Icons.local_dining_outlined,
-            'title': 'Special Dishes',
-            'subtitle': 'Highlight special menu items',
-            'badge': '3 specials',
-            'badgeColor': Colors.purple,
-            'iconColor': Colors.purple.shade700,
-            'onTap': () {
-              // Handle special dishes
-            },
-          },
         ],
       },
       {
         'title': 'Staff & Operations',
         'options': [
-          {
-            'icon': Icons.people_outline,
-            'title': 'Staff Management',
-            'subtitle': 'Manage canteen staff and shifts',
-            'badge': '12 staff',
-            'badgeColor': Colors.blue,
-            'iconColor': Colors.blue.shade700,
-            'onTap': () {
-              // Handle staff management
-            },
-          },
           {
             'icon': Icons.schedule_outlined,
             'title': 'Operating Hours',
@@ -912,42 +886,7 @@ Widget _buildTabItem({
           },
         ],
       },
-      {
-        'title': 'Inventory & Offers',
-        'options': [
-          {
-            'icon': Icons.inventory_2_outlined,
-            'title': 'Inventory Management',
-            'subtitle': 'Track and manage stock levels',
-            'badge': 'Low stock',
-            'badgeColor': Colors.orange,
-            'iconColor': Colors.amber.shade700,
-            'onTap': () {
-              // Handle inventory management
-            },
-          },
-          {
-            'icon': Icons.local_offer_outlined,
-            'title': 'Special Offers',
-            'subtitle': 'Create and manage promotions',
-            'badge': '2 active',
-            'badgeColor': Colors.pink,
-            'iconColor': Colors.pink.shade700,
-            'onTap': () {
-              // Handle special offers
-            },
-          },
-          {
-            'icon': Icons.insert_chart_outlined,
-            'title': 'Sales Analytics',
-            'subtitle': 'View sales reports and insights',
-            'iconColor': Colors.deepPurple.shade700,
-            'onTap': () {
-              // Handle analytics
-            },
-          },
-        ],
-      },
+      
     ];
 
     return ListView.builder(

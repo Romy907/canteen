@@ -1,3 +1,5 @@
+import 'package:canteen/Manager/ManagerManageMenu.dart';
+import 'package:canteen/Manager/ManagerPaymentMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -1028,28 +1030,19 @@ class _ManagerHomeState extends State<ManagerHome>
 
   // Method to handle action tap safely - prevents setState during build
   void _handleActionTap(Map<String, dynamic> action) {
-    setState(() {
-      _isLoading = true;
-    });
-
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // Show feedback after state update is complete
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${action['title']} action selected'),
-              duration: const Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-            ),
+    if(action['title'] == 'Manage Menu'){
+      Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ManagerManageMenu()),
           );
-        });
-      }
-    });
+    }
+    else if(action['title'] == 'Manage Payment'){
+     Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ManagerPaymentMethods()),
+          );
+    }
+    
   }
 
   Widget _buildQuickActions() {
