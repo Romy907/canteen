@@ -1,6 +1,7 @@
 import 'package:canteen/Firebase/FirebaseManager.dart';
 import 'package:canteen/Login/loginscreen.dart';
 import 'package:canteen/Manager/ManagerManageMenu.dart';
+import 'package:canteen/Manager/ManagerOperatingHours.dart';
 import 'package:canteen/Manager/ManagerPaymentMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -217,102 +218,113 @@ class _ManagerProfileState extends State<ManagerProfile>
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Stack(
-              alignment: Alignment.bottomRight,
+            children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
                 Hero(
                   tag: 'profile_image',
                   child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(51),
-                          blurRadius: 6,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                      border: Border.all(color: Colors.white, width: 3),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(51),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
                     ),
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        profileData['name']!.substring(0, 1),
-                        style: TextStyle(
-                          fontSize: 40,
-                          color: _primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    ],
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                    profileData['name']!.substring(0, 1),
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: _primaryColor,
+                      fontWeight: FontWeight.bold,
                     ),
+                    ),
+                  ),
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    // Handle profile picture change
+                  // Handle profile picture change
                   },
                   child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _accentColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(51),
-                          blurRadius: 6,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _accentColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(51),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 2),
                     ),
-                    child: const Icon(Icons.camera_alt,
-                        color: Colors.white, size: 20),
+                    ],
+                  ),
+                  child: const Icon(Icons.camera_alt,
+                    color: Colors.white, size: 20),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              profileData['name']!,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1.1,
+                ],
               ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(51),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                profileData['role']!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Text(
+                  profileData['name']!,
+                  style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                   color: Colors.white,
+                  letterSpacing: 1.1,
+                  ),
                 ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(51),
+                  borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                  profileData['role']!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  profileData['canteen']!,
+                  style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white.withAlpha(216),
+                  fontStyle: FontStyle.italic,
+                  ),
+                ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              profileData['canteen']!,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white.withAlpha(216),
-                fontStyle: FontStyle.italic,
-              ),
+              ],
             ),
           ],
         ),
@@ -720,6 +732,10 @@ class _ManagerProfileState extends State<ManagerProfile>
         }
         if (option['title'] == 'Operating Hours') {
           // Handle operating hours
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ManagerOperatingHours()),
+          );
         }
         if (option['title'] == 'Payment Methods') {
           Navigator.push(
