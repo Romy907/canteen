@@ -2,7 +2,6 @@ import 'package:canteen/Student/ChangePassword.dart';
 import 'package:canteen/Student/LanguageSettingScreen.dart';
 import 'package:canteen/Student/NotificationSettingsScreen.dart';
 import 'package:flutter/material.dart';
-import 'LanguageSettingScreen.dart';
 
 class StudentSettingScreen extends StatefulWidget {
   @override

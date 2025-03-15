@@ -23,10 +23,10 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   
   // Current timestamp and username - using the provided details
   final String _orderTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-  final String _username = 'navin280123';
+  // final String _username = 'navin280123';
   
   // Form is always considered complete now that we've removed required fields
-  bool get _isFormComplete => true;
+  // bool get _isFormComplete => true;
 
   @override
   void dispose() {

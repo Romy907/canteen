@@ -13,6 +13,7 @@ class ManagerScreen extends StatefulWidget {
 class _ManagerScreenState extends State<ManagerScreen> {
   int _selectedIndex = 0;
   int pendingOrderCount = 0;
+  // ignore: unused_field
   List<Map<String, dynamic>> _menuItems = [];
   @override
   void initState() {

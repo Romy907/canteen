@@ -34,6 +34,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
   late List<Order> orderHistory;
   late List<Order> filteredOrders;
   bool _isLoading = true;
+  // ignore: unused_field
   bool _isRefreshing = false;
   String _selectedFilter = 'None';
   late AnimationController _animationController;

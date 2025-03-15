@@ -26,9 +26,6 @@ class _StudentFavouriteScreenState extends State<StudentFavouriteScreen>
   late List<Map<String, dynamic>> _favoriteItems;
   String _searchQuery = '';
 
-  // Current timestamp from user input
-  final String _currentTimestamp = '2025-03-06 08:11:44';
-  final String _username = 'navin280123';
 
   @override
   void initState() {
