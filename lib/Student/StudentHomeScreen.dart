@@ -1,7 +1,6 @@
 import 'package:canteen/Student/CheckOutScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'dart:ui';
 
 class StudentHomeScreen extends StatefulWidget {
   final List<Map<String, dynamic>> favoriteItems;

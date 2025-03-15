@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter/cupertino.dart';
 
 class StoreTiming {
   final String day;
@@ -379,7 +378,7 @@ class ManagerOperatingHoursState extends State<ManagerOperatingHours> with Singl
                           width: 40,
                           height: 5,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withAlpha(76),
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -396,7 +395,7 @@ class ManagerOperatingHoursState extends State<ManagerOperatingHours> with Singl
                         Text(
                           'Apply the same hours to multiple days',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withAlpha(204),
                             fontSize: 14,
                           ),
                         ),
@@ -1010,7 +1009,7 @@ Widget _buildTimePicker(
     
     return Card(
       elevation: isToday ? 2 : 1,
-      shadowColor: isToday ? Colors.blue.withOpacity(0.3) : Colors.black12,
+      shadowColor: isToday ? Colors.blue.withAlpha(76) : Colors.black12,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

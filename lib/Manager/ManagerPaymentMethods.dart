@@ -1,6 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shimmer/shimmer.dart';
@@ -996,7 +995,7 @@ class UPIAccountItem extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 6),
         elevation: 2,
         shadowColor:
-            upiDetails.isPrimary ? Colors.blue.withOpacity(0.5) : Colors.black12,
+            upiDetails.isPrimary ? Colors.blue.withAlpha(127) : Colors.black12,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
@@ -1043,7 +1042,7 @@ class UPIAccountItem extends StatelessWidget {
                             boxShadow: upiDetails.isActive && upiDetails.isPrimary
                                 ? [
                                     BoxShadow(
-                                      color: Colors.blue.withOpacity(0.3),
+                                      color: Colors.blue.withAlpha(76),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     )
@@ -1072,7 +1071,7 @@ class UPIAccountItem extends StatelessWidget {
                                 border: Border.all(color: Colors.white, width: 2),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.blue.withOpacity(0.3),
+                                    color: Colors.blue.withAlpha(76),
                                     blurRadius: 4,
                                     spreadRadius: 1,
                                   )
@@ -1447,7 +1446,7 @@ class UPIAccountItem extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withAlpha(51),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

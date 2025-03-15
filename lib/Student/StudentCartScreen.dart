@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'CheckOutScreen.dart';
 
 class StudentCartScreen extends StatefulWidget {

@@ -16,8 +16,8 @@ class ManagerProfile extends StatefulWidget {
 
 class _ManagerProfileState extends State<ManagerProfile>
     with SingleTickerProviderStateMixin {
-  // Sample profile data
-  final Map<String, String> profileData = {
+  // Profile data
+  Map<String, String> profileData = {
     'name': 'John Manager',
     'email': 'john.manager@example.com',
     'phone': '+1 123-456-7890',
@@ -26,27 +26,56 @@ class _ManagerProfileState extends State<ManagerProfile>
   };
 
   late TabController _tabController;
-  final Color _primaryColor = const Color.fromARGB(102, 30, 136, 229);
+  bool _isLoading = true;
+  // ignore: unused_field
+  int _selectedTabIndex = 0;
+
+  // Modern color scheme
+  final Color _primaryColor = const Color(0xFF1E88E5);
   final Color _accentColor = const Color(0xFF26C6DA);
+  final Color _backgroundColor = const Color(0xFFF5F7FA);
+  final Color _cardColor = Colors.white;
+  final Color _textColor = const Color(0xFF2D3748);
+  final Color _subtitleColor = const Color(0xFF718096);
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _selectedTabIndex = _tabController.index;
+      });
+    });
+    
+    // Set system UI overlay style for better integration
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: _backgroundColor,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
   }
 
   Future<void> _fetchUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      profileData['name'] = prefs.getString('name') ?? 'Not Available';
-      profileData['email'] =
-          prefs.getString('email') ?? 'john.manager@example.com';
-      profileData['phone'] = prefs.getString('phone') ?? 'Not Available';
-      profileData['canteen'] =
-          prefs.getString('university') ?? 'Main Campus Canteen';
-      profileData['role'] = prefs.getString('role')?.toUpperCase() ?? 'Canteen Manager';
-    });
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      setState(() {
+        profileData = {
+          'name': prefs.getString('name') ?? 'Not Available',
+          'email': prefs.getString('email') ?? 'john.manager@example.com',
+          'phone': prefs.getString('phone') ?? 'Not Available',
+          'canteen': prefs.getString('university') ?? 'Main Campus Canteen',
+          'role': prefs.getString('role')?.toUpperCase() ?? 'CANTEEN MANAGER',
+        };
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -57,22 +86,63 @@ class _ManagerProfileState extends State<ManagerProfile>
 
   @override
   Widget build(BuildContext context) {
+    
     return Theme(
-      data: Theme.of(context).copyWith(
+      data: ThemeData(
+        primaryColor: _primaryColor,
+        colorScheme: ColorScheme.light(
+          primary: _primaryColor,
+          secondary: _accentColor,
+          surface: _backgroundColor,
+        ),
+        scaffoldBackgroundColor: _backgroundColor,
+        cardTheme: CardTheme(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          clipBehavior: Clip.antiAlias,
+        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: _primaryColor,
             foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           ),
         ),
       ),
       child: Scaffold(
-        body: _buildBody(),
-        floatingActionButton: _buildFloatingActionButton(),
+        body: _isLoading ? _buildLoadingState() : _buildBody(),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 60, height: 60,
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
+              strokeWidth: 3,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Loading profile...',
+            style: TextStyle(
+              color: _textColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -82,8 +152,10 @@ class _ManagerProfileState extends State<ManagerProfile>
       child: RefreshIndicator(
         color: _primaryColor,
         onRefresh: () async {
-          // Simulate refreshing profile data
-          await Future.delayed(const Duration(seconds: 1));
+          setState(() {
+            _isLoading = true;
+          });
+          await _fetchUserData();
         },
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -97,234 +169,187 @@ class _ManagerProfileState extends State<ManagerProfile>
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: () {
-        _showQuickActions(context);
-      },
-      backgroundColor: _accentColor,
-      child: const Icon(Icons.add),
-      tooltip: 'Quick Actions',
-    );
-  }
-
-  void _showQuickActions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildQuickActionItem(
-                  icon: Icons.restaurant_menu,
-                  label: 'Add Menu Item',
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Add menu item logic
-                  },
-                ),
-                _buildQuickActionItem(
-                  icon: Icons.people_alt_outlined,
-                  label: 'Add Staff',
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Add staff logic
-                  },
-                ),
-                _buildQuickActionItem(
-                  icon: Icons.local_offer_outlined,
-                  label: 'New Offer',
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Add offer logic
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _accentColor.withAlpha(25),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: _accentColor, size: 28),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildProfileHeader() {
     return SliverToBoxAdapter(
       child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [_primaryColor.withAlpha(229), _primaryColor],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: [
+              _primaryColor,
+              _primaryColor.withAlpha(204),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(30),
-            bottomRight: Radius.circular(30),
-          ),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(51),
-              blurRadius: 8,
-              spreadRadius: 2,
+              color: _primaryColor.withAlpha(76),
+              blurRadius: 12,
+              spreadRadius: 0,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-              Stack(
-                alignment: Alignment.bottomRight,
+        child: Stack(
+          children: [
+            // Background decorative elements
+            Positioned(
+              top: -20,
+              right: -20,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -40,
+              left: -10,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(12),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            
+            // Profile content
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                Hero(
-                  tag: 'profile_image',
-                  child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(51),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 3),
-                    ),
+                  // Profile image
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Hero(
+                        tag: 'profile_image',
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(51),
+                                blurRadius: 10,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 42,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              profileData['name']!.substring(0, 1),
+                              style: TextStyle(
+                                fontSize: 28,
+                                color: _primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          // Handle profile picture change
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _accentColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(51),
+                                blurRadius: 6,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.camera_alt,
+                              color: Colors.white, size: 18),
+                        ),
+                      ),
                     ],
-                    border: Border.all(color: Colors.white, width: 3),
                   ),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: Text(
-                    profileData['name']!.substring(0, 1),
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: _primaryColor,
-                      fontWeight: FontWeight.bold,
+                  
+                  const SizedBox(width: 20),
+                  
+                  // Profile details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profileData['name']!,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(51),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            profileData['role']!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              color: Colors.white.withAlpha(229),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                profileData['canteen']!,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withAlpha(229),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    ),
                   ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                  // Handle profile picture change
-                  },
-                  child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _accentColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(51),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 2),
-                    ),
-                    ],
-                  ),
-                  child: const Icon(Icons.camera_alt,
-                    color: Colors.white, size: 20),
-                  ),
-                ),
                 ],
               ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                Text(
-                  profileData['name']!,
-                  style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(51),
-                  borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                  profileData['role']!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  profileData['canteen']!,
-                  style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white.withAlpha(216),
-                  fontStyle: FontStyle.italic,
-                  ),
-                ),
-                ],
-              ),
-              ],
             ),
           ],
         ),
@@ -332,26 +357,154 @@ class _ManagerProfileState extends State<ManagerProfile>
     );
   }
 
-  Widget _buildTabBar() {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: _SliverAppBarDelegate(
-        TabBar(
-          controller: _tabController,
-          labelColor: _primaryColor,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: _primaryColor,
-          indicatorWeight: 3,
-          indicatorSize: TabBarIndicatorSize.label,
-          tabs: const [
-            Tab(text: 'Profile Info'),
-            Tab(text: 'Management'),
-          ],
+ Widget _buildTabBar() {
+  return SliverPersistentHeader(
+    pinned: true,
+    delegate: _SliverAppBarDelegate(
+      Container(
+        color: _backgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Backdrop with extra depth
+              Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withAlpha(20),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 2),
+                    ),
+                    BoxShadow(
+                      color: _primaryColor.withAlpha(12),
+                      blurRadius: 12,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Animated Tab Bar
+              AnimatedBuilder(
+                animation: _tabController.animation!,
+                builder: (context, child) {
+                  return TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: _subtitleColor,
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                    labelPadding: const EdgeInsets.symmetric(vertical: 10),
+                    indicator: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: [
+                          _primaryColor,
+                          Color.lerp(_primaryColor, _accentColor, 0.6)!,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primaryColor.withAlpha(76),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicatorPadding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 6,
+                    ),
+                    dividerColor: Colors.transparent,
+                    splashBorderRadius: BorderRadius.circular(12),
+                    overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                      (Set<WidgetState> states) {
+                        if (states.contains(WidgetState.hovered)) {
+                          return _primaryColor.withAlpha(10);
+                        }
+                        if (states.contains(WidgetState.pressed)) {
+                          return _primaryColor.withAlpha(25);
+                        }
+                        return null;
+                      },
+                    ),
+                    tabs: [
+                      _buildTabItem(
+                        icon: Icons.person_outline,
+                        text: "Profile Info",
+                        isSelected: _tabController.index == 0,
+                        animationValue: 1.0 - (_tabController.animation!.value),
+                      ),
+                      _buildTabItem(
+                        icon: Icons.settings_outlined,
+                        text: "Management",
+                        isSelected: _tabController.index == 1,
+                        animationValue: _tabController.animation!.value,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
+// Helper method to build animated tab items
+Widget _buildTabItem({
+  required IconData icon,
+  required String text,
+  required bool isSelected,
+  required double animationValue,
+}) {
+  return Tab(
+    height: 44,
+    child: AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: isSelected ? 1.0 : 0.8,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedScale(
+            scale: isSelected ? 1.0 : 0.9,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(icon, size: 20),
+          ),
+          SizedBox(width: 8),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: TextStyle(
+              fontSize: isSelected ? 14 : 13,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              letterSpacing: isSelected ? 0.2 : 0.0,
+            ),
+            child: Text(text),
+          ),
+        ],
+      ),
+    ),
+  );
+}  
   Widget _buildTabContent() {
     return SliverFillRemaining(
       child: TabBarView(
@@ -366,10 +519,11 @@ class _ManagerProfileState extends State<ManagerProfile>
 
   Widget _buildProfileInfoTab() {
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
+      physics: const BouncingScrollPhysics(),
       children: [
         _buildInfoCard(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         _buildAccountActions(),
       ],
     );
@@ -377,8 +531,13 @@ class _ManagerProfileState extends State<ManagerProfile>
 
   Widget _buildInfoCard() {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: EdgeInsets.zero,
+      color: _cardColor,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade100),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -387,48 +546,78 @@ class _ManagerProfileState extends State<ManagerProfile>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Personal Information',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: _textColor,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.edit_outlined, color: _primaryColor),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _primaryColor.withAlpha(25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      color: _primaryColor,
+                      size: 20,
+                    ),
+                  ),
                   onPressed: () {
                     // Handle edit profile
                   },
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            _buildInfoRow(
+              Icons.email_outlined,
+              'Email',
+              profileData['email']!,
+              Colors.blue.shade700,
+            ),
             const SizedBox(height: 16),
-            _buildInfoRow(Icons.email_outlined, 'Email', profileData['email']!),
+            _buildInfoRow(
+              Icons.phone_outlined,
+              'Phone',
+              profileData['phone']!,
+              Colors.green.shade700,
+            ),
             const SizedBox(height: 16),
-            _buildInfoRow(Icons.phone_outlined, 'Phone', profileData['phone']!),
+            _buildInfoRow(
+              Icons.location_on_outlined,
+              'Location',
+              'Main Campus, Building A',
+              Colors.orange.shade700,
+            ),
             const SizedBox(height: 16),
-            _buildInfoRow(Icons.location_on_outlined, 'Location',
-                'Main Campus, Building A'),
-            const SizedBox(height: 16),
-            _buildInfoRow(Icons.schedule_outlined, 'Working Hours',
-                'Mon-Fri, 8:00 AM - 5:00 PM'),
+            _buildInfoRow(
+              Icons.schedule_outlined,
+              'Working Hours',
+              'Mon-Fri, 8:00 AM - 5:00 PM',
+              Colors.purple.shade700,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: _primaryColor.withAlpha(25),
-            borderRadius: BorderRadius.circular(10),
+            color: color.withAlpha(25),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: _primaryColor, size: 22),
+          child: Icon(icon, color: color, size: 22),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -439,15 +628,16 @@ class _ManagerProfileState extends State<ManagerProfile>
                 label,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: _subtitleColor,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: _textColor,
                 ),
               ),
             ],
@@ -458,63 +648,120 @@ class _ManagerProfileState extends State<ManagerProfile>
   }
 
   Widget _buildAccountActions() {
+    final settingsItems = [
+      {
+        'icon': Icons.lock_outline,
+        'title': 'Change Password',
+        'subtitle': 'Update your security credentials',
+        'color': Colors.blue.shade700,
+        'onTap': () {
+          // Handle change password
+        },
+      },
+      {
+        'icon': Icons.notifications_outlined,
+        'title': 'Notifications',
+        'subtitle': 'Manage your notification preferences',
+        'color': Colors.orange.shade700,
+        'onTap': () {
+          // Handle notifications settings
+        },
+      },
+      {
+        'icon': Icons.language_outlined,
+        'title': 'Language',
+        'subtitle': 'Change your preferred language',
+        'color': Colors.green.shade700,
+        'onTap': () {
+          // Handle language settings
+        },
+      },
+      {
+        'icon': Icons.logout,
+        'title': 'Logout',
+        'subtitle': 'Sign out from your account',
+        'color': Colors.red.shade700,
+        'onTap': () async {
+          // Show confirmation dialog
+          bool confirm = await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Logout', style: TextStyle(color: _textColor)),
+              content: Text(
+                'Are you sure you want to logout from your account?',
+                style: TextStyle(color: _subtitleColor),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: _subtitleColor),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                  ),
+                  child: const Text('Logout'),
+                ),
+              ],
+            ),
+          ) ?? false;
+          
+          if (confirm) {
+            await FirebaseManager().logout();
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => LoginScreen()),
+            );
+          }
+        },
+      },
+    ];
+
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: EdgeInsets.zero,
+      color: _cardColor,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade100),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Account Settings',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: _textColor,
               ),
             ),
             const SizedBox(height: 16),
-            _buildSettingsTile(
-              Icons.lock_outline,
-              'Change Password',
-              'Update your security credentials',
-              onTap: () {
-                // Handle change password
-              },
-            ),
-            const Divider(height: 24),
-            _buildSettingsTile(
-              Icons.notifications_outlined,
-              'Notifications',
-              'Manage your notification preferences',
-              onTap: () {
-                // Handle notifications settings
-              },
-            ),
-            const Divider(height: 24),
-            _buildSettingsTile(
-              Icons.language_outlined,
-              'Language',
-              'Change your preferred language',
-              onTap: () {
-                // Handle language settings
-              },
-            ),
-            const Divider(height: 24),
-            _buildSettingsTile(
-              Icons.logout,
-              'Logout',
-              'Sign out from your account',
-              textColor: Colors.red,
-              iconColor: Colors.red,
-              onTap: () async {
-                await FirebaseManager().logout();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => LoginScreen()),
-                );
-              },
-            ),
+            ...List.generate(settingsItems.length, (index) {
+              final item = settingsItems[index];
+              return Column(
+                children: [
+                  _buildSettingsTile(
+                    item['icon'] as IconData,
+                    item['title'] as String,
+                    item['subtitle'] as String,
+                    color: item['color'] as Color,
+                    onTap: item['onTap'] as VoidCallback,
+                  ),
+                  if (index < settingsItems.length - 1)
+                    const Divider(height: 16),
+                ],
+              );
+            }),
           ],
         ),
       ),
@@ -525,31 +772,49 @@ class _ManagerProfileState extends State<ManagerProfile>
     IconData icon,
     String title,
     String subtitle, {
+    required Color color,
     required VoidCallback onTap,
-    Color? textColor,
-    Color? iconColor,
   }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: (iconColor ?? _primaryColor).withAlpha(25),
-          borderRadius: BorderRadius.circular(10),
+          color: color.withAlpha(25),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: iconColor ?? _primaryColor, size: 22),
+        child: Icon(icon, color: color, size: 24),
       ),
       title: Text(
         title,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          color: textColor,
+          color: _textColor,
+          fontSize: 16,
         ),
       ),
-      subtitle: Text(subtitle),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: Colors.grey[400],
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          subtitle,
+          style: TextStyle(
+            color: _subtitleColor,
+            fontSize: 14,
+          ),
+        ),
+      ),
+      trailing: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          Icons.arrow_forward_ios,
+          color: _subtitleColor,
+          size: 14,
+        ),
       ),
       onTap: onTap,
     );
@@ -565,12 +830,25 @@ class _ManagerProfileState extends State<ManagerProfile>
             'title': 'Manage Menu Items',
             'subtitle': 'Add, edit or remove menu items',
             'badge': '45 items',
+            'badgeColor': Colors.green,
+            'iconColor': Colors.orange.shade700,
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ManagerManageMenu()),
+              );
+            },
           },
           {
             'icon': Icons.local_dining_outlined,
             'title': 'Special Dishes',
             'subtitle': 'Highlight special menu items',
             'badge': '3 specials',
+            'badgeColor': Colors.purple,
+            'iconColor': Colors.purple.shade700,
+            'onTap': () {
+              // Handle special dishes
+            },
           },
         ],
       },
@@ -582,17 +860,37 @@ class _ManagerProfileState extends State<ManagerProfile>
             'title': 'Staff Management',
             'subtitle': 'Manage canteen staff and shifts',
             'badge': '12 staff',
+            'badgeColor': Colors.blue,
+            'iconColor': Colors.blue.shade700,
+            'onTap': () {
+              // Handle staff management
+            },
           },
           {
             'icon': Icons.schedule_outlined,
             'title': 'Operating Hours',
             'subtitle': 'Set canteen operating hours',
+            'iconColor': Colors.indigo.shade700,
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ManagerOperatingHours()),
+              );
+            },
           },
           {
             'icon': Icons.payments_outlined,
             'title': 'Payment Methods',
             'subtitle': 'Configure accepted payment options',
             'badge': '5 methods',
+            'badgeColor': Colors.teal,
+            'iconColor': Colors.teal.shade700,
+            'onTap': () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ManagerPaymentMethods()),
+              );
+            },
           },
         ],
       },
@@ -605,17 +903,30 @@ class _ManagerProfileState extends State<ManagerProfile>
             'subtitle': 'Track and manage stock levels',
             'badge': 'Low stock',
             'badgeColor': Colors.orange,
+            'iconColor': Colors.amber.shade700,
+            'onTap': () {
+              // Handle inventory management
+            },
           },
           {
             'icon': Icons.local_offer_outlined,
             'title': 'Special Offers',
             'subtitle': 'Create and manage promotions',
             'badge': '2 active',
+            'badgeColor': Colors.pink,
+            'iconColor': Colors.pink.shade700,
+            'onTap': () {
+              // Handle special offers
+            },
           },
           {
             'icon': Icons.insert_chart_outlined,
             'title': 'Sales Analytics',
             'subtitle': 'View sales reports and insights',
+            'iconColor': Colors.deepPurple.shade700,
+            'onTap': () {
+              // Handle analytics
+            },
           },
         ],
       },
@@ -624,6 +935,7 @@ class _ManagerProfileState extends State<ManagerProfile>
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: managementCategories.length,
+      physics: const BouncingScrollPhysics(),
       itemBuilder: (context, categoryIndex) {
         final category = managementCategories[categoryIndex];
         final options = category['options'] as List;
@@ -632,27 +944,34 @@ class _ManagerProfileState extends State<ManagerProfile>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               child: Text(
                 category['title'] as String,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: _textColor,
                 ),
               ),
             ),
             Card(
-              elevation: 2,
+              margin: EdgeInsets.zero,
+              color: _cardColor,
+              elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: Colors.grey.shade100),
+              ),
               child: ListView.separated(
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
                 itemCount: options.length,
-                separatorBuilder: (context, index) =>
-                    const Divider(height: 1, indent: 70),
+                separatorBuilder: (context, index) => Divider(
+                  height: 1,
+                  indent: 76,
+                  endIndent: 16,
+                  color: Colors.grey.shade200,
+                ),
                 itemBuilder: (context, index) {
                   final option = options[index] as Map;
                   return _buildManagementOption(option);
@@ -667,117 +986,108 @@ class _ManagerProfileState extends State<ManagerProfile>
   }
 
   Widget _buildManagementOption(Map option) {
+    final Color iconColor = option['iconColor'] as Color? ?? _primaryColor;
     final Color badgeColor = option['badgeColor'] as Color? ?? _accentColor;
+    final VoidCallback onTap = option['onTap'] as VoidCallback;
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       leading: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _primaryColor.withAlpha(25),
-          borderRadius: BorderRadius.circular(12),
+          color: iconColor.withAlpha(25),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(
           option['icon'] as IconData,
-          color: _primaryColor,
+          color: iconColor,
+          size: 26,
         ),
       ),
       title: Text(
         option['title'] as String,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 16,
+          color: _textColor,
         ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 4),
-        child: Text(option['subtitle'] as String),
+        child: Text(
+          option['subtitle'] as String,
+          style: TextStyle(
+            color: _subtitleColor,
+            fontSize: 14,
+          ),
+        ),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (option.containsKey('badge'))
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: badgeColor.withAlpha(25),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: badgeColor.withAlpha(102),
+                  width: 1,
+                ),
               ),
               child: Text(
                 option['badge'] as String,
                 style: TextStyle(
                   color: badgeColor,
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right, color: Colors.grey[400]),
+          const SizedBox(width: 12),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.arrow_forward_ios,
+              color: _subtitleColor,
+              size: 14,
+            ),
+          ),
         ],
       ),
-      onTap: () {
-        // Handle management option tap
-        if (option['title'] == 'Manage Menu Items') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ManagerManageMenu()),
-          );
-        }
-        if (option['title'] == 'Special Dishes') {
-          // Handle special dishes
-        }
-        if (option['title'] == 'Staff Management') {
-          // Handle staff management
-        }
-        if (option['title'] == 'Operating Hours') {
-          // Handle operating hours
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ManagerOperatingHours()),
-          );
-        }
-        if (option['title'] == 'Payment Methods') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ManagerPaymentMethods()),
-          );
-        }
-        if (option['title'] == 'Inventory Management') {
-          // Handle inventory management
-        }  
-
-        if (option['title'] == 'Special Offers') {
-          // Handle special offers
-        }
-
-      },
+      onTap: onTap,
     );
   }
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
+  final Widget _widget;
 
-  _SliverAppBarDelegate(this._tabBar);
+  _SliverAppBarDelegate(this._widget);
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Colors.white,
-      child: _tabBar,
-    );
+    return _widget;
   }
 
   @override
-  double get maxExtent => _tabBar.preferredSize.height;
+  double get maxExtent => kToolbarHeight + 16;
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
+  double get minExtent => kToolbarHeight + 16;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return false;
+    return true;
   }
 }

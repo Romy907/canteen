@@ -437,7 +437,7 @@ class _ManagerOrderListState extends State<ManagerOrderList> with SingleTickerPr
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
           colorScheme: Theme.of(context).colorScheme.copyWith(
-            background: Theme.of(context).cardColor,
+            surface: Theme.of(context).cardColor,
           ),
         ),
         child: ExpansionTile(
