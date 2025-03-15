@@ -6,6 +6,7 @@ import 'package:canteen/Manager/ManagerPaymentMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ManagerProfile extends StatefulWidget {
   const ManagerProfile({Key? key}) : super(key: key);
@@ -134,12 +135,29 @@ class _ManagerProfileState extends State<ManagerProfile>
             ),
           ),
           const SizedBox(height: 24),
-          Text(
-            'Loading profile...',
-            style: TextStyle(
-              color: _textColor,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Column(
+              children: [
+                Container(
+                  width: 200,
+                  height: 20,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 150,
+                  height: 20,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 100,
+                  height: 20,
+                  color: Colors.grey.shade300,
+                ),
+              ],
             ),
           ),
         ],
