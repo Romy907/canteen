@@ -4,12 +4,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 
 class StudentEditProfileScreen extends StatefulWidget {
+  final File? profileImage;
+
+  const StudentEditProfileScreen({Key? key, this.profileImage}) : super(key: key);
+
   @override
   _StudentEditProfileScreenState createState() => _StudentEditProfileScreenState();
 }
 
 class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isEditing = false;
 
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -21,10 +26,11 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProfileImage();
+    _profileImage = widget.profileImage;
+    _loadProfileData();
   }
 
-  Future<void> _loadProfileImage() async {
+  Future<void> _loadProfileData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? imagePath = prefs.getString('profile_image');
     if (imagePath != null) {
@@ -32,6 +38,13 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
         _profileImage = File(imagePath);
       });
     }
+    setState(() {
+      nameController.text = prefs.getString('name') ?? '';
+      emailController.text = prefs.getString('email') ?? '';
+      phoneController.text = prefs.getString('phone') ?? '';
+      campusController.text = prefs.getString('campus') ?? '';
+      selectedMealPreference = prefs.getString('meal_preference') ?? 'Vegetarian';
+    });
   }
 
   Future<void> _pickImage() async {
@@ -45,9 +58,14 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
     }
   }
 
-  Future<void> _saveProfileImage() async {
+  Future<void> _saveProfileData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', nameController.text);
+    await prefs.setString('email', emailController.text);
+    await prefs.setString('phone', phoneController.text);
+    await prefs.setString('campus', campusController.text);
+    await prefs.setString('meal_preference', selectedMealPreference);
     if (_profileImage != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('profile_image', _profileImage!.path);
     }
   }
@@ -95,23 +113,32 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Personal Information',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withAlpha(50),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Personal Information',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.edit_outlined, color: Theme.of(context).primaryColor),
-                            onPressed: () {
-                              // Handle edit profile
-                            },
-                          ),
-                        ],
+                            IconButton(
+                              icon: Icon(Icons.edit_outlined, color: Theme.of(context).primaryColor),
+                              onPressed: () {
+                                setState(() {
+                                  _isEditing = true;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildEditableInfoRow(Icons.person_outline, 'Full Name', nameController),
@@ -128,22 +155,30 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 85, 151, 244),
-                    foregroundColor: Colors.white,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        await _saveProfileData();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Profile updated successfully')),
+                        );
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: const Text('Save Changes'),
                   ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      await _saveProfileImage();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Profile updated successfully')),
-                      );
-                    }
-                  },
-                  child: const Text('Save Changes'),
                 ),
               ),
             ],
@@ -169,10 +204,12 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
         Expanded(
           child: TextFormField(
             controller: controller,
+            enabled: _isEditing,
             decoration: InputDecoration(
               labelText: label,
               border: InputBorder.none,
             ),
+            style: TextStyle(color: Colors.black),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your $label';
@@ -201,18 +238,27 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
         Expanded(
           child: DropdownButtonFormField<String>(
             value: currentValue,
+            onChanged: _isEditing ? (value) {
+              setState(() {
+                selectedMealPreference = value!;
+              });
+            } : null,
             decoration: InputDecoration(
               labelText: label,
               border: InputBorder.none,
             ),
+            style: TextStyle(color: Colors.black),
             items: ['Vegetarian', 'Non-Vegetarian', 'Vegan']
-                .map((meal) => DropdownMenuItem(value: meal, child: Text(meal)))
+                .map((meal) => DropdownMenuItem(
+                      value: meal,
+                      child: Text(
+                        meal,
+                        style: TextStyle(
+                          color: Colors.black, // Set the color of the dropdown items to black
+                        ),
+                      ),
+                    ))
                 .toList(),
-            onChanged: (value) {
-              setState(() {
-                selectedMealPreference = value!;
-              });
-            },
           ),
         ),
       ],
