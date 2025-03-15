@@ -1,6 +1,7 @@
 import 'package:canteen/Firebase/FirebaseManager.dart';
 import 'package:canteen/Login/loginscreen.dart';
 import 'package:canteen/Manager/ManagerManageMenu.dart';
+import 'package:canteen/Manager/ManagerPaymentMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -711,6 +712,29 @@ class _ManagerProfileState extends State<ManagerProfile>
             MaterialPageRoute(builder: (context) => ManagerManageMenu()),
           );
         }
+        if (option['title'] == 'Special Dishes') {
+          // Handle special dishes
+        }
+        if (option['title'] == 'Staff Management') {
+          // Handle staff management
+        }
+        if (option['title'] == 'Operating Hours') {
+          // Handle operating hours
+        }
+        if (option['title'] == 'Payment Methods') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ManagerPaymentMethods()),
+          );
+        }
+        if (option['title'] == 'Inventory Management') {
+          // Handle inventory management
+        }  
+
+        if (option['title'] == 'Special Offers') {
+          // Handle special offers
+        }
+
       },
     );
   }
