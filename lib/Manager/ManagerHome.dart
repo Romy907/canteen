@@ -1060,11 +1060,6 @@ class _ManagerHomeState extends State<ManagerHome>
         'color': Colors.blue[700]!,
       },
       {
-        'title': 'Manage Orders',
-        'icon': Icons.receipt_long,
-        'color': Colors.green[700]!,
-      },
-      {
         'title': 'View Reports',
         'icon': Icons.insert_chart,
         'color': Colors.purple[700]!,
