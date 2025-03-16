@@ -76,6 +76,9 @@ class _StudentScreenState extends State<StudentScreen> {
     try {
       List<Map<String, dynamic>> items =
           await StudentMenuServices().getMenuItems(ids);
+      items.forEach((item) {
+        item['storeId'] = ids;
+      });
       setState(() {
         foodItems = items;
         print("Fetched ${foodItems.length} food items");
