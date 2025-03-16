@@ -1418,9 +1418,10 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         setState(() {
           _isProcessing = false;
         });
-        
+
+        print(widget.items.toString());
         // Here you would typically save the order to Firebase
-        // FirebaseDatabase.instance.ref().child('orders').push().set(orderData);
+        FirebaseDatabase.instance.ref().child(widget.items[0]['storeId']).child('orders').push().set(orderData);
         
         // Show success dialog
         showDialog(

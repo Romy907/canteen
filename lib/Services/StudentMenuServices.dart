@@ -14,7 +14,9 @@ class StudentMenuServices {
         Map<dynamic, dynamic> items =
             snapshot.snapshot.value as Map<dynamic, dynamic>;
         items.forEach((key, value) {
-          menuItems.add(Map<String, dynamic>.from(value));
+          Map<String, dynamic> menuItem = Map<String, dynamic>.from(value);
+          menuItem['storeId'] = id;
+          menuItems.add(menuItem);
         });
       }
     }
