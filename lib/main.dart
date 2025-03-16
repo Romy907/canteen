@@ -36,7 +36,9 @@ class MyApp extends StatelessWidget {
               return StudentScreen();
             } else if (role == 'manager') {
               return ManagerScreen();
-            } else {
+            } 
+            
+            else {
               return LoginScreen();
             }
           }

@@ -1,5 +1,4 @@
 import 'package:canteen/Student/ChangePassword.dart';
-import 'package:canteen/Student/LanguageSettingScreen.dart';
 import 'package:canteen/Student/NotificationSettingsScreen.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +8,7 @@ class StudentSettingScreen extends StatefulWidget {
 }
 
 class _StudentSettingScreenState extends State<StudentSettingScreen> {
-  bool isDarkMode = false;
+  String _selectedLanguage = "English"; // Default language
 
   void _changePassword() {
     Navigator.push(
@@ -41,44 +40,34 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
     );
   }
 
-  void _showThemeDialog() {
-    bool tempIsDarkMode = isDarkMode;
-
+  void _openLanguageSettings() {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text("Change Theme"),
+          title: Text("Select Language"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                title: Text("Dark Mode"),
-                leading: Radio<bool>(
-                  value: true,
-                  groupValue: tempIsDarkMode,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        tempIsDarkMode = value;
-                      });
-                    }
-                  },
-                ),
+              RadioListTile<String>(
+                title: Text("English"),
+                value: "English",
+                groupValue: _selectedLanguage,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedLanguage = value!;
+                  });
+                },
               ),
-              ListTile(
-                title: Text("Light Mode"),
-                leading: Radio<bool>(
-                  value: false,
-                  groupValue: tempIsDarkMode,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        tempIsDarkMode = value;
-                      });
-                    }
-                  },
-                ),
+              RadioListTile<String>(
+                title: Text("Hindi"),
+                value: "Hindi",
+                groupValue: _selectedLanguage,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedLanguage = value!;
+                  });
+                },
               ),
             ],
           ),
@@ -90,22 +79,15 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  isDarkMode = tempIsDarkMode;
+                  Navigator.pop(context);
+                  // You can add logic here to apply the selected language
                 });
-                Navigator.pop(context);
               },
               child: Text("OK"),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  void _openLanguageSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => LanguageSettingsScreen()),
     );
   }
 
@@ -119,14 +101,8 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
         children: [
           _buildSettingOption(
             context,
-            icon: Icons.brightness_6,
-            title: "Display Theme",
-            onTap: _showThemeDialog,
-          ),
-          _buildSettingOption(
-            context,
             icon: Icons.language,
-            title: "Language",
+            title: "Language ($_selectedLanguage)", // Show selected language
             onTap: _openLanguageSettings,
           ),
           _buildSettingOption(
