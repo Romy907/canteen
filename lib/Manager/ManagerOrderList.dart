@@ -1195,12 +1195,11 @@ void _showFilterOptions() {
                 value: rejectReason,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 ),
                 items: [
                   'Out of stock',
                   'Restaurant too busy',
-                  'Cannot deliver to this location',
                   'Kitchen closed',
                   'Other reason'
                 ].map((String value) {
