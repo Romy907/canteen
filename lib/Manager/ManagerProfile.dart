@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
+import 'edit_profile_screen.dart';
 
 class ManagerProfile extends StatefulWidget {
   const ManagerProfile({Key? key}) : super(key: key);
@@ -32,6 +33,8 @@ class _ManagerProfileState extends State<ManagerProfile>
   bool _isLoading = true;
   // ignore: unused_field
   int _selectedTabIndex = 0;
+  
+
 
   // Modern color scheme
   final Color _primaryColor = const Color(0xFF1E88E5);
@@ -183,192 +186,164 @@ class _ManagerProfileState extends State<ManagerProfile>
   }
 
   Widget _buildProfileHeader() {
-    return SliverToBoxAdapter(
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              _primaryColor,
-              _primaryColor.withAlpha(204),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: _primaryColor.withAlpha(76),
-              blurRadius: 12,
-              spreadRadius: 0,
-              offset: const Offset(0, 4),
-            ),
+  return SliverToBoxAdapter(
+    child: Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _primaryColor,
+            _primaryColor.withAlpha(204),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Stack(
-          children: [
-            // Background decorative elements
-            Positioned(
-              top: -20,
-              right: -20,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withAlpha(76),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Background decorative elements
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(25),
+                shape: BoxShape.circle,
               ),
             ),
-            Positioned(
-              bottom: -40,
-              left: -10,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(12),
-                  shape: BoxShape.circle,
-                ),
+          ),
+          Positioned(
+            bottom: -40,
+            left: -10,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(12),
+                shape: BoxShape.circle,
               ),
             ),
-            
-            // Profile content
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Profile image
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Hero(
-                        tag: 'profile_image',
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(51),
-                                blurRadius: 10,
-                                spreadRadius: 0,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: CircleAvatar(
-                            radius: 42,
-                            backgroundColor: Colors.white,
-                            child: Text(
-                              profileData['name']!.substring(0, 1),
-                              style: TextStyle(
-                                fontSize: 28,
-                                color: _primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // Handle profile picture change
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _accentColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(51),
-                                blurRadius: 6,
-                                spreadRadius: 0,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.camera_alt,
-                              color: Colors.white, size: 18),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(width: 20),
-                  
-                  // Profile details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          profileData['name']!,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(51),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            profileData['role']!,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              color: Colors.white.withAlpha(229),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                profileData['canteen']!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withAlpha(229),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+          ),
+          
+          // Profile content
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Profile image
+                Hero(
+                  tag: 'profile_image',
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(51),
+                          blurRadius: 10,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
+                    child: CircleAvatar(
+                      radius: 42,
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        profileData['name']!.substring(0, 1),
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: _primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
+                ),
+                
+                const SizedBox(width: 20),
+                
+                // Profile details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profileData['name']!,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(51),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          profileData['role']!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            color: Colors.white.withAlpha(229),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              profileData['canteen']!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white.withAlpha(229),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
  Widget _buildTabBar() {
   return SliverPersistentHeader(
@@ -544,82 +519,95 @@ Widget _buildTabItem({
   }
 
   Widget _buildInfoCard() {
-    return Card(
-      margin: EdgeInsets.zero,
-      color: _cardColor,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.grey.shade100),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Personal Information',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _textColor,
+  return Card(
+    margin: EdgeInsets.zero,
+    color: _cardColor,
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+      side: BorderSide(color: Colors.grey.shade100),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Personal Information',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _textColor,
+                ),
+              ),
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _primaryColor.withAlpha(25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.edit_outlined,
+                    color: _primaryColor,
+                    size: 20,
                   ),
                 ),
-                IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _primaryColor.withAlpha(25),
-                      shape: BoxShape.circle,
+                onPressed: () async {
+                  final updatedProfileData = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditProfileScreen(
+                        profileData: profileData,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      color: _primaryColor,
-                      size: 20,
-                    ),
-                  ),
-                  onPressed: () {
-                    // Handle edit profile
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _buildInfoRow(
-              Icons.email_outlined,
-              'Email',
-              profileData['email']!,
-              Colors.blue.shade700,
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow(
-              Icons.phone_outlined,
-              'Phone',
-              profileData['phone']!,
-              Colors.green.shade700,
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow(
-              Icons.location_on_outlined,
-              'Location',
-              'Main Campus, Building A',
-              Colors.orange.shade700,
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow(
-              Icons.schedule_outlined,
-              'Working Hours',
-              'Mon-Fri, 8:00 AM - 5:00 PM',
-              Colors.purple.shade700,
-            ),
-          ],
-        ),
+                  );
+
+                  if (updatedProfileData != null) {
+                    setState(() {
+                      profileData = updatedProfileData;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildInfoRow(
+            Icons.email_outlined,
+            'Email',
+            profileData['email']!,
+            Colors.blue.shade700,
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow(
+            Icons.phone_outlined,
+            'Phone',
+            profileData['phone']!,
+            Colors.green.shade700,
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow(
+            Icons.location_on_outlined,
+            'Location',
+            'Main Campus, Building A',
+            Colors.orange.shade700,
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow(
+            Icons.schedule_outlined,
+            'Working Hours',
+            'Mon-Fri, 8:00 AM - 5:00 PM',
+            Colors.purple.shade700,
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
     return Row(

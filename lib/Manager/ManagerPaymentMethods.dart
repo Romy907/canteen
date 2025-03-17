@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 // UPI Payment Configuration Model
 class UPIDetails {
@@ -1396,6 +1397,9 @@ class UPIAccountItem extends StatelessWidget {
 
   // Helper method to show QR code dialog with improved UI
   void _showQRCode(BuildContext context) {
+     // Format the UPI URI
+  final upiUri = 'upi://pay?pa=${upiDetails.upiId}&pn=${upiDetails.merchantName}&cu=INR';
+   
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -1467,65 +1471,12 @@ class UPIAccountItem extends StatelessWidget {
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   children: [
-                    // QR code placeholder with animation
-                    Container(
-                      width: 220,
-                      height: 220,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade200,
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                        color: Colors.white,
-                      ),
-                      child: Center(
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween<double>(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 500),
-                          builder: (context, value, child) {
-                            return Opacity(
-                              opacity: value,
-                              child: Transform.scale(
-                                scale: 0.5 + (value * 0.5),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.qr_code,
-                                size: 100,
-                                color: Colors.blue.shade800,
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'UPI: ${upiDetails.upiId}',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    // QR code imageholder with animation
+                     QrImageView(
+                    data: upiUri, // Use the UPI URI as the QR code data
+                    version: QrVersions.auto,
+                    size: 220.0,
+                  ),
                     const SizedBox(height: 24),
                     
                     // UPI app selection hints
