@@ -14,30 +14,32 @@ class AddEditMenuItemScreen extends StatefulWidget {
   final Map<String, dynamic>? item; // Null if adding new item
   final String currentDate;
   final String userLogin;
-  
+
   const AddEditMenuItemScreen({
-    Key? key, 
-    this.item, 
+    Key? key,
+    this.item,
     required this.currentDate,
     required this.userLogin,
   }) : super(key: key);
-  
+
   @override
   _AddEditMenuItemScreenState createState() => _AddEditMenuItemScreenState();
 }
 
-class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with SingleTickerProviderStateMixin {
+class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen>
+    with SingleTickerProviderStateMixin {
   final MenuService _menuService = MenuService();
   final ImgBBService _imgBBService = ImgBBService();
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
-  
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
-  
+
   String _selectedCategory = 'Main Course';
+  String _selectedTime = '10 min';
   bool _isAvailable = true;
   bool _isVegetarian = false;
   bool _isPopular = false;
@@ -47,16 +49,16 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
   bool _isLoading = false;
   bool _isUploading = false;
   bool _isImageExpanded = false;
-  
+
   // UI Colors & Theme
   final Color _primaryColor = const Color(0xFF5E35B1); // Deep Purple
-  final Color _accentColor = const Color(0xFF00BFA5);  // Teal Accent
+  final Color _accentColor = const Color(0xFF00BFA5); // Teal Accent
   final Color _cardColor = Colors.white;
   final Color _backgroundColor = const Color(0xFFF9F9FB);
   final Color _vegetarianColor = const Color(0xFF43A047); // Green
-  final Color _popularColor = const Color(0xFFFF9800);    // Orange
-  final Color _discountColor = const Color(0xFFE91E63);   // Pink
-  final Color _errorColor = const Color(0xFFD50000);      // Red
+  final Color _popularColor = const Color(0xFFFF9800); // Orange
+  final Color _discountColor = const Color(0xFFE91E63); // Pink
+  final Color _errorColor = const Color(0xFFD50000); // Red
 
   // Input form border styling
   late final _inputBorder = OutlineInputBorder(
@@ -73,47 +75,67 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
     borderRadius: BorderRadius.circular(15),
     borderSide: BorderSide(color: _errorColor, width: 1.5),
   );
-  
+
   List<String> categories = [
-    'Main Course', 
-    'Appetizers', 
-    'Beverages', 
-    'Desserts', 
+    'Main Course',
+    'Appetizers',
+    'Beverages',
+    'Desserts',
     'Sides',
     'Breakfast',
     'Lunch',
     'Dinner',
     'Snacks'
   ];
-  
+  List<String> times = [
+    '5 min',
+    '10 min',
+    '15 min',
+    '20 min',
+    '25 min',
+    '30 min',
+    '35 min',
+    '40 min',
+    '45 min',
+  ];
+
   @override
   void initState() {
     super.initState();
     _initializeService();
-    
+
     // Initialize form with existing item data if editing
     if (widget.item != null) {
       _nameController.text = widget.item!['name'] as String;
       _priceController.text = widget.item!['price'] as String;
-      _descriptionController.text = widget.item!['description'] as String? ?? '';
+      _descriptionController.text =
+          widget.item!['description'] as String? ?? '';
+
+      // Make sure to properly handle the preparationTime
+      if (widget.item!.containsKey('preparationTime') &&
+          widget.item!['preparationTime'] != null) {
+        _selectedTime = widget.item!['preparationTime'] as String;
+        print('Initialized preparation time: $_selectedTime'); // Debug print
+      }
+
       _selectedCategory = widget.item!['category'] as String;
       _isAvailable = widget.item!['available'] as bool;
       _isVegetarian = widget.item!['isVegetarian'] as bool;
       _isPopular = widget.item!['isPopular'] as bool;
       _currentImageUrl = widget.item!['image'] as String?;
-      
+
       // Properly initialize discount fields from existing data
       _hasDiscount = widget.item!['hasDiscount'] as bool? ?? false;
       _discountController.text = widget.item!['discount']?.toString() ?? '0';
     } else {
       _discountController.text = '0';
     }
-    
+
     // Add listeners to controllers to update UI when values change
     _priceController.addListener(_onFormValueChange);
     _discountController.addListener(_onFormValueChange);
   }
-   
+
   Future<void> _initializeService() async {
     try {
       await _menuService.initialize();
@@ -123,7 +145,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       }
     }
   }
-  
+
   // Called when price or discount changes to update the UI
   void _onFormValueChange() {
     if (mounted) {
@@ -132,47 +154,45 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       });
     }
   }
-  
+
   @override
   void dispose() {
     _priceController.removeListener(_onFormValueChange);
     _discountController.removeListener(_onFormValueChange);
-    
+
     _nameController.dispose();
     _priceController.dispose();
     _descriptionController.dispose();
     _discountController.dispose();
     _scrollController.dispose();
-    
+
     super.dispose();
   }
-  
+
   void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: isError ? _errorColor : _accentColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(10),
-        duration: Duration(seconds: isError ? 4 : 3),
-        action: isError 
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        message,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      backgroundColor: isError ? _errorColor : _accentColor,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.all(10),
+      duration: Duration(seconds: isError ? 4 : 3),
+      action: isError
           ? SnackBarAction(
               label: 'RETRY',
               textColor: Colors.white,
               onPressed: _initializeService,
             )
           : null,
-      )
-    );
+    ));
   }
-  
+
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: _cardColor,
@@ -221,8 +241,10 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                         });
                       }
                     },
-                  ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
-                  
+                  ).animate().scale(
+                      delay: 200.ms,
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack),
                   _imageSourceOption(
                     icon: CupertinoIcons.photo_fill,
                     title: 'Gallery',
@@ -238,7 +260,10 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                         });
                       }
                     },
-                  ).animate().scale(delay: 400.ms, duration: 400.ms, curve: Curves.easeOutBack),
+                  ).animate().scale(
+                      delay: 400.ms,
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack),
                 ],
               ),
               if (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
@@ -246,9 +271,11 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                   padding: const EdgeInsets.only(top: 32.0),
                   child: TextButton.icon(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    label: const Text('Remove Current Image', style: TextStyle(color: Colors.red)),
+                    label: const Text('Remove Current Image',
+                        style: TextStyle(color: Colors.red)),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                     ),
                     onPressed: () {
                       Navigator.pop(context);
@@ -265,7 +292,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       },
     );
   }
-  
+
   Widget _imageSourceOption({
     required IconData icon,
     required String title,
@@ -300,19 +327,19 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       ),
     );
   }
-  
+
   Future<String> _uploadImage() async {
     if (_imageFile == null) return _currentImageUrl ?? '';
-    
+
     try {
       setState(() {
         _isUploading = true;
       });
-      
+
       // First compress the image to reduce upload size
       final tempDir = await getTemporaryDirectory();
       final tempPath = '${tempDir.path}/compressed_menu_image.jpg';
-      
+
       // Compress the file
       final compressedFile = await FlutterImageCompress.compressAndGetFile(
         _imageFile!.path,
@@ -321,18 +348,19 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
         minWidth: 800,
         minHeight: 800,
       );
-      
+
       if (compressedFile == null) {
         throw Exception('Failed to compress image');
       }
-      
+
       // Upload compressed file to ImgBB
-      final imageUrl = await _imgBBService.uploadImage(File(compressedFile.path));
-      
+      final imageUrl =
+          await _imgBBService.uploadImage(File(compressedFile.path));
+
       if (imageUrl == null || imageUrl.isEmpty) {
         throw Exception('Failed to upload image to ImgBB');
       }
-      
+
       return imageUrl;
     } catch (e) {
       _showSnackBar('Failed to upload image: $e', isError: true);
@@ -343,16 +371,16 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       });
     }
   }
-  
+
   // Calculate discounted price for preview
   String _calculateDiscountedPrice() {
     try {
       double price = double.tryParse(_priceController.text) ?? 0.0;
       double discount = double.tryParse(_discountController.text) ?? 0.0;
-      
+
       // Ensure discount is within valid range
       discount = discount.clamp(0.0, 100.0);
-      
+
       // Calculate final price
       double finalPrice = price - (price * discount / 100);
       return finalPrice.toStringAsFixed(2);
@@ -360,34 +388,39 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       return '0.00';
     }
   }
-  
+
   Future<void> _saveMenuItem() async {
     if (!_formKey.currentState!.validate()) {
       // Scroll to the first error field
       _showSnackBar('Please fix the errors in the form', isError: true);
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       // Upload image if changed
       String imageUrl = _currentImageUrl ?? '';
-      
+
       if (_imageFile != null) {
         imageUrl = await _uploadImage();
         if (imageUrl.isEmpty) {
           throw Exception('Image upload failed');
         }
       }
-      
+
+      // Debug print to verify the current selected time
+      print('Saving menu item with preparation time: $_selectedTime');
+
       final Map<String, dynamic> menuData = {
         'name': _nameController.text.trim(),
         'price': _priceController.text.trim(),
         'description': _descriptionController.text.trim(),
         'category': _selectedCategory,
+        'preparationTime':
+            _selectedTime, // This should contain the correct value
         'available': _isAvailable,
         'isVegetarian': _isVegetarian,
         'isPopular': _isPopular,
@@ -397,17 +430,19 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
         'lastUpdated': widget.currentDate,
         'updatedBy': widget.userLogin,
       };
-      
+
       if (widget.item == null) {
         // Add new item
-        await _menuService.addMenuItem(menuData, widget.currentDate, widget.userLogin);
+        await _menuService.addMenuItem(
+            menuData, widget.currentDate, widget.userLogin);
         _showSnackBar('${menuData['name']} added successfully');
       } else {
         // Update existing item
-        await _menuService.updateMenuItem(widget.item!['id'], menuData, widget.currentDate, widget.userLogin);
+        await _menuService.updateMenuItem(
+            widget.item!['id'], menuData, widget.currentDate, widget.userLogin);
         _showSnackBar('${menuData['name']} updated successfully');
       }
-      
+
       Navigator.pop(context, true); // Return success
     } catch (e) {
       _showSnackBar('Error: $e', isError: true);
@@ -421,14 +456,14 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
   @override
   Widget build(BuildContext context) {
     final bool isEditing = widget.item != null;
-    
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: _backgroundColor,
         appBar: AppBar(
           title: Text(
-            isEditing ? 'Edit Menu Item' : 'Add New Item', 
+            isEditing ? 'Edit Menu Item' : 'Add New Item',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
@@ -442,7 +477,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
             if (!_isLoading)
               TextButton.icon(
                 onPressed: _saveMenuItem,
-                icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                icon:
+                    const Icon(Icons.check_circle_outline, color: Colors.white),
                 label: const Text(
                   'SAVE',
                   style: TextStyle(
@@ -451,124 +487,144 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                     fontSize: 16,
                   ),
                 ),
-              ).animate()
-                .fadeIn(duration: 500.ms)
-                .move(begin: const Offset(20, 0), curve: Curves.easeOutQuad),
+              )
+                  .animate()
+                  .fadeIn(duration: 500.ms)
+                  .move(begin: const Offset(20, 0), curve: Curves.easeOutQuad),
           ],
         ),
         body: _isLoading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Shimmer.fromColors(
-                    baseColor: _primaryColor.withAlpha(102),
-                    highlightColor: _accentColor.withAlpha(102),
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Shimmer.fromColors(
+                      baseColor: _primaryColor.withAlpha(102),
+                      highlightColor: _accentColor.withAlpha(102),
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: _primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.restaurant_menu,
+                          size: 50,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        width: 200,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isEditing
+                          ? 'Updating menu item...'
+                          : 'Creating new menu item...',
+                      style: TextStyle(
                         color: _primaryColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.restaurant_menu,
-                        size: 50,
-                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey.shade300,
-                    highlightColor: Colors.grey.shade100,
-                    child: Container(
-                      width: 200,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
+                  ],
+                ).animate().fadeIn(duration: 400.ms).scale(
+                    delay: 200.ms, duration: 600.ms, curve: Curves.elasticOut),
+              )
+            : Stack(
+                children: [
+                  // Top curved background
+                  // Container(
+                  //   height: 60,
+                  //   width: double.infinity,
+                  //   decoration: BoxDecoration(
+                  //     color: _primaryColor,
+                  //     borderRadius: const BorderRadius.vertical(
+                  //       bottom: Radius.circular(30),
+                  //     ),
+                  //   ),
+                  // ),
+
+                  // Form content
+                  SafeArea(
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                        children: [
+                          // Image picker card
+                          _buildImagePickerCard(),
+
+                          // Details section
+                          _buildSectionHeader(
+                                  'Item Details', CupertinoIcons.doc_text_fill)
+                              .animate()
+                              .fadeIn(delay: 100.ms, duration: 200.ms),
+                          _buildDetailsCard()
+                              .animate()
+                              .fadeIn(delay: 100.ms)
+                              .slideY(begin: 0.2, end: 0, duration: 200.ms),
+
+                          // Pricing section
+                          _buildSectionHeader('Pricing',
+                                  CupertinoIcons.money_dollar_circle_fill)
+                              .animate()
+                              .fadeIn(delay: 100.ms, duration: 500.ms),
+                          _buildPriceAndDiscountCard()
+                              .animate()
+                              .fadeIn(delay: 100.ms)
+                              .slideY(begin: 0.2, end: 0, duration: 200.ms),
+
+                          // Options section
+                          _buildSectionHeader(
+                                  'Options', CupertinoIcons.settings_solid)
+                              .animate()
+                              .fadeIn(delay: 100.ms, duration: 500.ms),
+                          _buildOptionsCard()
+                              .animate()
+                              .fadeIn(delay: 100.ms)
+                              .slideY(begin: 0.2, end: 0, duration: 200.ms),
+
+                          // Item history (for editing)
+                          if (isEditing)
+                            _buildItemHistoryCard()
+                                .animate()
+                                .fadeIn(delay: 100.ms)
+                                .slideY(begin: 0.2, end: 0, duration: 200.ms),
+
+                          const SizedBox(height: 24),
+
+                          // Save button
+                          _buildSaveButton(isEditing)
+                              .animate()
+                              .fadeIn(delay: 100.ms, duration: 500.ms)
+                              .scale(
+                                  delay: 100.ms,
+                                  duration: 600.ms,
+                                  curve: Curves.easeOutBack),
+                        ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isEditing ? 'Updating menu item...' : 'Creating new menu item...',
-                    style: TextStyle(
-                      color: _primaryColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
-              ).animate()
-                .fadeIn(duration: 400.ms)
-                .scale(delay: 200.ms, duration: 600.ms, curve: Curves.elasticOut),
-            )
-          : Stack(
-              children: [
-                // Top curved background
-                // Container(
-                //   height: 60,
-                //   width: double.infinity,
-                //   decoration: BoxDecoration(
-                //     color: _primaryColor,
-                //     borderRadius: const BorderRadius.vertical(
-                //       bottom: Radius.circular(30),
-                //     ),
-                //   ),
-                // ),
-                
-                // Form content
-                SafeArea(
-                  child: Form(
-                    key: _formKey,
-                    child: ListView(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                      children: [
-                        // Image picker card
-                        _buildImagePickerCard(),
-                        
-                        // Details section
-                        _buildSectionHeader('Item Details', CupertinoIcons.doc_text_fill)
-                          .animate().fadeIn(delay: 100.ms, duration: 200.ms),
-                        _buildDetailsCard()
-                          .animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0, duration: 200.ms),
-                        
-                        // Pricing section
-                        _buildSectionHeader('Pricing', CupertinoIcons.money_dollar_circle_fill)
-                          .animate().fadeIn(delay: 100.ms, duration: 500.ms),
-                        _buildPriceAndDiscountCard()
-                          .animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0, duration: 200.ms),
-                        
-                        // Options section
-                        _buildSectionHeader('Options', CupertinoIcons.settings_solid)
-                          .animate().fadeIn(delay: 100.ms, duration: 500.ms),
-                        _buildOptionsCard()
-                          .animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0, duration: 200.ms),
-                        
-                        // Item history (for editing)
-                        if (isEditing) _buildItemHistoryCard()
-                          .animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0, duration: 200.ms),
-                        
-                        const SizedBox(height: 24),
-                        
-                        // Save button
-                        _buildSaveButton(isEditing)
-                          .animate()
-                          .fadeIn(delay: 100.ms, duration: 500.ms)
-                          .scale(delay: 100.ms, duration: 600.ms, curve: Curves.easeOutBack),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
       ),
     );
   }
-  
+
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 24, 0, 8),
@@ -588,7 +644,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       ),
     );
   }
-  
+
   Widget _buildDetailsCard() {
     return Card(
       elevation: 0,
@@ -608,7 +664,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: _primaryColor.withAlpha(25),
                         borderRadius: BorderRadius.circular(20),
@@ -632,7 +689,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                   ],
                 ),
               ),
-              
+
             // Item name field
             TextFormField(
               controller: _nameController,
@@ -643,8 +700,10 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 focusedBorder: _focusedBorder,
                 errorBorder: _errorBorder,
                 prefixIcon: Icon(CupertinoIcons.tag_fill, color: _primaryColor),
-                floatingLabelStyle: TextStyle(color: _primaryColor, fontWeight: FontWeight.bold),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                floatingLabelStyle: TextStyle(
+                    color: _primaryColor, fontWeight: FontWeight.bold),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               ),
               textCapitalization: TextCapitalization.words,
               validator: (value) {
@@ -655,16 +714,19 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
               },
             ),
             const SizedBox(height: 20),
-            
+
             // Category dropdown
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 labelText: 'Category',
                 border: _inputBorder,
                 focusedBorder: _focusedBorder,
-                prefixIcon: Icon(CupertinoIcons.rectangle_grid_1x2_fill, color: _primaryColor),
-                floatingLabelStyle: TextStyle(color: _primaryColor, fontWeight: FontWeight.bold),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                prefixIcon: Icon(CupertinoIcons.rectangle_grid_1x2_fill,
+                    color: _primaryColor),
+                floatingLabelStyle: TextStyle(
+                    color: _primaryColor, fontWeight: FontWeight.bold),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               ),
               value: _selectedCategory,
               isExpanded: true,
@@ -688,7 +750,52 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
               },
             ),
             const SizedBox(height: 20),
-            
+
+            // Category dropdown
+            // In the DropdownButtonFormField for preparation time:
+            DropdownButtonFormField<String>(
+              key: Key(
+                  'preparationTimeDropdown'), // Add a key for better state management
+              decoration: InputDecoration(
+                labelText: 'Preparation Time',
+                border: _inputBorder,
+                focusedBorder: _focusedBorder,
+                prefixIcon:
+                    Icon(CupertinoIcons.time_solid, color: _primaryColor),
+                floatingLabelStyle: TextStyle(
+                    color: _primaryColor, fontWeight: FontWeight.bold),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              ),
+              value: _selectedTime,
+              isExpanded: true,
+              borderRadius: BorderRadius.circular(15),
+              icon: const Icon(CupertinoIcons.chevron_down_circle, size: 18),
+              items: times
+                  .map((time) => DropdownMenuItem(
+                        value: time,
+                        child: Text(time, overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedTime = value;
+                    // Optional debugging: print to verify the value is changing
+                    print(
+                        'Selected preparation time changed to: $_selectedTime');
+                  });
+                }
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please select a preparation time';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+
             // Description field
             TextFormField(
               controller: _descriptionController,
@@ -697,9 +804,12 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 hintText: 'Enter item description (optional)',
                 border: _inputBorder,
                 focusedBorder: _focusedBorder,
-                prefixIcon: Icon(CupertinoIcons.text_alignleft, color: _primaryColor),
-                floatingLabelStyle: TextStyle(color: _primaryColor, fontWeight: FontWeight.bold),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                prefixIcon:
+                    Icon(CupertinoIcons.text_alignleft, color: _primaryColor),
+                floatingLabelStyle: TextStyle(
+                    color: _primaryColor, fontWeight: FontWeight.bold),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               ),
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
@@ -709,7 +819,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       ),
     );
   }
-  
+
   Widget _buildImagePickerCard() {
     return GestureDetector(
       onTap: _isUploading ? null : _pickImage,
@@ -724,7 +834,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
           width: double.infinity,
           decoration: BoxDecoration(
             border: Border.all(
-              color: _imageFile != null || (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
+              color: _imageFile != null ||
+                      (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
                   ? Colors.transparent
                   : Colors.grey.shade300,
               width: 2,
@@ -757,7 +868,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.broken_image_rounded, size: 50, color: Colors.grey),
+                          const Icon(Icons.broken_image_rounded,
+                              size: 50, color: Colors.grey),
                           const SizedBox(height: 16),
                           Text(
                             'Failed to load image',
@@ -796,7 +908,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                     ),
                   ],
                 ),
-                
+
               // Loading indicator
               if (_isUploading)
                 Container(
@@ -808,15 +920,16 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                     ),
                   ),
                 ),
-                
+
               // Image controls
-              if (_imageFile != null || (_currentImageUrl != null && _currentImageUrl!.isNotEmpty))
+              if (_imageFile != null ||
+                  (_currentImageUrl != null && _currentImageUrl!.isNotEmpty))
                 Positioned(
                   bottom: 0,
                   left: 0,
                   right: 0,
                   child: Container(
-                                        decoration: BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -826,13 +939,16 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                         ],
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton.icon(
                           icon: Icon(
-                            _isImageExpanded ? CupertinoIcons.arrow_down_circle_fill : CupertinoIcons.arrow_up_circle_fill,
+                            _isImageExpanded
+                                ? CupertinoIcons.arrow_down_circle_fill
+                                : CupertinoIcons.arrow_up_circle_fill,
                             color: Colors.white,
                             size: 20,
                           ),
@@ -842,7 +958,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                           ),
                           style: TextButton.styleFrom(
                             backgroundColor: Colors.black26,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
                           ),
                           onPressed: () {
                             setState(() {
@@ -862,7 +979,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                           ),
                           style: TextButton.styleFrom(
                             backgroundColor: _primaryColor.withAlpha(178),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
                           ),
                           onPressed: _pickImage,
                         ),
@@ -873,9 +991,10 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
             ],
           ),
         ),
-      ).animate()
-        .fadeIn(duration: 500.ms)
-        .scale(delay: 100.ms, curve: Curves.easeOutBack),
+      )
+          .animate()
+          .fadeIn(duration: 500.ms)
+          .scale(delay: 100.ms, curve: Curves.easeOutBack),
     );
   }
 
@@ -900,11 +1019,15 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 border: _inputBorder,
                 focusedBorder: _focusedBorder,
                 errorBorder: _errorBorder,
-                prefixIcon: Icon(CupertinoIcons.money_rubl_circle_fill, color: _accentColor),
-                floatingLabelStyle: TextStyle(color: _accentColor, fontWeight: FontWeight.bold),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                prefixIcon: Icon(CupertinoIcons.money_rubl_circle_fill,
+                    color: _accentColor),
+                floatingLabelStyle:
+                    TextStyle(color: _accentColor, fontWeight: FontWeight.bold),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a price';
@@ -915,9 +1038,9 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Discount Switch
             InkWell(
               onTap: () {
@@ -937,7 +1060,9 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 child: Row(
                   children: [
                     Icon(
-                      _hasDiscount ? CupertinoIcons.tag_fill : CupertinoIcons.tag,
+                      _hasDiscount
+                          ? CupertinoIcons.tag_fill
+                          : CupertinoIcons.tag,
                       color: _discountColor,
                     ),
                     const SizedBox(width: 12),
@@ -968,7 +1093,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 ),
               ),
             ),
-            
+
             // Discount content - shown only when discount is enabled
             AnimatedSize(
               duration: const Duration(milliseconds: 300),
@@ -985,38 +1110,47 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                             border: _inputBorder,
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
-                              borderSide: BorderSide(color: _discountColor, width: 2),
+                              borderSide:
+                                  BorderSide(color: _discountColor, width: 2),
                             ),
-                            prefixIcon: Icon(CupertinoIcons.percent, color: _discountColor),
+                            prefixIcon: Icon(CupertinoIcons.percent,
+                                color: _discountColor),
                             suffixText: '%',
-                            floatingLabelStyle: TextStyle(color: _discountColor, fontWeight: FontWeight.bold),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                            floatingLabelStyle: TextStyle(
+                                color: _discountColor,
+                                fontWeight: FontWeight.bold),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 18),
                           ),
                           keyboardType: TextInputType.number,
-                          validator: _hasDiscount ? (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter discount percentage';
-                            }
-                            int? percent = int.tryParse(value);
-                            if (percent == null) {
-                              return 'Enter a valid number';
-                            }
-                            if (percent < 0 || percent > 100) {
-                              return 'Discount must be between 0-100%';
-                            }
-                            return null;
-                          } : null,
+                          validator: _hasDiscount
+                              ? (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter discount percentage';
+                                  }
+                                  int? percent = int.tryParse(value);
+                                  if (percent == null) {
+                                    return 'Enter a valid number';
+                                  }
+                                  if (percent < 0 || percent > 100) {
+                                    return 'Discount must be between 0-100%';
+                                  }
+                                  return null;
+                                }
+                              : null,
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Discount preview
                         Container(
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 20),
                           decoration: BoxDecoration(
                             color: _discountColor.withAlpha(20),
                             borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: _discountColor.withAlpha(76)),
+                            border:
+                                Border.all(color: _discountColor.withAlpha(76)),
                           ),
                           child: Row(
                             children: [
@@ -1027,7 +1161,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                                   color: _discountColor.withAlpha(38),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(CupertinoIcons.money_dollar_circle, color: _discountColor),
+                                child: Icon(CupertinoIcons.money_dollar_circle,
+                                    color: _discountColor),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -1038,14 +1173,16 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                                       children: [
                                         const Text(
                                           'Original: ',
-                                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                                          style: TextStyle(
+                                              fontSize: 14, color: Colors.grey),
                                         ),
                                         Text(
                                           '₹${_priceController.text.isEmpty ? '0.00' : _priceController.text}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 14,
-                                            decoration: TextDecoration.lineThrough,
+                                            decoration:
+                                                TextDecoration.lineThrough,
                                           ),
                                         ),
                                       ],
@@ -1075,7 +1212,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: _discountColor,
                                   borderRadius: BorderRadius.circular(20),
@@ -1101,7 +1239,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       ),
     );
   }
-  
+
   Widget _buildOptionsCard() {
     return Card(
       elevation: 0,
@@ -1125,9 +1263,9 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 });
               },
             ),
-            
+
             const Divider(height: 20, thickness: 1),
-            
+
             // Vegetarian option
             _buildOptionTile(
               title: 'Vegetarian',
@@ -1141,9 +1279,9 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 });
               },
             ),
-            
+
             const Divider(height: 20, thickness: 1),
-            
+
             // Popular option
             _buildOptionTile(
               title: 'Popular',
@@ -1162,7 +1300,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       ),
     );
   }
-  
+
   Widget _buildOptionTile({
     required String title,
     required String subtitle,
@@ -1193,7 +1331,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w500, fontSize: 16),
                   ),
                   Text(
                     subtitle,
@@ -1214,9 +1353,10 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
   }
 
   Widget _buildItemHistoryCard() {
-    final String lastUpdated = widget.item?['lastUpdated'] ?? widget.currentDate;
+    final String lastUpdated =
+        widget.item?['lastUpdated'] ?? widget.currentDate;
     final String updatedBy = widget.item?['updatedBy'] ?? widget.userLogin;
-    
+
     // Format date for better readability
     String formattedDate;
     try {
@@ -1225,7 +1365,7 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
     } catch (e) {
       formattedDate = lastUpdated;
     }
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1238,7 +1378,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
           children: [
             Row(
               children: [
-                Icon(CupertinoIcons.time, size: 18, color: Colors.grey.shade700),
+                Icon(CupertinoIcons.time,
+                    size: 18, color: Colors.grey.shade700),
                 const SizedBox(width: 8),
                 Text(
                   'Item History',
@@ -1261,7 +1402,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                 children: [
                   Row(
                     children: [
-                      const Icon(CupertinoIcons.calendar, size: 16, color: Colors.grey),
+                      const Icon(CupertinoIcons.calendar,
+                          size: 16, color: Colors.grey),
                       const SizedBox(width: 8),
                       const Text(
                         'Last Updated: ',
@@ -1281,7 +1423,8 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(CupertinoIcons.person, size: 16, color: Colors.grey),
+                      const Icon(CupertinoIcons.person,
+                          size: 16, color: Colors.grey),
                       const SizedBox(width: 8),
                       const Text(
                         'Updated By: ',
@@ -1304,14 +1447,16 @@ class _AddEditMenuItemScreenState extends State<AddEditMenuItemScreen> with Sing
       ),
     );
   }
-  
+
   Widget _buildSaveButton(bool isEditing) {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton.icon(
         icon: Icon(
-          isEditing ? CupertinoIcons.checkmark_circle : CupertinoIcons.plus_circle,
+          isEditing
+              ? CupertinoIcons.checkmark_circle
+              : CupertinoIcons.plus_circle,
           color: Colors.white,
           size: 22,
         ),
