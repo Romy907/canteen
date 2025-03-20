@@ -1,6 +1,7 @@
 import 'package:canteen/Student/ChangePassword.dart';
 import 'package:canteen/Student/NotificationSettingsScreen.dart';
 import 'package:flutter/material.dart';
+import 'LanguageSelectionScreen.dart'; // Import the Language Selection Screen
 
 class StudentSettingScreen extends StatefulWidget {
   @override
@@ -40,55 +41,19 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
     );
   }
 
-  void _openLanguageSettings() {
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text("Select Language"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                title: Text("English"),
-                value: "English",
-                groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: Text("Hindi"),
-                value: "Hindi",
-                groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value!;
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  Navigator.pop(context);
-                  // You can add logic here to apply the selected language
-                });
-              },
-              child: Text("OK"),
-            ),
-          ],
-        ),
+  void _openLanguageSettings() async {
+    final selectedLang = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LanguageSelectionScreen(),
       ),
     );
+
+    if (selectedLang != null && selectedLang != _selectedLanguage) {
+      setState(() {
+        _selectedLanguage = selectedLang; // Update language after returning
+      });
+    }
   }
 
   @override
@@ -102,7 +67,7 @@ class _StudentSettingScreenState extends State<StudentSettingScreen> {
           _buildSettingOption(
             context,
             icon: Icons.language,
-            title: "Language ($_selectedLanguage)", // Show selected language
+            title: "Language ", // Show selected language
             onTap: _openLanguageSettings,
           ),
           _buildSettingOption(
