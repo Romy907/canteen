@@ -44,20 +44,47 @@ class CheckOutScreenState extends State<CheckOutScreen> {
     super.initState();
     _fetchStoreData();
     _loadUpiApps();
-  }
 
+    // Add this debug section
+    print("Checking for UPI apps...");
+    Future.delayed(Duration(seconds: 3), () {
+      if (_upiApps == null || _upiApps!.isEmpty) {
+        print("No UPI apps detected after 3 seconds");
+      } else {
+        print("Detected ${_upiApps!.length} UPI apps:");
+        for (var app in _upiApps!) {
+          print(" - ${app.upiApplication.getAppName()}");
+        }
+      }
+    });
+  }
   // Load available UPI apps on the device
+  // Add this improved method to your CheckOutScreenState class
+
   Future<void> _loadUpiApps() async {
     setState(() {
       _isLoadingUpiApps = true;
     });
 
     try {
-      _upiApps = await upiPay.getInstalledUpiApplications();
+      // Try with both discovery methods
+      _upiApps = await upiPay.getInstalledUpiApplications(
+          statusType: UpiApplicationDiscoveryAppStatusType.all);
+
+      print("Found ${_upiApps?.length ?? 0} UPI apps");
+
+      // If no apps found, show debug info
+      if (_upiApps == null || _upiApps!.isEmpty) {
+        print("No UPI apps found. Trying alternative discovery method...");
+
+        // You could add fallback discovery here if needed
+      }
 
       // Set the first app as default if available
       if (_upiApps != null && _upiApps!.isNotEmpty) {
         _selectedUpiApp = _upiApps![0].upiApplication.toString();
+        print(
+            "Selected default app: ${_upiApps![0].upiApplication.getAppName()}");
       }
     } catch (e) {
       print('Error loading UPI apps: $e');
@@ -66,6 +93,112 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         _isLoadingUpiApps = false;
       });
     }
+  }
+// Add this method to your CheckOutScreenState class
+
+  Widget _buildManualUpiAppSelection() {
+    // Common UPI apps in India
+    final List<Map<String, dynamic>> commonUpiApps = [
+      {
+        'name': 'Google Pay',
+        'package': 'com.google.android.apps.nbu.paisa.user',
+        'icon': Icons.account_balance_wallet,
+        'color': Colors.green,
+      },
+      {
+        'name': 'PhonePe',
+        'package': 'com.phonepe.app',
+        'icon': Icons.phone_android,
+        'color': Colors.indigo,
+      },
+      {
+        'name': 'Paytm',
+        'package': 'net.one97.paytm',
+        'icon': Icons.payment,
+        'color': Colors.blue,
+      },
+      {
+        'name': 'Amazon Pay',
+        'package': 'in.amazon.mShop.android.shopping',
+        'icon': Icons.shopping_cart,
+        'color': Colors.orange,
+      },
+      {
+        'name': 'BHIM',
+        'package': 'in.org.npci.upiapp',
+        'icon': Icons.account_balance,
+        'color': Colors.deepPurple,
+      },
+    ];
+
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 0.8,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: commonUpiApps.length,
+      itemBuilder: (context, index) {
+        final app = commonUpiApps[index];
+        final isSelected = _selectedUpiApp == app['package'];
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedUpiApp = app['package'];
+            });
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color:
+                  isSelected ? app['color'].withOpacity(0.1) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? app['color'] : Colors.grey[300]!,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // App icon
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: app['color'].withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(app['icon'], color: app['color'], size: 32),
+                ),
+                const SizedBox(height: 8),
+                // App name
+                Text(
+                  app['name'],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // Selected indicator
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    color: app['color'],
+                    size: 16,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _fetchStoreData() async {
@@ -934,6 +1067,8 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   }
 
   // UPDATED: Payment method with UPI app selection
+  // Replace your _buildPaymentMethod method with this:
+
   Widget _buildPaymentMethod() {
     if (_isLoadingUpiApps) {
       return Container(
@@ -960,40 +1095,6 @@ class CheckOutScreenState extends State<CheckOutScreen> {
               const SizedBox(height: 8),
             ],
           ),
-        ),
-      );
-    }
-
-    if (_upiApps == null || _upiApps!.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(12),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.payment_outlined,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "No UPI payment apps found on your device",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-          ],
         ),
       );
     }
@@ -1033,8 +1134,31 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Display UPI app options
-          _buildUpiAppOptions(),
+          // Check if UPI apps were detected
+          if (_upiApps != null && _upiApps!.isNotEmpty)
+            _buildUpiAppOptions()
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Unable to detect UPI apps automatically",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Select from common UPI apps:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildManualUpiAppSelection(),
+              ],
+            ),
         ],
       ),
     );
@@ -1399,6 +1523,8 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   }
 
   // UPDATED: Initiate UPI payment (fixed UpiApplication.values issue)
+  // Replace your _initiatePayment method with this:
+
   Future<void> _initiatePayment() async {
     if (_selectedUpiApp == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1411,27 +1537,50 @@ class CheckOutScreenState extends State<CheckOutScreen> {
       _isProcessing = true;
     });
 
-    // 1. Create the order in Firebase first
+    // Create the order in Firebase first
     final String orderId = await _createOrder();
 
     try {
-      // 2. Find the selected UPI app from the list
-      final selectedApp = _upiApps!.firstWhere(
-        (app) => app.upiApplication.toString() == _selectedUpiApp,
-        orElse: () => _upiApps![0], // Default to first app if not found
-      );
+      UpiApplication? selectedUpiApp;
+
+      // Check if we're using automatically discovered apps
+      if (_upiApps != null && _upiApps!.isNotEmpty) {
+        // Try to find the selected app
+        final selectedApp = _upiApps!.firstWhere(
+          (app) => app.upiApplication.toString() == _selectedUpiApp,
+          orElse: () => _upiApps![0], // Default to first app if not found
+        );
+
+        selectedUpiApp = selectedApp.upiApplication;
+      } else {
+        // We're using manual selection, determine the app by package name
+        if (_selectedUpiApp == 'com.google.android.apps.nbu.paisa.user') {
+          selectedUpiApp = UpiApplication.googlePay;
+        } else if (_selectedUpiApp == 'com.phonepe.app') {
+          selectedUpiApp = UpiApplication.phonePe;
+        } else if (_selectedUpiApp == 'net.one97.paytm') {
+          selectedUpiApp = UpiApplication.paytm;
+        } else if (_selectedUpiApp == 'in.amazon.mShop.android.shopping') {
+          selectedUpiApp = UpiApplication.amazonPay;
+        } else if (_selectedUpiApp == 'in.org.npci.upiapp') {
+          selectedUpiApp = UpiApplication.bhim;
+        } else {
+          // Default to Google Pay
+          selectedUpiApp = UpiApplication.googlePay;
+        }
+      }
 
       // Create UPI Payment request
       final UpiTransactionResponse response = await upiPay.initiateTransaction(
         amount: _total.toString(),
-        app: selectedApp.upiApplication,
+        app: selectedUpiApp,
         receiverName: 'Canteen', // Name of merchant
         receiverUpiAddress: 'canteen@ybl', // Merchant UPI ID
         transactionRef: orderId,
         transactionNote: 'Order #$orderId',
       );
 
-      // 3. Handle response
+      // Handle response
       _handlePaymentResponse(response, orderId);
     } catch (e) {
       print('Error initiating payment: $e');
