@@ -33,8 +33,6 @@ class _ManagerProfileState extends State<ManagerProfile>
   bool _isLoading = true;
   // ignore: unused_field
   int _selectedTabIndex = 0;
-  
-
 
   // Modern color scheme
   final Color _primaryColor = const Color(0xFF1E88E5);
@@ -54,7 +52,7 @@ class _ManagerProfileState extends State<ManagerProfile>
         _selectedTabIndex = _tabController.index;
       });
     });
-    
+
     // Set system UI overlay style for better integration
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -74,6 +72,7 @@ class _ManagerProfileState extends State<ManagerProfile>
           'phone': prefs.getString('phone') ?? 'Not Available',
           'canteen': prefs.getString('university') ?? 'Main Campus Canteen',
           'role': prefs.getString('role')?.toUpperCase() ?? 'CANTEEN MANAGER',
+          'location': prefs.getString('location')?? 'Not Available',
         };
         _isLoading = false;
       });
@@ -92,7 +91,6 @@ class _ManagerProfileState extends State<ManagerProfile>
 
   @override
   Widget build(BuildContext context) {
-    
     return Theme(
       data: ThemeData(
         primaryColor: _primaryColor,
@@ -187,313 +185,331 @@ class _ManagerProfileState extends State<ManagerProfile>
 
   Widget _buildProfileHeader() {
   return SliverToBoxAdapter(
-    child: Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _primaryColor,
-            _primaryColor.withAlpha(204),
+    child: GestureDetector(
+      onTap: () async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => EditProfileScreen(profileData: profileData)),
+  );
+  if (result != null && result.containsKey('profileData')) {
+    setState(() {
+      profileData = result['profileData'];
+      if (result.containsKey('profileImage') && result['profileImage'] != null) {
+        // Handle profile image update if necessary
+      }
+    });
+  }
+},
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              _primaryColor,
+              _primaryColor.withAlpha(204),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: _primaryColor.withAlpha(76),
+              blurRadius: 12,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
+            ),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withAlpha(76),
-            blurRadius: 12,
-            spreadRadius: 0,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background decorative elements
-          Positioned(
-            top: -20,
-            right: -20,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(25),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -40,
-            left: -10,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(12),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          
-          // Profile content
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Profile image
-                Hero(
-                  tag: 'profile_image',
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(51),
-                          blurRadius: 10,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 42,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        profileData['name']!.substring(0, 1),
-                        style: TextStyle(
-                          fontSize: 28,
-                          color: _primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+        child: Stack(
+          children: [
+            // Background decorative elements
+            Positioned(
+              top: -20,
+              right: -20,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(25),
+                  shape: BoxShape.circle,
                 ),
-                
-                const SizedBox(width: 20),
-                
-                // Profile details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profileData['name']!,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(51),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Text(
-                          profileData['role']!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            color: Colors.white.withAlpha(229),
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              profileData['canteen']!,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white.withAlpha(229),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+              ),
+            ),
+            Positioned(
+              bottom: -40,
+              left: -10,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(12),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+
+            // Profile content
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Profile image
+                  Hero(
+                    tag: 'profile_image',
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(51),
+                            blurRadius: 10,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
+                      child: CircleAvatar(
+                        radius: 42,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          profileData['name']!.substring(0, 1),
+                          style: TextStyle(
+                            fontSize: 28,
+                            color: _primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                        
+                  const SizedBox(width: 20),
+
+                  // Profile details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profileData['name']!,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(51),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            profileData['role']!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              color: Colors.white.withAlpha(229),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                profileData['canteen']!,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withAlpha(229),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+  Widget _buildTabBar() {
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _SliverAppBarDelegate(
+        Container(
+          color: _backgroundColor,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Backdrop with extra depth
+                Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withAlpha(20),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 2),
+                      ),
+                      BoxShadow(
+                        color: _primaryColor.withAlpha(12),
+                        blurRadius: 12,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 1),
+                      ),
                     ],
                   ),
+                ),
+
+                // Animated Tab Bar
+                AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) {
+                    return TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: _subtitleColor,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                      labelPadding: const EdgeInsets.symmetric(vertical: 10),
+                      indicator: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          colors: [
+                            _primaryColor,
+                            Color.lerp(_primaryColor, _accentColor, 0.6)!,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _primaryColor.withAlpha(76),
+                            blurRadius: 8,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorPadding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 6,
+                      ),
+                      dividerColor: Colors.transparent,
+                      splashBorderRadius: BorderRadius.circular(12),
+                      overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                        (Set<WidgetState> states) {
+                          if (states.contains(WidgetState.hovered)) {
+                            return _primaryColor.withAlpha(10);
+                          }
+                          if (states.contains(WidgetState.pressed)) {
+                            return _primaryColor.withAlpha(25);
+                          }
+                          return null;
+                        },
+                      ),
+                      tabs: [
+                        _buildTabItem(
+                          icon: Icons.person_outline,
+                          text: "Profile Info",
+                          isSelected: _tabController.index == 0,
+                          animationValue:
+                              1.0 - (_tabController.animation!.value),
+                        ),
+                        _buildTabItem(
+                          icon: Icons.settings_outlined,
+                          text: "Management",
+                          isSelected: _tabController.index == 1,
+                          animationValue: _tabController.animation!.value,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    ),
-  );
-}
-
- Widget _buildTabBar() {
-  return SliverPersistentHeader(
-    pinned: true,
-    delegate: _SliverAppBarDelegate(
-      Container(
-        color: _backgroundColor,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Backdrop with extra depth
-              Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withAlpha(20),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 2),
-                    ),
-                    BoxShadow(
-                      color: _primaryColor.withAlpha(12),
-                      blurRadius: 12,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Animated Tab Bar
-              AnimatedBuilder(
-                animation: _tabController.animation!,
-                builder: (context, child) {
-                  return TabBar(
-                    controller: _tabController,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: _subtitleColor,
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                    labelPadding: const EdgeInsets.symmetric(vertical: 10),
-                    indicator: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        colors: [
-                          _primaryColor,
-                          Color.lerp(_primaryColor, _accentColor, 0.6)!,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _primaryColor.withAlpha(76),
-                          blurRadius: 8,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicatorPadding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 6,
-                    ),
-                    dividerColor: Colors.transparent,
-                    splashBorderRadius: BorderRadius.circular(12),
-                    overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                      (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.hovered)) {
-                          return _primaryColor.withAlpha(10);
-                        }
-                        if (states.contains(WidgetState.pressed)) {
-                          return _primaryColor.withAlpha(25);
-                        }
-                        return null;
-                      },
-                    ),
-                    tabs: [
-                      _buildTabItem(
-                        icon: Icons.person_outline,
-                        text: "Profile Info",
-                        isSelected: _tabController.index == 0,
-                        animationValue: 1.0 - (_tabController.animation!.value),
-                      ),
-                      _buildTabItem(
-                        icon: Icons.settings_outlined,
-                        text: "Management",
-                        isSelected: _tabController.index == 1,
-                        animationValue: _tabController.animation!.value,
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
 // Helper method to build animated tab items
-Widget _buildTabItem({
-  required IconData icon,
-  required String text,
-  required bool isSelected,
-  required double animationValue,
-}) {
-  return Tab(
-    height: 44,
-    child: AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
-      opacity: isSelected ? 1.0 : 0.8,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedScale(
-            scale: isSelected ? 1.0 : 0.9,
-            duration: const Duration(milliseconds: 200),
-            child: Icon(icon, size: 20),
-          ),
-          SizedBox(width: 8),
-            AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            style: TextStyle(
-              fontSize: isSelected ? 14 : 13,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              letterSpacing: isSelected ? 0.2 : 0.0,
-              color: isSelected ? Colors.white : _subtitleColor,
+  Widget _buildTabItem({
+    required IconData icon,
+    required String text,
+    required bool isSelected,
+    required double animationValue,
+  }) {
+    return Tab(
+      height: 44,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: isSelected ? 1.0 : 0.8,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 1.0 : 0.9,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(icon, size: 20),
             ),
-            child: Text(text),
-          ),
-        ],
+            SizedBox(width: 8),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: isSelected ? 14 : 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                letterSpacing: isSelected ? 0.2 : 0.0,
+                color: isSelected ? Colors.white : _subtitleColor,
+              ),
+              child: Text(text),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}  
+    );
+  }
+
   Widget _buildTabContent() {
     return SliverFillRemaining(
       child: TabBarView(
@@ -543,36 +559,6 @@ Widget _buildTabItem({
                   color: _textColor,
                 ),
               ),
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _primaryColor.withAlpha(25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.edit_outlined,
-                    color: _primaryColor,
-                    size: 20,
-                  ),
-                ),
-                onPressed: () async {
-                  final updatedProfileData = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(
-                        profileData: profileData,
-                      ),
-                    ),
-                  );
-
-                  if (updatedProfileData != null) {
-                    setState(() {
-                      profileData = updatedProfileData;
-                    });
-                  }
-                },
-              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -593,7 +579,7 @@ Widget _buildTabItem({
           _buildInfoRow(
             Icons.location_on_outlined,
             'Location',
-            'Main Campus, Building A',
+            profileData['location']!,
             Colors.orange.shade700,
           ),
           const SizedBox(height: 16),
@@ -686,35 +672,36 @@ Widget _buildTabItem({
         'onTap': () async {
           // Show confirmation dialog
           bool confirm = await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Logout', style: TextStyle(color: _textColor)),
-              content: Text(
-                'Are you sure you want to logout from your account?',
-                style: TextStyle(color: _subtitleColor),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    'Cancel',
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Logout', style: TextStyle(color: _textColor)),
+                  content: Text(
+                    'Are you sure you want to logout from your account?',
                     style: TextStyle(color: _subtitleColor),
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade700,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Text('Logout'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: _subtitleColor),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade700,
+                      ),
+                      child: const Text('Logout'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ) ?? false;
-          
+              ) ??
+              false;
+
           if (confirm) {
             await FirebaseManager().logout();
             Navigator.pushReplacement(
@@ -854,7 +841,8 @@ Widget _buildTabItem({
             'onTap': () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ManagerOperatingHours()),
+                MaterialPageRoute(
+                    builder: (context) => ManagerOperatingHours()),
               );
             },
           },
@@ -868,13 +856,13 @@ Widget _buildTabItem({
             'onTap': () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ManagerPaymentMethods()),
+                MaterialPageRoute(
+                    builder: (context) => ManagerPaymentMethods()),
               );
             },
           },
         ],
       },
-      
     ];
 
     return ListView.builder(

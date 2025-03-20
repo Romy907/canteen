@@ -22,21 +22,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     _editedProfileData = Map.from(widget.profileData);
   }
+void _saveProfile() {
+  if (_formKey.currentState?.validate() ?? false) {
+    _formKey.currentState?.save();
+    // Save the profile data to shared preferences or any other storage
 
-  void _saveProfile() {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
-      // Save the profile data to shared preferences or any other storage
+    // Navigate back to the manager profile screen and pass the updated data
+    Navigator.pop(context, {'profileData': _editedProfileData, 'profileImage': _profileImage});
 
-      // Navigate back to the manager profile screen and pass the updated data
-      Navigator.pop(context, {'profileData': _editedProfileData, 'profileImage': _profileImage});
-
-      // Show a success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Personal information successfully changed')),
-      );
-    }
+    // Show a success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Personal information successfully changed')),
+    );
   }
+}
 
   Future<void> _pickImage() async {
     final ImagePicker _picker = ImagePicker();
@@ -168,12 +167,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 const SizedBox(height: 16),
                                 _buildEditableInfoRow(Icons.phone_outlined, 'Phone', _editedProfileData['phone'], (value) => _editedProfileData['phone'] = value!),
                                 const SizedBox(height: 16),
-                                _buildEditableInfoRow(Icons.restaurant_menu, 'Canteen', _editedProfileData['canteen'], (value) => _editedProfileData['canteen'] = value!),
-                                const SizedBox(height: 16),
-                                _buildEditableInfoRow(Icons.work_outline, 'Role', _editedProfileData['role'], (value) => _editedProfileData['role'] = value!),
-                                const SizedBox(height: 16),
                                 _buildEditableInfoRow(Icons.location_on_outlined, 'Location', _editedProfileData['location'], (value) => _editedProfileData['location'] = value!),
-                                
+                               
                               ],
                             ),
                           ),
