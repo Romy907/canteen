@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
 
@@ -19,7 +21,9 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
+  final DatabaseReference _ordersRef = FirebaseDatabase.instance.ref();
+  // Add database listeners
+  List<StreamSubscription<DatabaseEvent>> _dbListeners = [];
   // Order lists
   List<Map<String, dynamic>> pendingOrders = [];
   List<Map<String, dynamic>> onGoingOrders = [];
@@ -38,28 +42,19 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   // Filter options
   String? _selectedPaymentFilter;
   String? _selectedSortOption = 'Newest First';
-
+  String? id;
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this); // Changed to 3 tabs
-    
-    // Initial data load
-    _loadOrderData();
-    
+    _tabController = TabController(length: 3, vsync: this);
+
     // Set up filtered lists
     filteredPendingOrders = List.from(pendingOrders);
     filteredOnGoingOrders = List.from(onGoingOrders);
     filteredCompletedOrders = List.from(completedOrders);
 
-    // Simulate loading time
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    });
+    // Load ID first, which will trigger loading data
+    _loadIdFromSharedPrefs();
 
     _tabController.addListener(() {
       // Close search when switching tabs
@@ -71,49 +66,112 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     });
   }
 
-  void _loadOrderData() {
-    // This would typically come from a Firebase or API call
-    // For now, we'll use the sample data you provided
-    
-    // Sample data for demonstration
-    pendingOrders = [
-      {
-        'id': 'ORD-20250316154106',
-        'customer': 'Navin Kumar',
-        'time': _formatTimestamp('2025-03-16 15:41:06'),
-        'total': 'Rs. 165.69',
-        'paymentMethod': 'UPI',
-        'items': [
-          {
-            'name': 'Burger',
-            'quantity': 1,
-            'price': 'Rs. 80.00',
-          },
-          {
-            'name': 'Paneer',
-            'quantity': 1,
-            'price': 'Rs. 110.00',
-          }
-        ],
-        'notes': 'Pestu Pestu Pestu\nPookie pookie pookie',
-        'subtotal': 'Rs. 155.90',
-        'tax': 'Rs. 7.79',
-        'discount': 'Rs. 34.10',
-        'platformCharge': 'Rs. 2.00',
-        'deliveryTime': 'As soon as possible',
-        'paymentDetails': {
-          'merchantName': 'Navin kumar',
-          'upiApp': 'PhonePe',
-          'upiId': '7004394490@ybl'
-        },
-        'status': 'pending',
-        'estimatedTime': '1-2 mins'
+  void _loadIdFromSharedPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      id = prefs.getString('createdAt');
+
+      // Only load order data after id is available
+      if (id != null) {
+        _loadOrderData();
+        _setupOrderListeners(); // Move this here to use the correct id
+      } else {
+        // Handle the case where id is not available
+        _isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Store ID not found. Please login again.')),
+        );
       }
-    ];
-    
-    // Empty initial lists for other tabs
-    onGoingOrders = [];
-    completedOrders = [];
+    });
+  }
+
+  void _setupOrderListeners() {
+    if (id == null) return; // Safety check
+
+    // Cancel any existing listeners
+    for (var listener in _dbListeners) {
+      listener.cancel();
+    }
+    _dbListeners.clear();
+
+    // Listen for changes to orders
+    final orderListener =
+        _ordersRef.child(id!).child('orders').onValue.listen((event) {
+      if (event.snapshot.exists) {
+        _updateOrdersFromSnapshot(event.snapshot);
+      }
+    });
+
+    _dbListeners.add(orderListener);
+  }
+
+  void _updateOrdersFromSnapshot(DataSnapshot snapshot) {
+    setState(() {
+      // Clear current lists
+      pendingOrders.clear();
+      onGoingOrders.clear();
+      completedOrders.clear();
+
+      final ordersData = Map<String, dynamic>.from(snapshot.value as Map);
+
+      // Process each order
+      ordersData.forEach((key, value) {
+        final orderData = Map<String, dynamic>.from(value);
+        final status = orderData['status'] ?? 'pending';
+
+        // Add to appropriate list based on status
+        switch (status) {
+          case 'pending':
+            pendingOrders.add(orderData);
+            break;
+          case 'accepted':
+            onGoingOrders.add(orderData);
+            break;
+          case 'confirmed': // Handle this status as ongoing too
+            onGoingOrders.add(orderData);
+            break;
+          case 'completed':
+            completedOrders.add(orderData);
+            break;
+        }
+      });
+
+      // Update filtered lists
+      filteredPendingOrders = List.from(pendingOrders);
+      filteredOnGoingOrders = List.from(onGoingOrders);
+      filteredCompletedOrders = List.from(completedOrders);
+
+      // Apply filters if any
+      if (_searchQuery.isNotEmpty || _selectedPaymentFilter != null) {
+        _filterOrders();
+      }
+
+      _isLoading = false;
+    });
+  }
+
+  void _loadOrderData() {
+    if (id == null) return; // Safety check
+
+    setState(() {
+      _isLoading = true;
+    });
+  print(id);
+    // Get orders from Firebase
+    _ordersRef.child(id!).child('orders').get().then((snapshot) {
+      if (snapshot.exists) {
+        _updateOrdersFromSnapshot(snapshot);
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }).catchError((error) {
+      print('Error loading orders: $error');
+      setState(() {
+        _isLoading = false;
+      });
+    });
   }
 
   String _formatTimestamp(String timestamp) {
@@ -132,12 +190,17 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     _tabController.dispose();
     _searchController.dispose();
     _scrollController.dispose();
-    
+
     // Cancel all active timers
     orderTimers.forEach((key, timer) {
       timer.cancel();
     });
-    
+
+    // Cancel Firebase listeners
+    for (var listener in _dbListeners) {
+      listener.cancel();
+    }
+
     super.dispose();
   }
 
@@ -149,10 +212,12 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       filteredCompletedOrders = _filterOrdersByQuery(completedOrders);
 
       // Then filter by payment method if selected
-      if (_selectedPaymentFilter != null && _selectedPaymentFilter!.isNotEmpty) {
+      if (_selectedPaymentFilter != null &&
+          _selectedPaymentFilter!.isNotEmpty) {
         filteredPendingOrders = _filterOrdersByPayment(filteredPendingOrders);
         filteredOnGoingOrders = _filterOrdersByPayment(filteredOnGoingOrders);
-        filteredCompletedOrders = _filterOrdersByPayment(filteredCompletedOrders);
+        filteredCompletedOrders =
+            _filterOrdersByPayment(filteredCompletedOrders);
       }
 
       // Apply sorting
@@ -160,18 +225,30 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     });
   }
 
-  List<Map<String, dynamic>> _filterOrdersByQuery(List<Map<String, dynamic>> orders) {
-    return orders.where((order) =>
-        order['id'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        order['customer'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        order['items'].any((item) => item['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
-    ).toList();
+  List<Map<String, dynamic>> _filterOrdersByQuery(
+      List<Map<String, dynamic>> orders) {
+    return orders
+        .where((order) =>
+            order['id']
+                .toString()
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()) ||
+            order['customer']
+                .toString()
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()) ||
+            order['items'].any((item) => item['name']
+                .toString()
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase())))
+        .toList();
   }
 
-  List<Map<String, dynamic>> _filterOrdersByPayment(List<Map<String, dynamic>> orders) {
-    return orders.where((order) => 
-        order['paymentMethod'] == _selectedPaymentFilter
-    ).toList();
+  List<Map<String, dynamic>> _filterOrdersByPayment(
+      List<Map<String, dynamic>> orders) {
+    return orders
+        .where((order) => order['paymentMethod'] == _selectedPaymentFilter)
+        .toList();
   }
 
   void _applySorting() {
@@ -191,7 +268,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     }
   }
 
-  void _sortOrdersByAmount(List<Map<String, dynamic>> orders, {required bool isAscending}) {
+  void _sortOrdersByAmount(List<Map<String, dynamic>> orders,
+      {required bool isAscending}) {
     orders.sort((a, b) {
       String aTotal = a['total'].replaceAll('Rs. ', '');
       String bTotal = b['total'].replaceAll('Rs. ', '');
@@ -319,28 +397,17 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       controller: _tabController,
       children: [
         _buildOrdersScreen(
-            filteredPendingOrders,
-            OrderStatus.pending,
-            isTabletOrDesktop
-        ),
+            filteredPendingOrders, OrderStatus.pending, isTabletOrDesktop),
         _buildOrdersScreen(
-            filteredOnGoingOrders,
-            OrderStatus.ongoing,
-            isTabletOrDesktop
-        ),
+            filteredOnGoingOrders, OrderStatus.ongoing, isTabletOrDesktop),
         _buildOrdersScreen(
-            filteredCompletedOrders,
-            OrderStatus.completed,
-            isTabletOrDesktop
-        ),
+            filteredCompletedOrders, OrderStatus.completed, isTabletOrDesktop),
       ],
     );
   }
 
-  Widget _buildOrdersScreen(
-      List<Map<String, dynamic>> orders,
-      OrderStatus status,
-      bool isTabletOrDesktop) {
+  Widget _buildOrdersScreen(List<Map<String, dynamic>> orders,
+      OrderStatus status, bool isTabletOrDesktop) {
     // Empty state
     if (orders.isEmpty) {
       return Center(
@@ -403,7 +470,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     final filterText = _searchQuery.isNotEmpty || _selectedPaymentFilter != null
         ? 'matching '
         : '';
-    
+
     switch (status) {
       case OrderStatus.pending:
         return 'No ${filterText}pending orders';
@@ -414,10 +481,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     }
   }
 
-  Widget _buildResponsiveOrdersList(
-      List<Map<String, dynamic>> orders,
-      OrderStatus status,
-      bool isTabletOrDesktop) {
+  Widget _buildResponsiveOrdersList(List<Map<String, dynamic>> orders,
+      OrderStatus status, bool isTabletOrDesktop) {
     // For tablet and desktop: grid layout
     if (isTabletOrDesktop) {
       return GridView.builder(
@@ -431,10 +496,12 @@ class _ManagerOrderListState extends State<ManagerOrderList>
         ),
         itemCount: orders.length,
         itemBuilder: (context, index) {
-          return _buildOrderCard(orders[index], index, status, isTabletOrDesktop)
+          return _buildOrderCard(
+                  orders[index], index, status, isTabletOrDesktop)
               .animate()
               .fadeIn(duration: 500.ms, delay: (50 * index).ms)
-              .slideY(begin: 0.1, end: 0, delay: (50 * index).ms, duration: 500.ms);
+              .slideY(
+                  begin: 0.1, end: 0, delay: (50 * index).ms, duration: 500.ms);
         },
       );
     }
@@ -448,17 +515,14 @@ class _ManagerOrderListState extends State<ManagerOrderList>
         return _buildOrderCard(orders[index], index, status, isTabletOrDesktop)
             .animate()
             .fadeIn(duration: 500.ms, delay: (50 * index).ms)
-            .slideY(begin: 0.1, end: 0, delay: (50 * index).ms, duration: 500.ms);
+            .slideY(
+                begin: 0.1, end: 0, delay: (50 * index).ms, duration: 500.ms);
       },
     );
   }
 
-  Widget _buildOrderCard(
-      Map<String, dynamic> order,
-      int index,
-      OrderStatus status,
-      bool isTabletOrDesktop) {
-    
+  Widget _buildOrderCard(Map<String, dynamic> order, int index,
+      OrderStatus status, bool isTabletOrDesktop) {
     final statusColor = _getStatusColor(status);
     final paymentMethodIcon = _getPaymentMethodIcon(order['paymentMethod']);
 
@@ -510,41 +574,41 @@ class _ManagerOrderListState extends State<ManagerOrderList>
             children: [
               SizedBox(height: 4),
               Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.person_outline, size: 14, color: Colors.grey),
-                SizedBox(width: 4),
-                Expanded(
-                child: Text(
-                  order['customer'],
-                  style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.person_outline, size: 14, color: Colors.grey),
+                  SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      order['customer'],
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                ),
-              ],
+                ],
               ),
               SizedBox(height: 4),
               Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.access_time, size: 14, color: Colors.grey),
-                SizedBox(width: 4),
-                Expanded(
-                child: Text(
-                  _getTimeText(order, status),
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                ),
-                if (status == OrderStatus.ongoing) ...[
-                SizedBox(width: 8),
-                Flexible(
-                  child: _buildDeliveryTimer(order),
-                ),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.access_time, size: 14, color: Colors.grey),
+                  SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      _getTimeText(order, status),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (status == OrderStatus.ongoing) ...[
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: _buildDeliveryTimer(order),
+                    ),
+                  ],
                 ],
-              ],
               ),
             ],
           ),
@@ -587,12 +651,14 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                   ),
                   SizedBox(height: 12),
                   ..._buildOrderItems(order['items']),
-                  
-                  if (order['notes'] != null && order['notes'].toString().isNotEmpty) ...[
+
+                  if (order['notes'] != null &&
+                      order['notes'].toString().isNotEmpty) ...[
                     SizedBox(height: 16),
                     Text(
                       'Customer Notes:',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     SizedBox(height: 4),
                     Container(
@@ -607,25 +673,28 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                       ),
                     ),
                   ],
-                  
+
                   Divider(height: 24, thickness: 1, color: Colors.grey[200]),
-                  
+
                   // Payment summary
                   Column(
                     children: [
                       _buildPaymentDetail('Subtotal', order['subtotal']),
                       if (order['discount'] != null)
-                        _buildPaymentDetail('Discount', '- ${order['discount']}'),
+                        _buildPaymentDetail(
+                            'Discount', '- ${order['discount']}'),
                       _buildPaymentDetail('Tax', order['tax']),
                       if (order['platformCharge'] != null)
-                        _buildPaymentDetail('Platform Charge', order['platformCharge']),
+                        _buildPaymentDetail(
+                            'Platform Charge', order['platformCharge']),
                       Divider(height: 16, thickness: 1),
-                      _buildPaymentDetail('Total Amount', order['total'], isBold: true),
+                      _buildPaymentDetail('Total Amount', order['total'],
+                          isBold: true),
                     ],
                   ),
-                  
+
                   SizedBox(height: 16),
-                  
+
                   // Action buttons
                   _buildActionButtons(order, status),
                 ],
@@ -639,31 +708,32 @@ class _ManagerOrderListState extends State<ManagerOrderList>
 
   Widget _buildDeliveryTimer(Map<String, dynamic> order) {
     final String orderId = order['id'];
-    
+
     // If no timer is running for this order, start one
     if (!orderTimers.containsKey(orderId)) {
       // Record the start time if not already set
       orderStartTimes[orderId] = orderStartTimes[orderId] ?? DateTime.now();
-      
+
       // Parse the estimated delivery time (e.g., "20-30 mins")
       if (order['estimatedTime'] != null) {
         final String estTime = order['estimatedTime'];
         final RegExp regex = RegExp(r'(\d+)(?:-(\d+))?\s*mins?');
         final match = regex.firstMatch(estTime);
-        
+
         if (match != null) {
           int minTime = int.parse(match.group(1)!);
-          int maxTime = match.group(2) != null ? int.parse(match.group(2)!) : minTime;
-          
+          int maxTime =
+              match.group(2) != null ? int.parse(match.group(2)!) : minTime;
+
           // Use average for display
-          int avgTime = (minTime + maxTime) ~/ 2; 
+          int avgTime = (minTime + maxTime) ~/ 2;
           orderEstimatedTimes[orderId] = Duration(minutes: avgTime);
         }
       } else {
         // Default to 30 minutes if no estimate is provided
         orderEstimatedTimes[orderId] = Duration(minutes: 30);
       }
-      
+
       // Start the timer to update the UI every second
       orderTimers[orderId] = Timer.periodic(Duration(seconds: 1), (_) {
         if (mounted) setState(() {});
@@ -671,17 +741,18 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     }
 
     // Calculate elapsed time
-    final Duration elapsed = DateTime.now().difference(orderStartTimes[orderId]!);
+    final Duration elapsed =
+        DateTime.now().difference(orderStartTimes[orderId]!);
     final Duration estimated = orderEstimatedTimes[orderId]!;
-    
+
     // Calculate progress (0.0 to 1.0)
     final double progress = elapsed.inSeconds / estimated.inSeconds;
     final bool isOverdue = progress > 1.0;
-    
+
     // Format the remaining/overdue time
     String timeText;
     Color timeColor;
-    
+
     if (isOverdue) {
       final Duration overdue = elapsed - estimated;
       timeText = '+${_formatDuration(overdue)} over';
@@ -691,7 +762,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       timeText = '${_formatDuration(remaining)} left';
       timeColor = progress > 0.8 ? Colors.orange : Colors.green;
     }
-    
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -782,7 +853,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       icon: Icon(Icons.close, color: Colors.red),
-                      label: Text('Reject', style: TextStyle(color: Colors.red)),
+                      label:
+                          Text('Reject', style: TextStyle(color: Colors.red)),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.red),
                         padding: EdgeInsets.symmetric(vertical: 12),
@@ -822,7 +894,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: Icon(Icons.close, color: Colors.red),
-                      label: Text('Reject', style: TextStyle(color: Colors.red)),
+                      label:
+                          Text('Reject', style: TextStyle(color: Colors.red)),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.red),
                         padding: EdgeInsets.symmetric(vertical: 12),
@@ -866,7 +939,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             OutlinedButton.icon(
-                            icon: Icon(Icons.print),
+              icon: Icon(Icons.print),
               label: Text('Print Receipt'),
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -875,7 +948,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                 ),
               ),
               onPressed: () {
-                _printReceipt(order);
+                // _printReceipt(order);
               },
             ),
             SizedBox(width: 12),
@@ -1028,54 +1101,53 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   }
 
   void _acceptOrder(Map<String, dynamic> order) {
-    setState(() {
-      // Remove from pending orders
-      pendingOrders.removeWhere((o) => o['id'] == order['id']);
-      filteredPendingOrders.removeWhere((o) => o['id'] == order['id']);
-      
-      // Add to ongoing orders
-      order['status'] = 'ongoing';
-      order['acceptedAt'] = _getCurrentTime();
-      order['acceptedBy'] = 'navin280123'; // Using the current user's login
-      order['acceptedDate'] = '2025-03-20'; // Using current date
-      onGoingOrders.add(order);
-      filteredOnGoingOrders = List.from(onGoingOrders);
-      
-      // Apply filters if any
-      if (_searchQuery.isNotEmpty || _selectedPaymentFilter != null) {
-        _filterOrders();
-      }
+    final String orderId = order['orderId'] ?? order['id'];
+    final String storeId = order['storeId'];
+
+    // Update Firebase with new status
+    _ordersRef.child(storeId).child('orders').child(orderId).update({
+      'status': 'accepted',
+      'acceptedAt': _getCurrentTime(),
+      'acceptedBy': 'navin280123', // Using current user's login
+      'acceptedDate': DateTime.now().toString()
+    }).then((_) {
+      // Success handling - UI will update via the listener
+      _showNotification(
+        message: 'Order $orderId accepted and moved to On Going!',
+        isSuccess: true,
+      );
+
+      // Switch to ongoing tab
+      _tabController.animateTo(1); // Index 1 is the "On Going" tab
+
+      // Start the delivery timer
+      _startDeliveryTimer(order);
+    }).catchError((error) {
+      print('Error accepting order: $error');
+      _showNotification(
+        message: 'Failed to accept order: $error',
+        isSuccess: false,
+      );
     });
-
-    // Start the delivery timer
-    _startDeliveryTimer(order);
-
-    // Show confirmation
-    _showNotification(
-      message: 'Order ${order['id']} accepted and moved to On Going!',
-      isSuccess: true,
-    );
-    
-    // Switch to ongoing tab
-    _tabController.animateTo(1); // Index 1 is the "On Going" tab
   }
 
   void _startDeliveryTimer(Map<String, dynamic> order) {
     final String orderId = order['id'];
     orderStartTimes[orderId] = DateTime.now();
-    
+
     // Parse the estimated delivery time
     if (order['estimatedTime'] != null) {
       final String estTime = order['estimatedTime'];
       final RegExp regex = RegExp(r'(\d+)(?:-(\d+))?\s*mins?');
       final match = regex.firstMatch(estTime);
-      
+
       if (match != null) {
         int minTime = int.parse(match.group(1)!);
-        int maxTime = match.group(2) != null ? int.parse(match.group(2)!) : minTime;
-        
+        int maxTime =
+            match.group(2) != null ? int.parse(match.group(2)!) : minTime;
+
         // Use average
-        int avgTime = (minTime + maxTime) ~/ 2; 
+        int avgTime = (minTime + maxTime) ~/ 2;
         orderEstimatedTimes[orderId] = Duration(minutes: avgTime);
       } else {
         orderEstimatedTimes[orderId] = Duration(minutes: 30); // Default
@@ -1083,7 +1155,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     } else {
       orderEstimatedTimes[orderId] = Duration(minutes: 30); // Default
     }
-    
+
     // Start timer to update UI
     orderTimers[orderId] = Timer.periodic(Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
@@ -1091,66 +1163,62 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   }
 
   void _completeOrder(Map<String, dynamic> order) {
-    final String orderId = order['id'];
-    
+    final String orderId = order['orderId'] ?? order['id'];
+    final String storeId = order['storeId'];
+
     // Cancel the timer if it exists
     if (orderTimers.containsKey(orderId)) {
       orderTimers[orderId]!.cancel();
       orderTimers.remove(orderId);
     }
-    
-    setState(() {
-      // Remove from ongoing orders
-      onGoingOrders.removeWhere((o) => o['id'] == order['id']);
-      filteredOnGoingOrders.removeWhere((o) => o['id'] == order['id']);
-      
-      // Add to completed orders
-      order['status'] = 'completed';
-      order['completedAt'] = _getCurrentTime();
-      order['completedBy'] = 'navin280123'; // Current user
-      order['completedDate'] = '2025-03-20'; // Current date
-      completedOrders.add(order);
-      filteredCompletedOrders = List.from(completedOrders);
-      
-      // Apply filters if any
-      if (_searchQuery.isNotEmpty || _selectedPaymentFilter != null) {
-        _filterOrders();
-      }
-    });
 
-    _showNotification(
-      message: 'Order ${order['id']} completed successfully!',
-      isSuccess: true,
-    );
-    
-    // Switch to completed tab
-    _tabController.animateTo(2); // Index 2 is the "Completed" tab
+    // Update Firebase with new status
+    _ordersRef.child(storeId).child('orders').child(orderId).update({
+      'status': 'completed',
+      'completedAt': _getCurrentTime(),
+      'completedBy': 'navin280123', // Current user
+      'completedDate': DateTime.now().toString()
+    }).then((_) {
+      // Success handling - UI will update via the listener
+      _showNotification(
+        message: 'Order $orderId completed successfully!',
+        isSuccess: true,
+      );
+
+      // Switch to completed tab
+      _tabController.animateTo(2); // Index 2 is the "Completed" tab
+    }).catchError((error) {
+      print('Error completing order: $error');
+      _showNotification(
+        message: 'Failed to complete order: $error',
+        isSuccess: false,
+      );
+    });
   }
 
   void _rejectOrder(Map<String, dynamic> order, String reason) {
-    setState(() {
-      pendingOrders.removeWhere((o) => o['id'] == order['id']);
-      filteredPendingOrders.removeWhere((o) => o['id'] == order['id']);
-      
-      // In a real app, you would store the rejected order with its reason
-      // rejectedOrders.add({...order, 'rejectReason': reason, 'rejectedAt': _getCurrentTime()});
-      
-      if (_searchQuery.isNotEmpty || _selectedPaymentFilter != null) {
-        _filterOrders();
-      }
+    final String orderId = order['orderId'] ?? order['id'];
+    final String storeId = order['storeId'];
+
+    // Update Firebase with rejected status
+    _ordersRef.child(storeId).child('orders').child(orderId).update({
+      'status': 'rejected',
+      'rejectedAt': _getCurrentTime(),
+      'rejectedBy': 'navin280123', // Current user
+      'rejectReason': reason
+    }).then((_) {
+      // Success handling - UI will update via the listener
+      _showNotification(
+        message: 'Order $orderId rejected: $reason',
+        isSuccess: false,
+      );
+    }).catchError((error) {
+      print('Error rejecting order: $error');
+      _showNotification(
+        message: 'Failed to reject order: $error',
+        isSuccess: false,
+      );
     });
-
-    _showNotification(
-      message: 'Order ${order['id']} rejected: $reason',
-      isSuccess: false,
-    );
-  }
-
-  void _printReceipt(Map<String, dynamic> order) {
-    _showNotification(
-      message: 'Printing receipt for order ${order['id']}...',
-      isSuccess: true,
-    );
   }
 
   void _showOrderHistory(Map<String, dynamic> order) {
@@ -1164,29 +1232,22 @@ class _ManagerOrderListState extends State<ManagerOrderList>
           child: ListView(
             shrinkWrap: true,
             children: [
-              _buildTimelineItem(
-                'Order Placed', 
-                'Customer placed the order',
-                order['time'], 
-                Icons.shopping_cart,
-                Colors.blue
-              ),
+              _buildTimelineItem('Order Placed', 'Customer placed the order',
+                  order['time'], Icons.shopping_cart, Colors.blue),
               if (order['acceptedAt'] != null)
                 _buildTimelineItem(
-                  'Order Accepted', 
-                  'Accepted by ${order['acceptedBy'] ?? 'staff'}',
-                  order['acceptedAt'], 
-                  Icons.thumb_up,
-                  Colors.green
-                ),
+                    'Order Accepted',
+                    'Accepted by ${order['acceptedBy'] ?? 'staff'}',
+                    order['acceptedAt'],
+                    Icons.thumb_up,
+                    Colors.green),
               if (order['completedAt'] != null)
                 _buildTimelineItem(
-                  'Order Completed', 
-                  'Completed and delivered to customer',
-                  order['completedAt'], 
-                  Icons.check_circle,
-                  Colors.purple
-                ),
+                    'Order Completed',
+                    'Completed and delivered to customer',
+                    order['completedAt'],
+                    Icons.check_circle,
+                    Colors.purple),
             ],
           ),
         ),
@@ -1200,7 +1261,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     );
   }
 
-  Widget _buildTimelineItem(String title, String subtitle, String time, IconData icon, Color color) {
+  Widget _buildTimelineItem(
+      String title, String subtitle, String time, IconData icon, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(
@@ -1265,7 +1327,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       case 'card':
         return Icon(Icons.credit_card, size: 14, color: Colors.blue[700]);
       case 'upi':
-        return Icon(Icons.account_balance_wallet, size: 14, color: Colors.purple[700]);
+        return Icon(Icons.account_balance_wallet,
+            size: 14, color: Colors.purple[700]);
       default:
         return Icon(Icons.payment, size: 14, color: Colors.grey[700]);
     }
@@ -1517,13 +1580,13 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       },
     );
   }
-  
-    void _showOtpVerificationDialog(Map<String, dynamic> order) {
+
+  void _showOtpVerificationDialog(Map<String, dynamic> order) {
     // Create controller inside the method, but don't dispose it in the .then() callback
     final TextEditingController otpController = TextEditingController();
     bool isVerifying = false;
     String errorMessage = '';
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1579,12 +1642,12 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                             });
                             return;
                           }
-                          
+
                           setState(() {
                             isVerifying = true;
                             errorMessage = '';
                           });
-                          
+
                           // Simulate OTP verification
                           await Future.delayed(Duration(seconds: 2));
                           if (otpController.text.length == 6) {
@@ -1613,8 +1676,4 @@ class _ManagerOrderListState extends State<ManagerOrderList>
 }
 
 // Enum to represent order status
-enum OrderStatus {
-  pending,
-  ongoing,
-  completed
-}
+enum OrderStatus { pending, ongoing, completed }
