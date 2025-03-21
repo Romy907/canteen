@@ -38,74 +38,138 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       });
     }
     setState(() {
-      name = prefs.getString('name') ?? 'Nicolas Adams';
+      name = prefs.getString('name') ?? 'Not Available';
       email = prefs.getString('email') ?? 'nicolasadams@gmail.com';
       phone = prefs.getString('phone') ?? '';
       campus = prefs.getString('campus') ?? '';
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: _profileImage != null
-                  ? FileImage(_profileImage!)
-                  : AssetImage('assets/images/logo.png') as ImageProvider,
-            ),
-            SizedBox(height: 10),
-            Text(
-              name,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              email,
+  Future<void> _confirmLogout(BuildContext context) async {
+    bool confirm = await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Logout', style: TextStyle(color: Colors.black)),
+            content: Text(
+              'Are you sure you want to logout from your account?',
               style: TextStyle(color: Colors.grey),
             ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
               ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => StudentEditProfileScreen(profileImage: _profileImage),
-                  ),
-                ).then((_) => _loadProfileData());
-              },
-              child: Text(
-                'Edit Profile',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 236, 136, 136),
                 ),
+                child: const Text('Logout'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirm) {
+      await FirebaseManager().logout();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+  return Scaffold(
+    body: Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(51),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.white,
+                backgroundImage: _profileImage != null
+                    ? FileImage(_profileImage!)
+                    : AssetImage('assets/images/logo.png') as ImageProvider,
+                child: _profileImage == null
+                    ? Icon(Icons.person, size: 50, color: Colors.grey)
+                    : null,
               ),
             ),
-            SizedBox(height: 10),
-            _buildProfileOption(context, Icons.history, 'My Orders'),
-            SizedBox(height: 10),
-            _buildProfileOption(context, Icons.help_outline, 'Help & Support'),
-            SizedBox(height: 10),
-            _buildProfileOption(context, Icons.settings, 'Settings'),
-            SizedBox(height: 10),
-            _buildProfileOption(context, Icons.person_add, 'Invite a Friend'),
-            SizedBox(height: 10),
-            _buildProfileOption(context, Icons.logout, 'Logout', isLogout: true),
-          ],
-        ),
+          ),
+          SizedBox(height: 10),
+          Text(
+            name,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            email,
+            style: TextStyle(color: Colors.grey),
+          ),
+          SizedBox(height: 10),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+            ),
+            onPressed: () {
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(
+                      builder: (context) => StudentEditProfileScreen(profileImage: _profileImage),
+                    ),
+                  )
+                  .then((_) => _loadProfileData());
+            },
+            child: Text(
+              'Edit Profile',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
+          _buildProfileOption(context, Icons.history, 'My Orders'),
+          SizedBox(height: 10),
+          _buildProfileOption(context, Icons.help_outline, 'Help & Support'),
+          SizedBox(height: 10),
+          _buildProfileOption(context, Icons.settings, 'Settings'),
+          SizedBox(height: 10),
+          _buildProfileOption(context, Icons.person_add, 'Invite a Friend'),
+          SizedBox(height: 10),
+          _buildProfileOption(context, Icons.logout, 'Logout', isLogout: true),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildProfileOption(BuildContext context, IconData icon, String title, {bool isLogout = false}) {
     return Container(
@@ -149,10 +213,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               );
               break;
             case 'Logout':
-              FirebaseManager().logout();
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => LoginScreen()),
-              );
+              _confirmLogout(context);
               break;
           }
         },

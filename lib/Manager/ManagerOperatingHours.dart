@@ -748,21 +748,33 @@ Widget _buildTimePicker(
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Store Hours'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
-        actions: [
-          if (!_isLoading)
-            IconButton(
-              icon: Icon(Icons.edit_calendar_outlined),
-              onPressed: _showBatchEditSheet,
-              tooltip: 'Batch Edit Hours',
-            ),
-        ],
+     appBar: AppBar(
+  title: const Text('Store Hours'),
+  centerTitle: true,
+  backgroundColor: Colors.white,
+  foregroundColor: Colors.black87,
+  elevation: 1,
+  leading: IconButton(
+    icon: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(25),
+        shape: BoxShape.circle,
       ),
+      child: Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.black87),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  ),
+  actions: [
+    if (!_isLoading)
+      IconButton(
+        icon: Icon(Icons.edit_calendar_outlined),
+        onPressed: _showBatchEditSheet,
+        tooltip: 'Batch Edit Hours',
+      ),
+  ],
+),
+
       body: RefreshIndicator(
         onRefresh: _loadStoreTimings,
         child: Column(

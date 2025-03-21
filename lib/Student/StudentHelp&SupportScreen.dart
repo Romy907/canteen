@@ -8,9 +8,24 @@ class HelpAndSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Help & Support'),
+     appBar: AppBar(
+  title: const Text('Help & Support'),
+  backgroundColor: Colors.white,
+  foregroundColor: Colors.black87,
+  elevation: 1,
+  leading: IconButton(
+    icon: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(25),
+        shape: BoxShape.circle,
       ),
+      child: Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.black87),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  ),
+),
+
       body: ListView(
         children: [
           _buildSupportOption(

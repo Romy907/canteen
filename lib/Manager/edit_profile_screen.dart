@@ -68,15 +68,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Edit Profile'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _saveProfile,
-            ),
-          ],
-        ),
+       appBar: AppBar(
+  title: const Text('Edit Profile'),
+  centerTitle: true,
+  elevation: 1,
+  backgroundColor: Colors.white,
+  foregroundColor: Colors.black87,
+  leading: IconButton(
+    icon: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(25),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.arrow_back_ios_new, size: 16),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.save),
+      onPressed: _saveProfile,
+    ),
+  ],
+),
+
+
         resizeToAvoidBottomInset: true,
         body: LayoutBuilder(
           builder: (context, constraints) {
