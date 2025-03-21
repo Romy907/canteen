@@ -37,7 +37,8 @@ class CheckOutScreenState extends State<CheckOutScreen> {
       DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
   // Merchant UPI ID
-  final String _merchantUpiId = '7004394490@ybl'; // Replace with your merchant ID
+  final String _merchantUpiId =
+      '7004394490@ybl'; // Replace with your merchant ID
   final String _merchantName = 'Canteen';
 
   @override
@@ -46,6 +47,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
     _fetchStoreData();
     _fetchMerchantUpiId();
   }
+
   _fetchMerchantUpiId() async {
     // final ref = FirebaseDatabase.instance.ref().child('merchant_upi_id');
     // final snapshot = await ref.get();
@@ -1361,7 +1363,15 @@ class CheckOutScreenState extends State<CheckOutScreen> {
     );
   }
 
+  // Add this method to generate orderId without creating in Firebase
+  String _generateOrderId() {
+    final now = DateTime.parse(_orderTimestamp);
+    final formatter = DateFormat('yyyyMMddHHmmss');
+    return 'ORD-${formatter.format(now)}';
+  }
+
   // NEW: Initiate direct UPI payment using URL schemes
+  // Replace the _initiatePayment method with this improved version
   Future<void> _initiatePayment() async {
     if (_selectedUpiApp == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1375,114 +1385,325 @@ class CheckOutScreenState extends State<CheckOutScreen> {
     });
 
     try {
-      // Create the order in Firebase first with pending status
-      final String orderId = await _createOrder();
+      // Generate orderId but DON'T create in Firebase yet
+      final String orderId = _generateOrderId();
+      bool success = false;
 
-      // Generate UPI payment URL for the selected app
-      final String upiUrl = _generateUpiUrl(orderId);
-      
-      // Launch the URL to open the UPI app
-      final success = await _launchUpiApp(upiUrl);
-      
+      // Use app-specific approach based on selected app
+      switch (_selectedUpiApp) {
+        case 'com.google.android.apps.nbu.paisa.user':
+          success = await _launchGooglePay(orderId, _total);
+          break;
+        case 'com.phonepe.app':
+          success = await _launchPhonePe(orderId, _total);
+          break;
+        case 'net.one97.paytm':
+          success = await _launchPaytm(orderId, _total);
+          break;
+        case 'in.amazon.mShop.android.shopping':
+          success = await _launchAmazonPay(orderId, _total);
+          break;
+        case 'in.org.npci.upiapp':
+          success = await _launchBhim(orderId, _total);
+          break;
+        default:
+          // Use generic intent approach as fallback
+          success = await _launchUpiApp(_selectedUpiApp!);
+      }
+
       if (success) {
-        // Show a dialog to confirm payment status
-        // This is necessary because we don't get automatic callbacks from direct URL launches
+        // App launched successfully - show confirmation dialog
         if (mounted) {
           _showPaymentConfirmationDialog(orderId);
         }
       } else {
-        // Failed to launch app
-        _updateOrderStatus(orderId, 'payment_failed', 'Failed to launch payment app');
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to launch the payment app. Please try another one.')),
-          );
+        // Try generic fallback approach
+        final String upiUrl =
+            "upi://pay?pa=${_merchantUpiId}&pn=${Uri.encodeComponent(_merchantName)}&tr=$orderId&am=${_total.toStringAsFixed(2)}&cu=INR&tn=${Uri.encodeComponent('Order #$orderId')}";
+
+        print('Trying fallback generic UPI URL: $upiUrl');
+
+        final fallbackSuccess = await launchUrl(
+          Uri.parse(upiUrl),
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (fallbackSuccess) {
+          if (mounted) {
+            _showPaymentConfirmationDialog(orderId);
+          }
+        } else {
+          // All attempts failed
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      'Could not launch payment app. Please check if the app is installed or try another payment option.')),
+            );
+          }
         }
       }
     } catch (e) {
       print('Error initiating payment: $e');
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment failed: ${e.toString()}')),
-        );
-      }
-    } finally {
+
       if (mounted) {
         setState(() {
           _isProcessing = false;
         });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment failed: ${e.toString()}')),
+        );
       }
     }
   }
 
+// Specialized launcher for PhonePe
+  Future<bool> _launchPhonePe(String orderId, double amount) async {
+    try {
+      final upiId = _merchantUpiId;
+      final String formattedAmount = amount.toStringAsFixed(2);
+      final merchant = Uri.encodeComponent(_merchantName);
+      final note = Uri.encodeComponent("Order #$orderId");
+
+      // PhonePe deep link format
+      final url =
+          "phonepe://pay?pa=$upiId&pn=$merchant&tr=$orderId&am=$formattedAmount&cu=INR&tn=$note";
+
+      print('Launching PhonePe URL: $url');
+
+      final uri = Uri.parse(url);
+      return await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Error launching PhonePe: $e');
+      return false;
+    }
+  }
+
+// Specialized launcher for Paytm
+  Future<bool> _launchPaytm(String orderId, double amount) async {
+    try {
+      final upiId = _merchantUpiId;
+      final String formattedAmount = amount.toStringAsFixed(2);
+      final merchant = Uri.encodeComponent(_merchantName);
+      final note = Uri.encodeComponent("Order #$orderId");
+
+      // Paytm deep link format
+      final url =
+          "paytmmp://pay?pa=$upiId&pn=$merchant&tr=$orderId&am=$formattedAmount&cu=INR&tn=$note";
+
+      print('Launching Paytm URL: $url');
+
+      final uri = Uri.parse(url);
+      return await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Error launching Paytm: $e');
+      return false;
+    }
+  }
+
+// Specialized launcher for Amazon Pay
+  Future<bool> _launchAmazonPay(String orderId, double amount) async {
+    try {
+      final upiId = _merchantUpiId;
+      final String formattedAmount = amount.toStringAsFixed(2);
+      final merchant = Uri.encodeComponent(_merchantName);
+      final note = Uri.encodeComponent("Order #$orderId");
+
+      // Amazon Pay deep link format
+      final url =
+          "amazonpay://pay?pa=$upiId&pn=$merchant&tr=$orderId&am=$formattedAmount&cu=INR&tn=$note";
+
+      print('Launching Amazon Pay URL: $url');
+
+      final uri = Uri.parse(url);
+      return await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Error launching Amazon Pay: $e');
+      return false;
+    }
+  }
+
+// Specialized launcher for BHIM UPI
+  Future<bool> _launchBhim(String orderId, double amount) async {
+    try {
+      final upiId = _merchantUpiId;
+      final String formattedAmount = amount.toStringAsFixed(2);
+      final merchant = Uri.encodeComponent(_merchantName);
+      final note = Uri.encodeComponent("Order #$orderId");
+
+      // BHIM deep link format
+      final url =
+          "bhim://pay?pa=$upiId&pn=$merchant&tr=$orderId&am=$formattedAmount&cu=INR&tn=$note";
+
+      print('Launching BHIM URL: $url');
+
+      final uri = Uri.parse(url);
+      return await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Error launching BHIM: $e');
+      return false;
+    }
+  }
+
   // Generate UPI deep link URL based on app and payment details
+  // Improved UPI URL generation with better encoding
   String _generateUpiUrl(String orderId) {
     // Format amount with 2 decimal places, no comma separators
     final String formattedAmount = _total.toStringAsFixed(2);
-    
+
     // Basic parameters required for UPI payment
     final Map<String, String> upiParams = {
       'pa': _merchantUpiId, // Payee address (merchant UPI ID)
-      'pn': _merchantName, // Payee name
-      'tn': 'Order #$orderId', // Transaction note
+      'pn': Uri.encodeComponent(_merchantName), // Encoded payee name
+      'tn': Uri.encodeComponent('Order #$orderId'), // Encoded transaction note
       'am': formattedAmount, // Amount
       'cu': 'INR', // Currency (Indian Rupee)
       'tr': orderId, // Transaction reference ID
     };
-    
-    // Create different URL schemes based on the selected app
+
+    // Create URL based on selected app
+    String baseUrl;
     switch (_selectedUpiApp) {
       case 'com.google.android.apps.nbu.paisa.user': // Google Pay
-        return _buildUpiUrl('upi://pay', upiParams);
-      
+        baseUrl = 'upi://pay';
+        break;
       case 'com.phonepe.app': // PhonePe
-        return _buildUpiUrl('phonepe://pay', upiParams);
-      
+        baseUrl = 'phonepe://pay';
+        break;
       case 'net.one97.paytm': // Paytm
-        return _buildUpiUrl('paytmmp://pay', upiParams);
-        
+        baseUrl = 'paytmmp://pay';
+        break;
       case 'in.amazon.mShop.android.shopping': // Amazon Pay
-        return _buildUpiUrl('amazonpay://pay', upiParams);
-        
+        baseUrl = 'amazonpay://pay';
+        break;
       case 'in.org.npci.upiapp': // BHIM
-        return _buildUpiUrl('bhim://pay', upiParams);
-        
+        baseUrl = 'bhim://pay';
+        break;
       default: // Default to generic UPI URL
-        return _buildUpiUrl('upi://pay', upiParams);
+        baseUrl = 'upi://pay';
     }
+
+    // Construct the URL manually to ensure proper encoding
+    String url = baseUrl + '?';
+    upiParams.forEach((key, value) {
+      url += '$key=$value&';
+    });
+
+    // Remove trailing &
+    return url.substring(0, url.length - 1);
   }
-  
+
   // Helper to build a URL with query parameters
   String _buildUpiUrl(String baseUrl, Map<String, String> params) {
     final Uri uri = Uri.parse(baseUrl);
     final queryParams = Uri(queryParameters: params).query;
     return '${uri.toString()}?$queryParams';
   }
-  
+
   // Launch the UPI app using the generated URL
-  Future<bool> _launchUpiApp(String url) async {
+  // Improved URL launcher with better debugging
+// Improved URL launcher that uses Intent approach for Android
+  Future<bool> _launchUpiApp(String upiUrl) async {
     try {
-      final uri = Uri.parse(url);
-      final canLaunch = await canLaunchUrl(uri);
-      
-      if (canLaunch) {
+      // For direct apps, use package-specific intents instead of URL schemes
+      if (_selectedUpiApp != null) {
+        // Create an intent URL for Android
+        final intentUrl = _createIntentUrl();
+
+        print('Launching intent: $intentUrl');
+
+        final uri = Uri.parse(intentUrl);
         return await launchUrl(
           uri,
           mode: LaunchMode.externalApplication,
         );
       } else {
-        print('Cannot launch URL: $url');
+        print('No UPI app selected');
         return false;
       }
     } catch (e) {
-      print('Error launching URL: $e');
+      print('Error launching UPI app: $e');
       return false;
     }
   }
 
+// Specialized launcher for Google Pay (more reliable)
+  Future<bool> _launchGooglePay(String orderId, double amount) async {
+    try {
+      final packageName = 'com.google.android.apps.nbu.paisa.user';
+      final upiId = _merchantUpiId;
+      final String formattedAmount = amount.toStringAsFixed(2);
+      final merchant = Uri.encodeComponent(_merchantName);
+      final note = Uri.encodeComponent("Order #$orderId");
+
+      // Direct Google Pay URL format
+      final url =
+          "tez://upi/pay?pa=$upiId&pn=$merchant&tr=$orderId&am=$formattedAmount&cu=INR&tn=$note";
+
+      print('Launching Google Pay URL: $url');
+
+      final uri = Uri.parse(url);
+      return await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Error launching Google Pay: $e');
+      return false;
+    }
+  }
+
+// Creates an Android Intent URL instead of direct UPI URL
+  String _createIntentUrl() {
+    // Format amount properly
+    final String formattedAmount = _total.toStringAsFixed(2);
+    final String orderId = _generateOrderId();
+
+    // The package to launch
+    final String packageName = _selectedUpiApp!;
+
+    // Create an Android intent URL with all necessary parameters
+    String intentUrl = 'intent://#Intent;';
+
+    // Add scheme
+    intentUrl += 'scheme=upi;';
+
+    // Add package
+    intentUrl += 'package=$packageName;';
+
+    // Add parameters as extras
+    intentUrl += 'S.pa=${Uri.encodeComponent(_merchantUpiId)};';
+    intentUrl += 'S.pn=${Uri.encodeComponent(_merchantName)};';
+    intentUrl += 'S.tn=${Uri.encodeComponent("Order #$orderId")};';
+    intentUrl += 'S.am=$formattedAmount;';
+    intentUrl += 'S.cu=INR;';
+    intentUrl += 'S.tr=$orderId;';
+
+    // End intent
+    intentUrl += 'end;';
+
+    return intentUrl;
+  }
+
   // Show dialog to confirm payment status
+  // Updated to create Firebase order only on confirmed payment
   void _showPaymentConfirmationDialog(String orderId) {
     showDialog(
       context: context,
@@ -1497,21 +1718,48 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _updateOrderStatus(orderId, 'payment_failed', 'User reported payment failure');
-              
+              setState(() {
+                _isProcessing = false;
+              });
+
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Payment marked as failed')),
+                const SnackBar(content: Text('Payment cancelled')),
               );
             },
             child: const Text('No, Failed'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              _updateOrderStatus(orderId, 'confirmed', 'User confirmed payment');
-              
-              // Show success dialog
-              _showSuccessDialog(orderId);
+
+              // Show loading indicator
+              setState(() {
+                _isProcessing = true;
+              });
+
+              try {
+                // NOW create the order in Firebase
+                await _createOrder(orderId, 'confirmed');
+
+                // Show success dialog
+                if (mounted) {
+                  setState(() {
+                    _isProcessing = false;
+                  });
+                  _showSuccessDialog(orderId);
+                }
+              } catch (e) {
+                print('Error creating order: $e');
+                if (mounted) {
+                  setState(() {
+                    _isProcessing = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('Error saving order: ${e.toString()}')),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
@@ -1524,14 +1772,15 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   }
 
   // Update order status in Firebase
-  Future<void> _updateOrderStatus(String orderId, String status, String reason) async {
+  Future<void> _updateOrderStatus(
+      String orderId, String status, String reason) async {
     try {
       final orderRef = FirebaseDatabase.instance
           .ref()
           .child(widget.items[0]['storeId'])
           .child('orders')
           .child(orderId);
-          
+
       await orderRef.update({
         'status': status,
         'paymentDetails.status': status == 'confirmed' ? 'completed' : 'failed',
@@ -1544,10 +1793,11 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   }
 
   // NEW: Create order in Firebase and return order ID
-  Future<String> _createOrder() async {
+  // Updated to accept status parameter and simplified
+  Future<void> _createOrder(String orderId, String status) async {
     // Create order data
     final orderData = {
-      'orderId': _orderId,
+      'orderId': orderId,
       'items': widget.items,
       'timestamp': _orderTimestamp,
       'notes': _notesController.text,
@@ -1560,27 +1810,21 @@ class CheckOutScreenState extends State<CheckOutScreen> {
       'paymentMethod': 'UPI',
       'paymentDetails': {
         'upiApp': _getAppName(_selectedUpiApp!),
-        'status': 'pending', // Will be updated after payment is complete
+        'status': status == 'confirmed' ? 'completed' : 'pending',
+        'updatedAt': DateTime.now().toIso8601String(),
       },
-      'storeId': widget.items[0]['storeId'], // Store ID
+      'storeId': widget.items[0]['storeId'],
       'userId': 'navin280123', // Current user
-      'status': 'pending',
+      'status': "pending",
     };
 
-    try {
-      // Save order to Firebase
-      await FirebaseDatabase.instance
-          .ref()
-          .child(widget.items[0]['storeId'])
-          .child('orders')
-          .child(_orderId)
-          .set(orderData);
-
-      return _orderId;
-    } catch (e) {
-      print('Error creating order: $e');
-      rethrow; // Re-throw to handle in the calling function
-    }
+    // Save order to Firebase
+    await FirebaseDatabase.instance
+        .ref()
+        .child(widget.items[0]['storeId'])
+        .child('orders')
+        .child(orderId)
+        .set(orderData);
   }
 
   // Helper to get app name from package
@@ -1666,7 +1910,8 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildInfoRow("Order ID", orderId),
-                    _buildInfoRow("Payment Method", _getAppName(_selectedUpiApp!)),
+                    _buildInfoRow(
+                        "Payment Method", _getAppName(_selectedUpiApp!)),
                     _buildInfoRow("Amount", _formatCurrency(_total)),
                   ],
                 ),
