@@ -4,8 +4,9 @@ import 'dart:io';
 
 class EditProfileScreen extends StatefulWidget {
   final Map<String, String> profileData;
+  final File? profileImage;
 
-  const EditProfileScreen({Key? key, required this.profileData}) : super(key: key);
+  const EditProfileScreen({Key? key, required this.profileData, this.profileImage}) : super(key: key);
 
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
@@ -13,29 +14,32 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameFocusNode = FocusNode(); // Add this line
   late Map<String, String> _editedProfileData;
-  bool _isEditing = true; // Set to true to enable editing by default
+  bool _isEditing = false; // Initially set to false
   File? _profileImage;
 
   @override
   void initState() {
     super.initState();
     _editedProfileData = Map.from(widget.profileData);
+    _profileImage = widget.profileImage;
   }
-void _saveProfile() {
-  if (_formKey.currentState?.validate() ?? false) {
-    _formKey.currentState?.save();
-    // Save the profile data to shared preferences or any other storage
 
-    // Navigate back to the manager profile screen and pass the updated data
-    Navigator.pop(context, {'profileData': _editedProfileData, 'profileImage': _profileImage});
+  void _saveProfile() {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
+      // Save the profile data to shared preferences or any other storage
 
-    // Show a success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Personal information successfully changed')),
-    );
+      // Navigate back to the manager profile screen and pass the updated data
+      Navigator.pop(context, {'profileData': _editedProfileData, 'profileImage': _profileImage});
+
+      // Show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Personal information successfully changed')),
+      );
+    }
   }
-}
 
   Future<void> _pickImage() async {
     final ImagePicker _picker = ImagePicker();
@@ -46,6 +50,17 @@ void _saveProfile() {
         _profileImage = File(image.path);
       });
     }
+  }
+
+  void _toggleEdit() {
+    setState(() {
+      _isEditing = true;
+    });
+
+    // Focus on the first text field to bring up the keyboard
+    Future.delayed(Duration(milliseconds: 300), () {
+      FocusScope.of(context).requestFocus(_nameFocusNode);
+    });
   }
 
   @override
@@ -146,29 +161,37 @@ void _saveProfile() {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withAlpha(50),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Text(
-                                    'Personal Information',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8.0),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).primaryColor.withAlpha(50),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Text(
+                                        'Personal Information',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    IconButton(
+                                      icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
+                                      onPressed: _toggleEdit,
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 16),
-                                _buildEditableInfoRow(Icons.person_outline, 'Name', _editedProfileData['name'], (value) => _editedProfileData['name'] = value!),
+                                _buildEditableInfoRow(Icons.person_outline, 'Name', _editedProfileData['name'], (value) => _editedProfileData['name'] = value!, focusNode: _nameFocusNode, iconColor: Colors.blue),
                                 const SizedBox(height: 16),
-                                _buildEditableInfoRow(Icons.email_outlined, 'Email', _editedProfileData['email'], (value) => _editedProfileData['email'] = value!),
+                                _buildEditableInfoRow(Icons.email_outlined, 'Email', _editedProfileData['email'], (value) => _editedProfileData['email'] = value!, iconColor: Colors.red),
                                 const SizedBox(height: 16),
-                                _buildEditableInfoRow(Icons.phone_outlined, 'Phone', _editedProfileData['phone'], (value) => _editedProfileData['phone'] = value!),
+                                _buildEditableInfoRow(Icons.phone_outlined, 'Phone', _editedProfileData['phone'], (value) => _editedProfileData['phone'] = value!, iconColor: Colors.green),
                                 const SizedBox(height: 16),
-                                _buildEditableInfoRow(Icons.location_on_outlined, 'Location', _editedProfileData['location'], (value) => _editedProfileData['location'] = value!),
-                               
+                                _buildEditableInfoRow(Icons.location_on_outlined, 'Location', _editedProfileData['location'], (value) => _editedProfileData['location'] = value!, iconColor: Colors.orange),
                               ],
                             ),
                           ),
@@ -204,23 +227,24 @@ void _saveProfile() {
     );
   }
 
-  Widget _buildEditableInfoRow(IconData icon, String label, String? initialValue, FormFieldSetter<String> onSaved) {
+  Widget _buildEditableInfoRow(IconData icon, String label, String? initialValue, FormFieldSetter<String> onSaved, {FocusNode? focusNode, required Color iconColor}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withAlpha(25),
+            color: iconColor.withAlpha(25),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: Theme.of(context).primaryColor, size: 22),
+          child: Icon(icon, color: iconColor, size: 22),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: TextFormField(
             initialValue: initialValue,
             enabled: _isEditing,
+            focusNode: focusNode, // Add this line
             decoration: InputDecoration(
               labelText: label,
               border: InputBorder.none,

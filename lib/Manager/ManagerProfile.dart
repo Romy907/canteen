@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'edit_profile_screen.dart';
+import 'dart:io';
 
 class ManagerProfile extends StatefulWidget {
   const ManagerProfile({Key? key}) : super(key: key);
@@ -28,7 +29,8 @@ class _ManagerProfileState extends State<ManagerProfile>
     'canteen': 'Main Campus Canteen',
     'role': 'Canteen Manager',
   };
-
+  
+   File? _profileImage;
   late TabController _tabController;
   bool _isLoading = true;
   // ignore: unused_field
@@ -183,23 +185,23 @@ class _ManagerProfileState extends State<ManagerProfile>
     );
   }
 
-  Widget _buildProfileHeader() {
+Widget _buildProfileHeader() {
   return SliverToBoxAdapter(
     child: GestureDetector(
       onTap: () async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => EditProfileScreen(profileData: profileData)),
-  );
-  if (result != null && result.containsKey('profileData')) {
-    setState(() {
-      profileData = result['profileData'];
-      if (result.containsKey('profileImage') && result['profileImage'] != null) {
-        // Handle profile image update if necessary
-      }
-    });
-  }
-},
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => EditProfileScreen(profileData: profileData,profileImage: _profileImage,)),
+        );
+        if (result != null && result.containsKey('profileData')) {
+          setState(() {
+            profileData = result['profileData'];
+            if (result.containsKey('profileImage') && result['profileImage'] != null) {
+              _profileImage = result['profileImage'];
+            }
+          });
+        }
+      },
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         decoration: BoxDecoration(
@@ -275,14 +277,19 @@ class _ManagerProfileState extends State<ManagerProfile>
                       child: CircleAvatar(
                         radius: 42,
                         backgroundColor: Colors.white,
-                        child: Text(
-                          profileData['name']!.substring(0, 1),
-                          style: TextStyle(
-                            fontSize: 28,
-                            color: _primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        backgroundImage: _profileImage != null
+                            ? FileImage(_profileImage!)
+                            : null,
+                        child: _profileImage == null
+                            ? Text(
+                                profileData['name']!.substring(0, 1),
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  color: _primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ),
