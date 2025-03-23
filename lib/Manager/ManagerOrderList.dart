@@ -140,8 +140,9 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       filteredPendingOrders = List.from(pendingOrders);
       filteredOnGoingOrders = List.from(onGoingOrders);
       filteredCompletedOrders = List.from(completedOrders);
-
-      // Apply filters if any
+      print(filteredPendingOrders.length);
+      print(filteredPendingOrders.toString());  
+    // Apply filters if any
       if (_searchQuery.isNotEmpty || _selectedPaymentFilter != null) {
         _filterOrders();
       }
@@ -563,7 +564,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
             ),
           ),
           title: Text(
-            '${order['id']}',
+            '${order['orderId']}',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).textTheme.titleMedium?.color,
@@ -580,7 +581,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                   SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      order['customer'],
+                      order['userId'],
                       style: TextStyle(
                         color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
@@ -617,7 +618,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                order['total'],
+                order['totalAmount'].toString(),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).textTheme.titleMedium?.color,
@@ -679,16 +680,16 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                   // Payment summary
                   Column(
                     children: [
-                      _buildPaymentDetail('Subtotal', order['subtotal']),
+                      _buildPaymentDetail('Subtotal', order['subtotal'].toString()),
                       if (order['discount'] != null)
                         _buildPaymentDetail(
                             'Discount', '- ${order['discount']}'),
-                      _buildPaymentDetail('Tax', order['tax']),
+                      _buildPaymentDetail('Tax', order['tax'].toString()),
                       if (order['platformCharge'] != null)
                         _buildPaymentDetail(
-                            'Platform Charge', order['platformCharge']),
+                            'Platform Charge', order['platformCharge'].toString()),
                       Divider(height: 16, thickness: 1),
-                      _buildPaymentDetail('Total Amount', order['total'],
+                      _buildPaymentDetail('Total Amount', order['totalAmount'].toString(),
                           isBold: true),
                     ],
                   ),
@@ -707,7 +708,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   }
 
   Widget _buildDeliveryTimer(Map<String, dynamic> order) {
-    final String orderId = order['id'];
+    final String orderId = order['orderId'];
 
     // If no timer is running for this order, start one
     if (!orderTimers.containsKey(orderId)) {
