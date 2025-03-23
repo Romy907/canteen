@@ -185,17 +185,29 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          widget.isBuyNow ? "Quick Checkout" : "Checkout",
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        elevation: 0,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+    appBar: AppBar(
+  title: Text(
+    widget.isBuyNow ? "Quick Checkout" : "Checkout",
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  elevation: 0,
+  backgroundColor: Theme.of(context).primaryColor,
+  foregroundColor: Colors.white,
+  leading: IconButton(
+    icon: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(50), // Light background for contrast
+        shape: BoxShape.circle,
       ),
+      child: Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.white),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  ),
+),
+
       body: _isLoadingStoreData
           ? _buildLoadingView()
           : widget.items.isEmpty

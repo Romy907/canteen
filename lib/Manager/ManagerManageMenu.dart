@@ -187,25 +187,36 @@ class _ManagerManageMenuState extends State<ManagerManageMenu> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Menu Items',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: _primaryColor,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view,
-                color: Colors.white),
-            onPressed: () {
-              setState(() {
-                _isGridView = !_isGridView;
-              });
-            },
-            tooltip:
-                _isGridView ? 'Switch to List View' : 'Switch to Grid View',
-          ),
-          
-        ],
+  title: const Text(
+    'Manage Menu Items',
+    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+  ),
+  backgroundColor: _primaryColor,
+  elevation: 0,
+  leading: IconButton(
+    icon: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(25),
+        shape: BoxShape.circle,
       ),
+      child: Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.white),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  ),
+  actions: [
+    IconButton(
+      icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view,
+          color: Colors.white),
+      onPressed: () {
+        setState(() {
+          _isGridView = !_isGridView;
+        });
+      },
+    ),
+  ],
+),
+
       floatingActionButton: _isError
           ? null
           : FloatingActionButton.extended(

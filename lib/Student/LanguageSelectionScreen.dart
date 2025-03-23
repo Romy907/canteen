@@ -82,18 +82,32 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        title: Text('Select Language'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
-        iconTheme: IconThemeData(color: Colors.black),
+     appBar: AppBar(
+  title: const Text(
+    'Select Language',
+    style: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: Colors.black,
+    ),
+  ),
+  backgroundColor: Colors.white,
+  elevation: 0,
+  centerTitle: false, // Ensures the title stays left-aligned
+  iconTheme: const IconThemeData(color: Colors.black),
+  leading: IconButton(
+    icon: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(25),
+        shape: BoxShape.circle,
       ),
+      child: Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.black87),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  ),
+),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

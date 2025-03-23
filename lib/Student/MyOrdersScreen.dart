@@ -755,69 +755,81 @@ Widget _buildWideItemDetails(BuildContext context, Order order) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'My Orders',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              _isLoading
-                  ? 'Loading orders...'
-                  : '${filteredOrders.length} orders',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[200],
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
+  title: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'My Orders',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
-        actions: [
-          if (!_isLoading) ...[
-            // Filter button
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.filter_list,
-                    color: _selectedFilter != 'None'
-                        ? Theme.of(context).colorScheme.secondary
-                        : null,
-                  ),
-                  onPressed: () => _showFilterOptions(context),
-                ),
-                if (_selectedFilter != 'None')
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-
-            // Refresh button
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _resetFilter,
-            ),
-          ],
-        ],
-        elevation: 0,
-        backgroundColor: Theme.of(context).primaryColor,
       ),
+      Text(
+        _isLoading
+            ? 'Loading orders...'
+            : '${filteredOrders.length} orders',
+        style: TextStyle(
+          fontSize: 12,
+          color: Colors.grey[200],
+          fontWeight: FontWeight.normal,
+        ),
+      ),
+    ],
+  ),
+  leading: IconButton(
+    icon: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(25),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.white),
+    ),
+    onPressed: () => Navigator.of(context).pop(),
+  ),
+  actions: [
+    if (!_isLoading) ...[
+      // Filter button
+      Stack(
+        alignment: Alignment.center,
+        children: [
+          IconButton(
+            icon: Icon(
+              Icons.filter_list,
+              color: _selectedFilter != 'None'
+                  ? Theme.of(context).colorScheme.secondary
+                  : null,
+            ),
+            onPressed: () => _showFilterOptions(context),
+          ),
+          if (_selectedFilter != 'None')
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
+      ),
+
+      // Refresh button
+      IconButton(
+        icon: const Icon(Icons.refresh),
+        onPressed: _resetFilter,
+      ),
+    ],
+  ],
+  elevation: 0,
+  backgroundColor: Theme.of(context).primaryColor,
+),
+
       body: _isLoading ? _buildShimmerEffect() : _buildOrdersList(),
     );
   }
