@@ -177,7 +177,7 @@ Widget _buildShimmerBox({required double height, required double width, double b
   );
 }
 
-/// Shimmer for Profile Info (Name, Role, Location)
+/// Shimmer for Profile Info (Name, Role, Canteen)
 Widget _buildShimmerProfileInfo() {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,10 +186,11 @@ Widget _buildShimmerProfileInfo() {
       const SizedBox(height: 8),
       _buildShimmerBox(height: 16, width: 120), // Role
       const SizedBox(height: 8),
-      _buildShimmerBox(height: 14, width: 160), // Location
+      _buildShimmerBox(height: 14, width: 200), // Canteen
     ],
   );
 }
+
 
 /// Shimmer for Action Buttons (Edit, Settings, Logout)
 Widget _buildShimmerActions() {
@@ -235,7 +236,6 @@ Widget _buildShimmerSettings() {
       ),
     );
   }
-
 Widget _buildProfileHeader() {
   return SliverToBoxAdapter(
     child: AnimatedOpacity(
@@ -293,6 +293,7 @@ Widget _buildProfileHeader() {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Name
                       Text(
                         profileData['name']!,
                         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
@@ -300,6 +301,8 @@ Widget _buildProfileHeader() {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
+                      
+                      // Role
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
@@ -310,6 +313,30 @@ Widget _buildProfileHeader() {
                           profileData['role']!,
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
                         ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Canteen Info (NEWLY ADDED)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined, // Canteen icon
+                            color: Colors.white.withAlpha(229),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              profileData['canteen']!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white.withAlpha(229),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -322,6 +349,7 @@ Widget _buildProfileHeader() {
     ),
   );
 }
+
 
 
   Widget _buildTabBar() {
