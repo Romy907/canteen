@@ -1014,7 +1014,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
             ),
             SizedBox(width: 8),
             Text(
-              item['price'],
+              item['price'].toString(),
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.w500,
@@ -1133,7 +1133,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   }
 
   void _startDeliveryTimer(Map<String, dynamic> order) {
-    final String orderId = order['id'];
+    final String orderId = order['orderId'];
     orderStartTimes[orderId] = DateTime.now();
 
     // Parse the estimated delivery time
