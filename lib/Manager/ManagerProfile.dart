@@ -54,6 +54,7 @@ class _ManagerProfileState extends State<ManagerProfile>
         _selectedTabIndex = _tabController.index;
       });
     });
+     
 
     // Set system UI overlay style for better integration
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -67,6 +68,7 @@ class _ManagerProfileState extends State<ManagerProfile>
   Future<void> _fetchUserData() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
+       await Future.delayed(const Duration(seconds: 2));
       setState(() {
         profileData = {
           'name': prefs.getString('name') ?? 'Not Available',
@@ -79,6 +81,7 @@ class _ManagerProfileState extends State<ManagerProfile>
         _isLoading = false;
       });
     } catch (e) {
+       await Future.delayed(const Duration(seconds: 2));
       setState(() {
         _isLoading = false;
       });
@@ -92,76 +95,124 @@ class _ManagerProfileState extends State<ManagerProfile>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Theme(
-      data: ThemeData(
-        primaryColor: _primaryColor,
-        colorScheme: ColorScheme.light(
-          primary: _primaryColor,
-          secondary: _accentColor,
-          surface: _backgroundColor,
-        ),
-        scaffoldBackgroundColor: _backgroundColor,
-        cardTheme: CardTheme(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          clipBehavior: Clip.antiAlias,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _primaryColor,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
+ @override
+Widget build(BuildContext context) {
+  return Theme(
+    data: ThemeData(
+      primaryColor: _primaryColor,
+      colorScheme: ColorScheme.light(
+        primary: _primaryColor,
+        secondary: _accentColor,
+        surface: _backgroundColor,
       ),
-      child: Scaffold(
-        body: _isLoading ? _buildLoadingState() : _buildBody(),
+      scaffoldBackgroundColor: _backgroundColor,
+    ),
+    child: Scaffold(
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 600), // Smooth transition effect
+        switchInCurve: Curves.easeInOut, // In animation curve
+        switchOutCurve: Curves.easeInOut, // Out animation curve
+        child: _isLoading 
+          ? _buildLoadingState() // Show shimmer effect
+          : _buildBody(), // Fade in actual content
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildLoadingState() {
-    return Center(
+
+Widget _buildLoadingState() {
+  return SingleChildScrollView(
+    physics: const NeverScrollableScrollPhysics(),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
-          Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
-            child: Column(
-              children: [
-                Container(
-                  width: 200,
-                  height: 100,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 150,
-                  height: 75,
-                  color: Colors.grey.shade300,
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 100,
-                  height: 50,
-                  color: Colors.grey.shade300,
-                ),
-              ],
-            ),
+
+          // Profile Header Shimmer
+          _buildShimmerBox(height: 150, width: double.infinity, borderRadius: 24),
+          const SizedBox(height: 24),
+
+          // Tab Bar Shimmer
+          Row(
+            children: List.generate(2, (index) {
+              return Expanded(
+                child: _buildShimmerBox(height: 48, width: double.infinity, borderRadius: 12),
+              );
+            }),
           ),
+          const SizedBox(height: 24),
+
+          // Profile Info Section
+          _buildShimmerProfileInfo(),
+          const SizedBox(height: 24),
+
+          // Action Buttons Shimmer
+          _buildShimmerActions(),
+          const SizedBox(height: 24),
+
+          // Settings List Shimmer
+          _buildShimmerSettings(),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+/// Generic Shimmer Box with Slow Effect
+Widget _buildShimmerBox({required double height, required double width, double borderRadius = 8}) {
+  return Shimmer.fromColors(
+    baseColor: Colors.grey[300]!,
+    highlightColor: Colors.grey[100]!,
+    child: Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        color: Colors.white,
+      ),
+    ),
+  );
+}
+
+/// Shimmer for Profile Info (Name, Role, Location)
+Widget _buildShimmerProfileInfo() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildShimmerBox(height: 20, width: 180), // Name
+      const SizedBox(height: 8),
+      _buildShimmerBox(height: 16, width: 120), // Role
+      const SizedBox(height: 8),
+      _buildShimmerBox(height: 14, width: 160), // Location
+    ],
+  );
+}
+
+/// Shimmer for Action Buttons (Edit, Settings, Logout)
+Widget _buildShimmerActions() {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: List.generate(3, (index) {
+      return _buildShimmerBox(height: 40, width: 100, borderRadius: 20);
+    }),
+  );
+}
+
+/// Shimmer for Settings List
+Widget _buildShimmerSettings() {
+  return Column(
+    children: List.generate(3, (index) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: _buildShimmerBox(height: 60, width: double.infinity, borderRadius: 16),
+      );
+    }),
+  );
+}
+
 
   Widget _buildBody() {
     return SafeArea(
@@ -187,184 +238,91 @@ class _ManagerProfileState extends State<ManagerProfile>
 
 Widget _buildProfileHeader() {
   return SliverToBoxAdapter(
-    child: GestureDetector(
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => EditProfileScreen(profileData: profileData,profileImage: _profileImage,)),
-        );
-        if (result != null && result.containsKey('profileData')) {
-          setState(() {
-            profileData = result['profileData'];
-            if (result.containsKey('profileImage') && result['profileImage'] != null) {
-              _profileImage = result['profileImage'];
-            }
-          });
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              _primaryColor,
-              _primaryColor.withAlpha(204),
+    child: AnimatedOpacity(
+      duration: const Duration(milliseconds: 800), 
+      opacity: _isLoading ? 0.0 : 1.0, // Only fade in after loading
+      child: GestureDetector(
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EditProfileScreen(profileData: profileData, profileImage: _profileImage)),
+          );
+          if (result != null && result.containsKey('profileData')) {
+            setState(() {
+              profileData = result['profileData'];
+              if (result.containsKey('profileImage') && result['profileImage'] != null) {
+                _profileImage = result['profileImage'];
+              }
+            });
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_primaryColor, _primaryColor.withAlpha(204)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(color: _primaryColor.withAlpha(76), blurRadius: 12, spreadRadius: 0, offset: const Offset(0, 4)),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: _primaryColor.withAlpha(76),
-              blurRadius: 12,
-              spreadRadius: 0,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Background decorative elements
-            Positioned(
-              top: -20,
-              right: -20,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -40,
-              left: -10,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(12),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-
-            // Profile content
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Profile image
-                  Hero(
-                    tag: 'profile_image',
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(51),
-                            blurRadius: 10,
-                            spreadRadius: 0,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: CircleAvatar(
-                        radius: 42,
-                        backgroundColor: Colors.white,
-                        backgroundImage: _profileImage != null
-                            ? FileImage(_profileImage!)
-                            : null,
-                        child: _profileImage == null
-                            ? Text(
-                                profileData['name']!.substring(0, 1),
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  color: _primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              )
-                            : null,
-                      ),
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Hero(
+                  tag: 'profile_image',
+                  child: CircleAvatar(
+                    radius: 42,
+                    backgroundColor: Colors.white,
+                    backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                    child: _profileImage == null
+                        ? Text(
+                            profileData['name']!.substring(0, 1),
+                            style: TextStyle(fontSize: 28, color: _primaryColor, fontWeight: FontWeight.bold),
+                          )
+                        : null,
                   ),
-                        
-                  const SizedBox(width: 20),
-
-                  // Profile details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          profileData['name']!,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profileData['name']!,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(51),
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(51),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            profileData['role']!,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
+                        child: Text(
+                          profileData['role']!,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              color: Colors.white.withAlpha(229),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                profileData['canteen']!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withAlpha(229),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     ),
   );
 }
+
 
   Widget _buildTabBar() {
     return SliverPersistentHeader(
