@@ -29,22 +29,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     _loadProfileData();
   }
 
-  // Future<void> _loadProfileData() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   String? imagePath = prefs.getString('profile_image');
-  //   if (imagePath != null) {
-  //     setState(() {
-  //       _profileImage = File(imagePath);
-  //     });
-  //   }
-  //   setState(() {
-  //     name = prefs.getString('name') ?? 'Not Available';
-  //     email = prefs.getString('email') ?? 'nicolasadams@gmail.com';
-  //     phone = prefs.getString('phone') ?? '';
-  //     campus = prefs.getString('campus') ?? '';
-  //   });
-  // }
-
 Future<void> _loadProfileData() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? imagePath = prefs.getString('profile_image');
