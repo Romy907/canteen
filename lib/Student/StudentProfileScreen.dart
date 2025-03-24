@@ -29,21 +29,41 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     _loadProfileData();
   }
 
-  Future<void> _loadProfileData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? imagePath = prefs.getString('profile_image');
-    if (imagePath != null) {
-      setState(() {
-        _profileImage = File(imagePath);
-      });
-    }
+  // Future<void> _loadProfileData() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? imagePath = prefs.getString('profile_image');
+  //   if (imagePath != null) {
+  //     setState(() {
+  //       _profileImage = File(imagePath);
+  //     });
+  //   }
+  //   setState(() {
+  //     name = prefs.getString('name') ?? 'Not Available';
+  //     email = prefs.getString('email') ?? 'nicolasadams@gmail.com';
+  //     phone = prefs.getString('phone') ?? '';
+  //     campus = prefs.getString('campus') ?? '';
+  //   });
+  // }
+
+Future<void> _loadProfileData() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? imagePath = prefs.getString('profile_image');
+
+  if (imagePath != null && File(imagePath).existsSync()) {
     setState(() {
-      name = prefs.getString('name') ?? 'Not Available';
-      email = prefs.getString('email') ?? 'nicolasadams@gmail.com';
-      phone = prefs.getString('phone') ?? '';
-      campus = prefs.getString('campus') ?? '';
+      _profileImage = File(imagePath);
     });
   }
+
+  setState(() {
+    name = prefs.getString('name')?.isNotEmpty == true ? prefs.getString('name')! : 'Not Available';
+    email = prefs.getString('email') ?? 'nicolasadams@gmail.com';
+    phone = prefs.getString('phone')?.isNotEmpty == true ? prefs.getString('phone')! : 'Not Available';
+    campus = prefs.getString('campus') ?? '';
+    });
+  }
+
+
 
   Future<void> _confirmLogout(BuildContext context) async {
     bool confirm = await showDialog(
@@ -87,7 +107,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context) {
   return Scaffold(
     body: Padding(
       padding: const EdgeInsets.all(20.0),
@@ -112,41 +132,49 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 backgroundColor: Colors.white,
                 backgroundImage: _profileImage != null
                     ? FileImage(_profileImage!)
-                    : AssetImage('assets/images/logo.png') as ImageProvider,
+                    : null, // No default asset image now
                 child: _profileImage == null
-                    ? Icon(Icons.person, size: 50, color: Colors.grey)
+                    ? Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
                     : null,
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
-            name,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            name.isNotEmpty ? name : 'Not Available',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           Text(
-            email,
-            style: TextStyle(color: Colors.grey),
+            email.isNotEmpty ? email : 'nicolasadams@gmail.com',
+            style: const TextStyle(color: Colors.grey),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
             ),
             onPressed: () {
               Navigator.of(context)
                   .push(
                     MaterialPageRoute(
-                      builder: (context) => StudentEditProfileScreen(profileImage: _profileImage),
+                      builder: (context) =>
+                          StudentEditProfileScreen(profileImage: _profileImage),
                     ),
                   )
                   .then((_) => _loadProfileData());
             },
-            child: Text(
+            child: const Text(
               'Edit Profile',
               style: TextStyle(
                 color: Colors.white,
@@ -154,15 +182,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _buildProfileOption(context, Icons.history, 'My Orders'),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _buildProfileOption(context, Icons.help_outline, 'Help & Support'),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _buildProfileOption(context, Icons.settings, 'Settings'),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _buildProfileOption(context, Icons.person_add, 'Invite a Friend'),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _buildProfileOption(context, Icons.logout, 'Logout', isLogout: true),
         ],
       ),
