@@ -74,9 +74,11 @@ class _ManagerProfileState extends State<ManagerProfile>
           'name': prefs.getString('name') ?? 'Not Available',
           'email': prefs.getString('email') ?? 'john.manager@example.com',
           'phone': prefs.getString('phone') ?? 'Not Available',
-          'canteen': prefs.getString('university') ?? 'Main Campus Canteen',
-          'role': prefs.getString('role')?.toUpperCase() ?? 'CANTEEN MANAGER',
+          'university': prefs.getString('university') ?? 'Main Campus Canteen',
+          'role': prefs.getString('role') ?? 'CANTEEN MANAGER',
           'location': prefs.getString('location')?? 'Not Available',
+          'createdAt': prefs.getString('createdAt')?? 'Not Available',
+          'profileImageUrl': prefs.getString('profileImageUrl')?? '',
         };
         _isLoading = false;
       });
@@ -277,15 +279,17 @@ Widget _buildProfileHeader() {
                 Hero(
                   tag: 'profile_image',
                   child: CircleAvatar(
-                    radius: 42,
-                    backgroundColor: Colors.white,
-                    backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
-                    child: _profileImage == null
-                        ? Text(
-                            profileData['name']!.substring(0, 1),
-                            style: TextStyle(fontSize: 28, color: _primaryColor, fontWeight: FontWeight.bold),
-                          )
-                        : null,
+                  radius: 42,
+                  backgroundColor: Colors.white,
+                  backgroundImage: profileData.containsKey('profileImageUrl') && profileData['profileImageUrl']!.isNotEmpty
+                    ? NetworkImage(profileData['profileImageUrl']!)
+                    : (_profileImage != null ? FileImage(_profileImage!) : null) as ImageProvider?,
+                  child: (profileData['profileImageUrl'] == null || profileData['profileImageUrl']!.isEmpty) && _profileImage == null
+                    ? Text(
+                      profileData['name']!.substring(0, 1),
+                      style: TextStyle(fontSize: 28, color: _primaryColor, fontWeight: FontWeight.bold),
+                      )
+                    : null,
                   ),
                 ),
                 const SizedBox(width: 20),
@@ -310,7 +314,7 @@ Widget _buildProfileHeader() {
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
-                          profileData['role']!,
+                          profileData['role']!.toUpperCase(),
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
                         ),
                       ),
@@ -327,7 +331,7 @@ Widget _buildProfileHeader() {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              profileData['canteen']!,
+                              profileData['university']!,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white.withAlpha(229),
@@ -572,7 +576,7 @@ Widget _buildProfileHeader() {
           _buildInfoRow(
             Icons.location_on_outlined,
             'Location',
-            profileData['location']!,
+            profileData['university']!,
             Colors.orange.shade700,
           ),
           const SizedBox(height: 16),

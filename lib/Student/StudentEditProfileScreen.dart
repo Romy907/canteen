@@ -64,15 +64,15 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
   }
 
   Future<void> _saveProfileData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('name', nameController.text);
-    await prefs.setString('email', emailController.text);
-    await prefs.setString('phone', phoneController.text);
-    await prefs.setString('campus', campusController.text);
-    await prefs.setString('meal_preference', selectedMealPreference);
-    if (_profileImage != null) {
-      await prefs.setString('profile_image', _profileImage!.path);
-    }
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // await prefs.setString('name', nameController.text);
+    // await prefs.setString('email', emailController.text);
+    // await prefs.setString('phone', phoneController.text);
+    // await prefs.setString('campus', campusController.text);
+    // await prefs.setString('meal_preference', selectedMealPreference);
+    // if (_profileImage != null) {
+    //   await prefs.setString('profile_image', _profileImage!.path);
+    // }
   }
 
   @override
