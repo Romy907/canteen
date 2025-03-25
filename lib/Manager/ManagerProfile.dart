@@ -575,8 +575,8 @@ Widget _buildProfileHeader() {
           const SizedBox(height: 16),
           _buildInfoRow(
             Icons.location_on_outlined,
-            'Location',
-            profileData['university']!,
+            'Address',
+            profileData['location']!,
             Colors.orange.shade700,
           ),
           const SizedBox(height: 16),

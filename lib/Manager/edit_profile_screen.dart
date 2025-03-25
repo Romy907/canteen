@@ -426,6 +426,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               },
               iconColor: Colors.orange,
             ),
+            const Divider(height: 24),
+             _buildInputField(
+              icon: Icons.home,
+              label: 'Address',
+              initialValue: _editedProfileData['location'],
+              onSaved: (value) => _editedProfileData['location'] = value!,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your Store Address';
+                }
+                return null;
+              },
+              iconColor: const Color.fromARGB(255, 20, 218, 13),
+            ),
           ],
         ),
       ),
