@@ -141,8 +141,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       filteredOnGoingOrders = List.from(onGoingOrders);
       filteredCompletedOrders = List.from(completedOrders);
       print(filteredPendingOrders.length);
-      print(filteredPendingOrders.toString());  
-    // Apply filters if any
+      print(filteredPendingOrders.toString());
+      // Apply filters if any
       if (_searchQuery.isNotEmpty || _selectedPaymentFilter != null) {
         _filterOrders();
       }
@@ -157,7 +157,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     setState(() {
       _isLoading = true;
     });
-  print(id);
+    print(id);
     // Get orders from Firebase
     _ordersRef.child(id!).child('orders').get().then((snapshot) {
       if (snapshot.exists) {
@@ -680,16 +680,18 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                   // Payment summary
                   Column(
                     children: [
-                      _buildPaymentDetail('Subtotal', order['subtotal'].toString()),
+                      _buildPaymentDetail(
+                          'Subtotal', order['subtotal'].toString()),
                       if (order['discount'] != null)
                         _buildPaymentDetail(
                             'Discount', '- ${order['discount']}'),
                       _buildPaymentDetail('Tax', order['tax'].toString()),
                       if (order['platformCharge'] != null)
-                        _buildPaymentDetail(
-                            'Platform Charge', order['platformCharge'].toString()),
+                        _buildPaymentDetail('Platform Charge',
+                            order['platformCharge'].toString()),
                       Divider(height: 16, thickness: 1),
-                      _buildPaymentDetail('Total Amount', order['totalAmount'].toString(),
+                      _buildPaymentDetail(
+                          'Total Amount', order['totalAmount'].toString(),
                           isBold: true),
                     ],
                   ),
@@ -1166,7 +1168,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   void _completeOrder(Map<String, dynamic> order) {
     final String orderId = order['orderId'] ?? order['id'];
     final String storeId = order['storeId'];
-
+    final String studEmail = order['userId'];
     // Cancel the timer if it exists
     if (orderTimers.containsKey(orderId)) {
       orderTimers[orderId]!.cancel();
@@ -1179,11 +1181,21 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       'completedAt': _getCurrentTime(),
       'completedBy': 'navin280123', // Current user
       'completedDate': DateTime.now().toString()
-    }).then((_) {
+    }).then((_) async {
+      // Move the liveOrder node to completedOrder under studEmail
+      final liveOrderRef = _ordersRef.child('User').child(studEmail).child('liveOrder').child(orderId);
+      final completedOrderRef = _ordersRef.child('User').child(studEmail).child('completedOrder').child(orderId);
+
+      final liveOrderSnapshot = await liveOrderRef.get();
+      if (liveOrderSnapshot.exists) {
+      await completedOrderRef.set(liveOrderSnapshot.value);
+      await liveOrderRef.remove();
+      }
+
       // Success handling - UI will update via the listener
       _showNotification(
-        message: 'Order $orderId completed successfully!',
-        isSuccess: true,
+      message: 'Order $orderId completed successfully!',
+      isSuccess: true,
       );
 
       // Switch to completed tab
@@ -1191,8 +1203,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     }).catchError((error) {
       print('Error completing order: $error');
       _showNotification(
-        message: 'Failed to complete order: $error',
-        isSuccess: false,
+      message: 'Failed to complete order: $error',
+      isSuccess: false,
       );
     });
   }

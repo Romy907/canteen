@@ -2,6 +2,7 @@ import 'package:canteen/Student/MyOrdersScreen.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CheckOutScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
 
   // Selected UPI app
   String? _selectedUpiApp;
-
+  String? userEmail;
   // Current timestamp
   final String _orderTimestamp =
       DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
@@ -46,6 +47,22 @@ class CheckOutScreenState extends State<CheckOutScreen> {
     super.initState();
     _fetchStoreData();
     _fetchMerchantUpiId();
+    _fetchCurrentUser();
+  }
+
+  // Fetch current user data from shared preferences
+  Future<void> _fetchCurrentUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userEmail = prefs.getString('email');
+    if (userEmail != null) {
+      setState(() {
+      this.userEmail = userEmail.replaceAll(RegExp(r'[.#$[\]]'), '');
+      });
+    } else {
+      setState(() {
+      this.userEmail = 'unknown@examplecom';
+      });
+    }
   }
 
   _fetchMerchantUpiId() async {
@@ -185,29 +202,30 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-    appBar: AppBar(
-  title: Text(
-    widget.isBuyNow ? "Quick Checkout" : "Checkout",
-    style: const TextStyle(
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-  elevation: 0,
-  backgroundColor: Theme.of(context).primaryColor,
-  foregroundColor: Colors.white,
-  leading: IconButton(
-    icon: Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(50), // Light background for contrast
-        shape: BoxShape.circle,
+      appBar: AppBar(
+        title: Text(
+          widget.isBuyNow ? "Quick Checkout" : "Checkout",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color:
+                  Colors.white.withAlpha(50), // Light background for contrast
+              shape: BoxShape.circle,
+            ),
+            child:
+                Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.white),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-      child: Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.white),
-    ),
-    onPressed: () => Navigator.of(context).pop(),
-  ),
-),
-
       body: _isLoadingStoreData
           ? _buildLoadingView()
           : widget.items.isEmpty
@@ -1795,7 +1813,6 @@ class CheckOutScreenState extends State<CheckOutScreen> {
   // NEW: Create order in Firebase and return order ID
   // Updated to accept status parameter and simplified
   Future<void> _createOrder(String orderId, String status) async {
-    // Create order data
     final orderData = {
       'orderId': orderId,
       'items': widget.items,
@@ -1814,10 +1831,12 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         'updatedAt': DateTime.now().toIso8601String(),
       },
       'storeId': widget.items[0]['storeId'],
-      'userId': 'navin280123', // Current user
+      'userId': userEmail, // Current user
       'status': "pending",
     };
+    // Retrieve email from SharedPreferences
 
+    final studentOrderData = {orderId: widget.items[0]['storeId']};
     // Save order to Firebase
     await FirebaseDatabase.instance
         .ref()
@@ -1825,6 +1844,12 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         .child('orders')
         .child(orderId)
         .set(orderData);
+    await FirebaseDatabase.instance
+        .ref()
+        .child('User')
+        .child(userEmail!)
+        .child('liveOrder')
+        .set(studentOrderData);
   }
 
   // Helper to get app name from package
