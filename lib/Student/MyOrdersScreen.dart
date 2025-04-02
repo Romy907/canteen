@@ -8,47 +8,133 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Order {
   final String id;
-  final String itemName;
-  final double price;
-  final String date;
-  final int quantity;
-  String status;
-  final String imageUrl;
   final String storeId;
+  final String userId;
+  String status;
+  final String timestamp;
+  final String acceptedDate;
+  final String completedDate;
+  final String acceptedBy;
+  final String completedBy;
+  final String acceptedAt;
+  final String completedAt;
+  final String deliveryTime;
+  final String notes;
+  final double totalAmount;
+  final double subtotal;
+  final double discount;
+  final double tax;
+  final double platformCharge;
+  final String paymentMethod;
+  final Map<String, dynamic>? paymentDetails;
+  final List<Map<String, dynamic>> items;
   final Map<String, dynamic>? statusHistory;
 
   Order({
     required this.id,
-    required this.itemName,
-    required this.price,
-    required this.date,
-    required this.quantity,
-    required this.status,
-    required this.imageUrl,
     required this.storeId,
+    required this.userId,
+    required this.status,
+    required this.timestamp,
+    this.acceptedDate = '',
+    this.completedDate = '',
+    this.acceptedBy = '',
+    this.completedBy = '',
+    this.acceptedAt = '',
+    this.completedAt = '',
+    this.deliveryTime = '',
+    this.notes = '',
+    required this.totalAmount,
+    required this.subtotal,
+    required this.discount,
+    required this.tax,
+    required this.platformCharge,
+    required this.paymentMethod,
+    this.paymentDetails,
+    required this.items,
     this.statusHistory,
   });
 
+  // Primary item name getter
+  String get itemName {
+    if (items.isNotEmpty) {
+      return items[0]['name'] ?? 'Unknown Item';
+    }
+    return 'Unknown Item';
+  }
+
+  // Primary item image getter
+  String get imageUrl {
+    if (items.isNotEmpty) {
+      return items[0]['image'] ?? 'assets/images/placeholder.jpg';
+    }
+    return 'assets/images/placeholder.jpg';
+  }
+
+
+  // Total item quantity getter
+  int get quantity {
+    if (items.isEmpty) return 0;
+    return items.length;
+  }
+
+  // First item price getter
+  double get price {
+    return subtotal;
+  }
+
   // Create Order from Firebase snapshot
   factory Order.fromSnapshot(String orderId, Map<String, dynamic> data) {
+    // Process items array
+    List<Map<String, dynamic>> itemsList = [];
+    if (data['items'] != null && data['items'] is List) {
+      itemsList = List<Map<String, dynamic>>.from(
+          (data['items'] as List).map((item) => Map<String, dynamic>.from(item)));
+    }
+
+    // Create status history if not present
+    Map<String, dynamic> statusHistory = {};
+    if (data['timestamp'] != null) {
+      statusHistory[data['timestamp']] = data['status'] ?? 'pending';
+    }
+    if (data['acceptedDate'] != null) {
+      statusHistory[data['acceptedDate']] = 'accepted';
+    }
+    if (data['completedDate'] != null) {
+      statusHistory[data['completedDate']] = 'completed';
+    }
+
     return Order(
       id: orderId,
-      itemName: data['itemName'] ?? 'Unknown Item',
-      price: (data['price'] != null)
-          ? double.parse(data['price'].toString())
-          : 0.0,
-      date: data['orderDate'] ?? DateTime.now().toString(),
-      quantity: data['quantity'] ?? 1,
-      status: data['status'] ?? 'pending',
-      imageUrl: data['imageUrl'] ?? 'assets/images/placeholder.jpg',
-      storeId: data['storeId'] ?? '',
-      statusHistory: data['statusHistory'] != null
-          ? Map<String, dynamic>.from(data['statusHistory'])
+      storeId: data['storeId']?.toString() ?? '',
+      userId: data['userId']?.toString() ?? '',
+      status: data['status']?.toString() ?? 'pending',
+      timestamp: data['timestamp']?.toString() ?? DateTime.now().toString(),
+      acceptedDate: data['acceptedDate']?.toString() ?? '',
+      completedDate: data['completedDate']?.toString() ?? '',
+      acceptedBy: data['acceptedBy']?.toString() ?? '',
+      completedBy: data['completedBy']?.toString() ?? '',
+      acceptedAt: data['acceptedAt']?.toString() ?? '',
+      completedAt: data['completedAt']?.toString() ?? '',
+      deliveryTime: data['deliveryTime']?.toString() ?? 'As soon as possible',
+      notes: data['notes']?.toString() ?? '',
+      totalAmount: double.tryParse(data['totalAmount']?.toString() ?? '0') ?? 0.0,
+      subtotal: double.tryParse(data['subtotal']?.toString() ?? '0') ?? 0.0,
+      discount: double.tryParse(data['discount']?.toString() ?? '0') ?? 0.0,
+      tax: double.tryParse(data['tax']?.toString() ?? '0') ?? 0.0,
+      platformCharge: double.tryParse(data['platformCharge']?.toString() ?? '0') ?? 0.0,
+      paymentMethod: data['paymentMethod']?.toString() ?? 'Unknown',
+      paymentDetails: data['paymentDetails'] != null
+          ? Map<String, dynamic>.from(data['paymentDetails'])
           : null,
+      items: itemsList,
+      statusHistory: statusHistory,
     );
   }
-}
 
+  // Get formatted date for display
+  String get date => timestamp;
+}
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({Key? key}) : super(key: key);
 
@@ -120,8 +206,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
     // Get userId from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     _userId = (prefs.getString('email') ?? '$_username@examplecom')
-      .replaceAll(RegExp(r'[.#$[\]]'), '');
-  
+        .replaceAll(RegExp(r'[.#$[\]]'), '');
   }
 
   @override
@@ -143,152 +228,155 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
 
   // Load orders from Firebase
   Future<void> _loadOrdersFromFirebase() async {
-  setState(() {
-    _isLoading = true;
-    orderHistory.clear();
-  });
-
-  try {
-    // Get user email from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    String userEmail = (prefs.getString('email') ?? '$_username@examplecom')
-      .replaceAll(RegExp(r'[.#$[\]]'), '');
-    
-    // Fetch live orders
-    DatabaseEvent liveOrdersEvent = await _database
-        .child('User/$userEmail/liveOrder')
-        .once();
-    
-    // Fetch completed orders
-    DatabaseEvent completedOrdersEvent = await _database
-        .child('User/$userEmail/completedOrder')
-        .once();
-    
-    // Process live orders
-    if (liveOrdersEvent.snapshot.exists) {
-      Map<dynamic, dynamic> liveOrdersMap = liveOrdersEvent.snapshot.value as Map;
-      print(liveOrdersMap.toString());
-      await _processOrders(liveOrdersMap, true);
-    }
-    
-    // Process completed orders
-    if (completedOrdersEvent.snapshot.exists) {
-      Map<dynamic, dynamic> completedOrdersMap = completedOrdersEvent.snapshot.value as Map;
-      print(completedOrdersMap.toString());
-      await _processOrders(completedOrdersMap, false);
-    }
-    
-    // Sort by date (newest first)
-    orderHistory.sort((a, b) => b.date.compareTo(a.date));
-    filteredOrders = List.from(orderHistory);
-    
-  } catch (e) {
-    print('Error loading orders: $e');
-    _createSampleOrders();
-  } finally {
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
+      orderHistory.clear();
     });
+
+    try {
+      // Get user email from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      String userEmail = (prefs.getString('email') ?? '$_username@examplecom')
+          .replaceAll(RegExp(r'[.#$[\]]'), '');
+
+      // Fetch live orders
+      DatabaseEvent liveOrdersEvent =
+          await _database.child('User/$userEmail/liveOrder').once();
+
+      // Fetch completed orders
+      DatabaseEvent completedOrdersEvent =
+          await _database.child('User/$userEmail/completedOrder').once();
+
+      // Process live orders
+      if (liveOrdersEvent.snapshot.exists) {
+        Map<dynamic, dynamic> liveOrdersMap =
+            liveOrdersEvent.snapshot.value as Map;
+        print(liveOrdersMap.toString());
+        await _processOrders(liveOrdersMap, true);
+      }
+
+      // Process completed orders
+      if (completedOrdersEvent.snapshot.exists) {
+        Map<dynamic, dynamic> completedOrdersMap =
+            completedOrdersEvent.snapshot.value as Map;
+        print(completedOrdersMap.toString());
+        await _processOrders(completedOrdersMap, false);
+      }
+
+      // Sort by date (newest first)
+      orderHistory.sort((a, b) => b.date.compareTo(a.date));
+      filteredOrders = List.from(orderHistory);
+    } catch (e) {
+      print('Error loading orders: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
-Future<void> _processOrders(Map<dynamic, dynamic> orderMap, bool isLive) async {
-  List<Future<void>> futures = [];
-  
-  orderMap.forEach((orderId, storeId) {
-    // For each order ID and store ID, fetch the order details
-    Future<void> future = _database
-        .child('$storeId/orders/$orderId')
-        .once()
-        .then((DatabaseEvent event) {
-          if (event.snapshot.exists) {
-            Map<dynamic, dynamic> orderData = event.snapshot.value as Map;
-            final orderDetails = Map<String, dynamic>.from(orderData);
-            
-            // Create Order object
-            final Order order = Order.fromSnapshot(orderId.toString(), orderDetails);
-            
-            // If needed, set status based on isLive
-            if (!isLive && order.status != 'delivered') {
-              order.status = 'delivered';
-            }
-            
-            orderHistory.add(order);
-            
-            // Setup real-time listener only for live orders
-            if (isLive) {
-              _setupOrderStatusListener(orderId.toString(), storeId.toString());
-              
-              // Create animation controller for status changes
-              _statusAnimationControllers[orderId.toString()] = AnimationController(
-                duration: const Duration(milliseconds: 800),
-                vsync: this,
-              );
-            }
+
+  Future<void> _processOrders(
+      Map<dynamic, dynamic> orderMap, bool isLive) async {
+    List<Future<void>> futures = [];
+
+    orderMap.forEach((orderId, storeId) {
+      // For each order ID and store ID, fetch the order details
+      Future<void> future = _database
+          .child('$storeId/orders/$orderId')
+          .once()
+          .then((DatabaseEvent event) {
+        if (event.snapshot.exists) {
+          Map<dynamic, dynamic> orderData = event.snapshot.value as Map;
+          final orderDetails = Map<String, dynamic>.from(orderData);
+
+          // Create Order object
+          final Order order =
+              Order.fromSnapshot(orderId.toString(), orderDetails);
+
+          // If needed, set status based on isLive
+          if (!isLive && order.status != 'delivered') {
+            order.status = 'delivered';
           }
-        });
-    
-    futures.add(future);
-  });
-  
-  // Wait for all orders to be fetched
-  await Future.wait(futures);
-}
+          orderHistory.add(order);
+
+          // Setup real-time listener only for live orders
+          if (isLive) {
+            _setupOrderStatusListener(orderId.toString(), storeId.toString());
+
+            // Create animation controller for status changes
+            _statusAnimationControllers[orderId.toString()] =
+                AnimationController(
+              duration: const Duration(milliseconds: 800),
+              vsync: this,
+            );
+          }
+        }
+      });
+
+      futures.add(future);
+    });
+
+    // Wait for all orders to be fetched
+    await Future.wait(futures);
+  }
+
   // Set up real-time listener for order status changes
   void _setupOrderStatusListener(String orderId, String storeId) {
-  final subscription = _database
-      .child('$storeId/order/$orderId')
-      .onValue
-      .listen((event) {
-    if (event.snapshot.exists) {
-      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-      final newStatus = data['status'] ?? 'pending';
+    final subscription =
+        _database.child('$storeId/order/$orderId').onValue.listen((event) {
+      if (event.snapshot.exists) {
+        final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+        final newStatus = data['status'] ?? 'pending';
 
-      // Find the order and update its status if changed
-      final index = orderHistory.indexWhere((order) => order.id == orderId);
-      if (index != -1 && orderHistory[index].status != newStatus) {
-        setState(() {
-          // Get the old status for animation purposes
-          final oldStatus = orderHistory[index].status;
+        // Find the order and update its status if changed
+        final index = orderHistory.indexWhere((order) => order.id == orderId);
+        if (index != -1 && orderHistory[index].status != newStatus) {
+          setState(() {
+            // Get the old status for animation purposes
+            final oldStatus = orderHistory[index].status;
 
-          // Update order status
-          orderHistory[index].status = newStatus;
+            // Update order status
+            orderHistory[index].status = newStatus;
 
-          // Apply the same update to filtered list if it contains this order
-          final filteredIndex =
-              filteredOrders.indexWhere((order) => order.id == orderId);
-          if (filteredIndex != -1) {
-            filteredOrders[filteredIndex].status = newStatus;
-          }
+            // Apply the same update to filtered list if it contains this order
+            final filteredIndex =
+                filteredOrders.indexWhere((order) => order.id == orderId);
+            if (filteredIndex != -1) {
+              filteredOrders[filteredIndex].status = newStatus;
+            }
 
-          // Show a notification of status change
-          _showStatusChangeNotification(orderId, oldStatus, newStatus);
-          _playStatusChangeAnimation(orderId);
-          
-          // If status changed to delivered, move from liveOrder to completedOrder
-          if (newStatus == 'delivered') {
-            _moveOrderToCompleted(orderId, storeId);
-          }
-        });
+            // Show a notification of status change
+            _showStatusChangeNotification(orderId, oldStatus, newStatus);
+            _playStatusChangeAnimation(orderId);
+
+            // If status changed to delivered, move from liveOrder to completedOrder
+            if (newStatus == 'delivered') {
+              _moveOrderToCompleted(orderId, storeId);
+            }
+          });
+        }
       }
-    }
-  });
+    });
 
-  _subscriptions.add(subscription);
-}
-Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    String userEmail = prefs.getString('email') ?? _username;
-    
-    // First remove from liveOrder
-    await _database.child('User/$userEmail/liveOrder/$orderId').remove();
-    
-    // Then add to completedOrder
-    await _database.child('User/$userEmail/completedOrder/$orderId').set(storeId);
-  } catch (e) {
-    print('Error moving order to completed: $e');
+    _subscriptions.add(subscription);
   }
-}
+
+  Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String userEmail = prefs.getString('email') ?? _username;
+
+      // First remove from liveOrder
+      await _database.child('User/$userEmail/liveOrder/$orderId').remove();
+
+      // Then add to completedOrder
+      await _database
+          .child('User/$userEmail/completedOrder/$orderId')
+          .set(storeId);
+    } catch (e) {
+      print('Error moving order to completed: $e');
+    }
+  }
 
   // Play status change animation
   void _playStatusChangeAnimation(String orderId) {
@@ -328,155 +416,18 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
     );
   }
 
-  // Create sample orders for demo (will connect to real Firebase in production)
-  void _createSampleOrders() {
-    // Get a Firebase-compatible storeid format for our demo
-    String storeId = _userId ?? '173988898092';
+ 
+  
 
-    orderHistory = [
-      Order(
-        id: 'ORD-${_generateOrderId(0)}',
-        itemName: 'Double Cheese Burger',
-        price: 199.00,
-        date: '2025-03-04 12:35:22',
-        quantity: 2,
-        status: 'processing', // Set to processing for demo
-        imageUrl: 'assets/images/burger.jpg',
-        storeId: storeId,
-        statusHistory: {
-          '2025-03-04 12:35:22': 'pending',
-          '2025-03-04 12:40:15': 'processing',
-        },
-      ),
-      Order(
-        id: 'ORD-${_generateOrderId(1)}',
-        itemName: 'Margherita Pizza',
-        price: 349.00,
-        date: '2025-03-01 19:15:44',
-        quantity: 1,
-        status: 'delivered',
-        imageUrl: 'assets/images/pizza.jpg',
-        storeId: storeId,
-        statusHistory: {
-          '2025-03-01 19:15:44': 'pending',
-          '2025-03-01 19:20:12': 'processing',
-          '2025-03-01 19:45:30': 'delivered',
-        },
-      ),
-      Order(
-        id: 'ORD-${_generateOrderId(2)}',
-        itemName: 'Cold Coffee',
-        price: 129.00,
-        date: '2025-02-25 14:20:11',
-        quantity: 3,
-        status: 'delivered',
-        imageUrl: 'assets/images/coffee.jpg',
-        storeId: storeId,
-        statusHistory: {
-          '2025-02-25 14:20:11': 'pending',
-          '2025-02-25 14:25:30': 'processing',
-          '2025-02-25 14:40:15': 'delivered',
-        },
-      ),
-      Order(
-        id: 'ORD-${_generateOrderId(3)}',
-        itemName: 'Pasta Arrabiata',
-        price: 249.00,
-        date: '2025-02-20 20:05:38',
-        quantity: 2,
-        status: 'delivered',
-        imageUrl: 'assets/images/pasta.jpg',
-        storeId: storeId,
-        statusHistory: {
-          '2025-02-20 20:05:38': 'pending',
-          '2025-02-20 20:10:22': 'processing',
-          '2025-02-20 20:35:40': 'delivered',
-        },
-      ),
-      Order(
-        id: 'ORD-${_generateOrderId(4)}',
-        itemName: 'French Fries',
-        price: 99.00,
-        date: '2025-02-15 13:42:17',
-        quantity: 2,
-        status: 'delivered',
-        imageUrl: 'assets/images/fries.jpg',
-        storeId: storeId,
-        statusHistory: {
-          '2025-02-15 13:42:17': 'pending',
-          '2025-02-15 13:45:30': 'processing',
-          '2025-02-15 14:00:12': 'delivered',
-        },
-      ),
-    ];
-
-    // Setup animation controllers for sample orders
-    for (var order in orderHistory) {
-      _statusAnimationControllers[order.id] = AnimationController(
-        duration: const Duration(milliseconds: 800),
-        vsync: this,
-      );
-
-      // For demo purposes, simulate status updates for the first order if it's processing
-      if (order.status == 'processing') {
-        _simulateStatusUpdates(order);
-      }
-    }
-
-    filteredOrders = List.from(orderHistory);
-  }
-
-  // For demo: simulate status updates every few seconds
-  void _simulateStatusUpdates(Order order) {
-    // After 10 seconds, change status to 'on the way'
-    Future.delayed(Duration(seconds: 10), () {
-      if (mounted) {
-        setState(() {
-          String oldStatus = order.status;
-          order.status = 'on the way';
-
-          // Update in filtered list if present
-          final filteredIndex =
-              filteredOrders.indexWhere((o) => o.id == order.id);
-          if (filteredIndex != -1) {
-            filteredOrders[filteredIndex].status = 'on the way';
-          }
-
-          _showStatusChangeNotification(order.id, oldStatus, 'on the way');
-          _playStatusChangeAnimation(order.id);
-        });
-
-        // After another 15 seconds, change to 'delivered'
-        Future.delayed(Duration(seconds: 15), () {
-          if (mounted) {
-            setState(() {
-              String oldStatus = order.status;
-              order.status = 'delivered';
-
-              // Update in filtered list if present
-              final filteredIndex =
-                  filteredOrders.indexWhere((o) => o.id == order.id);
-              if (filteredIndex != -1) {
-                filteredOrders[filteredIndex].status = 'delivered';
-              }
-
-              _showStatusChangeNotification(order.id, oldStatus, 'delivered');
-              _playStatusChangeAnimation(order.id);
-            });
-          }
-        });
-      }
-    });
-  }
 
   // Generate a consistent order ID based on date and username
-  String _generateOrderId(int index) {
-    final dateComponents = _currentDate.split(' ')[0].split('-');
-    final year = dateComponents[0].substring(2);
-    final month = dateComponents[1];
-    final day = dateComponents[2];
-    return '$year$month$day-${_username.substring(0, 4).toUpperCase()}-${1000 + index}';
-  }
+  // String _generateOrderId(int index) {
+  //   final dateComponents = _currentDate.split(' ')[0].split('-');
+  //   final year = dateComponents[0].substring(2);
+  //   final month = dateComponents[1];
+  //   final day = dateComponents[2];
+  //   return '$year$month$day-${_username.substring(0, 4).toUpperCase()}-${1000 + index}';
+  // }
 
   // Refresh data and check for new orders
   Future<void> _refreshData() async {
@@ -511,13 +462,13 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
           filteredOrders.sort((a, b) {
             int getPriority(String status) {
               switch (status.toLowerCase()) {
-                case 'processing':
+                case 'accepted':
                   return 0;
-                case 'on the way':
+                case 'preparing':
                   return 1;
-                case 'pending':
+                case 'accepted':
                   return 2;
-                case 'delivered':
+                case 'preparing':
                   return 3;
                 case 'cancelled':
                   return 4;
@@ -802,19 +753,6 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
                           ? Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: _canReorder(order)
-                                        ? () => _reorderItem(order)
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16),
-                                    ),
-                                    child: const Text('Reorder'),
-                                  ),
-                                ),
                                 const SizedBox(height: 12),
                                 SizedBox(
                                   width: double.infinity,
@@ -847,19 +785,7 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
                                     child: const Text('Help'),
                                   ),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: _canReorder(order)
-                                        ? () => _reorderItem(order)
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16),
-                                    ),
-                                    child: const Text('Reorder'),
-                                  ),
-                                ),
+                                
                               ],
                             ),
                     ),
@@ -965,7 +891,7 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
 
   // Check if status is active and should pulse
   bool _isActiveStatus(String status) {
-    return ['pending', 'processing', 'on the way']
+    return ['pending', 'accepted', 'preparing']
         .contains(status.toLowerCase());
   }
 
@@ -976,10 +902,10 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
       case 'pending':
         progressValue = 0.2;
         break;
-      case 'processing':
+      case 'accepted':
         progressValue = 0.5;
         break;
-      case 'on the way':
+      case 'preparing':
         progressValue = 0.8;
         break;
       default:
@@ -1002,9 +928,9 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
           children: [
             _buildProgressDot('Ordered', progressValue >= 0.2, true),
             _buildProgressDot(
-                'Preparing', progressValue >= 0.5, progressValue >= 0.2),
+                'Accepted', progressValue >= 0.5, progressValue >= 0.2),
             _buildProgressDot(
-                'On the way', progressValue >= 0.8, progressValue >= 0.5),
+                'Preparing', progressValue >= 0.8, progressValue >= 0.5),
             _buildProgressDot(
                 'Delivered', progressValue >= 1.0, progressValue >= 0.8),
           ],
@@ -1050,7 +976,7 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
 
   // Check if we should show progress bar for this status
   bool _showStatusProgress(String status) {
-    return ['pending', 'processing', 'on the way', 'delivered']
+    return ['pending', 'accepted', 'preparing', 'delivered']
         .contains(status.toLowerCase());
   }
 
@@ -1094,23 +1020,23 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
       });
 
       // Add processing timestamp if needed
-      if (['processing', 'on the way', 'delivered']
+      if (['accepted', 'preparing', 'delivered']
           .contains(order.status.toLowerCase())) {
         final orderTime = DateTime.parse(order.date);
         final processingTime = orderTime.add(Duration(minutes: 5));
         timeline.add({
           'time': processingTime.toString(),
-          'status': 'processing',
+          'status': 'accepted',
         });
       }
 
-      // Add on the way timestamp if needed
-      if (['on the way', 'delivered'].contains(order.status.toLowerCase())) {
+      // Add preparing timestamp if needed
+      if (['preparing', 'delivered'].contains(order.status.toLowerCase())) {
         final orderTime = DateTime.parse(order.date);
         final onTheWayTime = orderTime.add(Duration(minutes: 15));
         timeline.add({
           'time': onTheWayTime.toString(),
-          'status': 'on the way',
+          'status': 'preparing',
         });
       }
 
@@ -1378,9 +1304,9 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
     switch (status.toLowerCase()) {
       case 'delivered':
         return Colors.green;
-      case 'processing':
+      case 'accepted':
         return Colors.orange;
-      case 'on the way':
+      case 'preparing':
         return Colors.blue;
       case 'cancelled':
         return Colors.red;
@@ -1397,9 +1323,9 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
     switch (status.toLowerCase()) {
       case 'delivered':
         return Icons.check_circle;
-      case 'processing':
+      case 'accepted':
         return Icons.restaurant;
-      case 'on the way':
+      case 'preparing':
         return Icons.delivery_dining;
       case 'cancelled':
         return Icons.cancel;
@@ -1417,9 +1343,9 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
       case 'pending':
       case 'ordered':
         return 'Order Placed';
-      case 'processing':
+      case 'accepted':
         return 'Preparing Your Order';
-      case 'on the way':
+      case 'preparing':
         return 'On The Way';
       case 'delivered':
         return 'Delivered';
@@ -1436,10 +1362,10 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
       case 'pending':
       case 'ordered':
         return 'Your order has been received and is awaiting confirmation';
-      case 'processing':
-        return 'Your food is being prepared by the restaurant';
-      case 'on the way':
-        return 'Your order is on the way to your location';
+      case 'accepted':
+        return 'Your order has been accepted and is being prepared';
+      case 'preparing':
+        return 'Your order is being prepared';
       case 'delivered':
         return 'Your order has been delivered successfully';
       case 'cancelled':
@@ -1448,94 +1374,6 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
         return '';
     }
   }
-
-  // Check if order can be reordered (only for delivered orders)
-  bool _canReorder(Order order) {
-    return order.status.toLowerCase() == 'delivered';
-  }
-
-  // Reorder functionality
-  void _reorderItem(Order order) {
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Processing your reorder...'),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    // Simulate adding to cart
-    Future.delayed(Duration(seconds: 2), () {
-      // Dismiss loading dialog
-      Navigator.of(context).pop();
-
-      // Create a new order in Firebase with pending status
-      if (_userId != null) {
-        final newOrderId = 'ORD-${_generateOrderId(orderHistory.length)}';
-        final newOrderData = {
-          'itemName': order.itemName,
-          'price': order.price.toString(),
-          'orderDate': DateTime.now().toString(),
-          'quantity': order.quantity,
-          'status': 'pending',
-          'imageUrl': order.imageUrl,
-          'storeId': order.storeId,
-          'statusHistory': {
-            DateTime.now().toString(): 'pending',
-          }
-        };
-
-        // Add to Firebase
-        _database
-            .child('users/$_userId/orders/$newOrderId')
-            .set(newOrderData)
-            .then((_) {
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Your order has been placed again!'),
-              duration: Duration(seconds: 3),
-              action: SnackBarAction(
-                label: 'VIEW',
-                onPressed: () {
-                  // Could navigate to order tracking screen
-                  _refreshData();
-                },
-              ),
-            ),
-          );
-
-          // Close order details
-          Navigator.of(context).pop();
-
-          // Refresh the orders list
-          _refreshData();
-        }).catchError((error) {
-          // Show error
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to place order: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        });
-      }
-    });
-  }
-
   // Show help options for the order
   void _showHelpOptions(Order order) {
     showModalBottomSheet(
@@ -1586,7 +1424,7 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
                 },
               ),
               if (order.status.toLowerCase() == 'pending' ||
-                  order.status.toLowerCase() == 'processing') ...[
+                  order.status.toLowerCase() == 'accepted') ...[
                 _buildHelpOption(
                   context,
                   'Cancel Order',
@@ -1944,7 +1782,7 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
                   : '${filteredOrders.length} orders',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[200],
+                color: Colors.grey[800],
                 fontWeight: FontWeight.normal,
               ),
             ),
@@ -1954,11 +1792,11 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
           icon: Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(25),
+              color: const Color.fromARGB(255, 11, 10, 10).withAlpha(25),
               shape: BoxShape.circle,
             ),
             child:
-                Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.white),
+                Icon(Icons.arrow_back_ios_new, size: 16, color: const Color.fromARGB(255, 0, 0, 0)),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -2001,7 +1839,6 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
           ],
         ],
         elevation: 0,
-        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: _isLoading ? _buildShimmerEffect() : _buildOrdersList(),
     );
@@ -2100,7 +1937,7 @@ Future<void> _moveOrderToCompleted(String orderId, String storeId) async {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
               color: isAnimating
-                  ? _getStatusColor(order.status).withOpacity(0.5)
+                  ? _getStatusColor(order.status).withAlpha(127)
                   : Colors.grey[200]!,
               width: isAnimating ? 2 : 1,
             ),

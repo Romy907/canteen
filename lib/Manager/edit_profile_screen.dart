@@ -148,7 +148,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withAlpha(25),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.camera_alt, color: Colors.blue),
@@ -161,7 +161,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.indigo.withOpacity(0.1),
+                    color: Colors.indigo.withAlpha(25),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.photo_library, color: Colors.indigo),
@@ -205,7 +205,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha(12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.arrow_back, size: 20),
@@ -294,7 +294,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 child: CircleAvatar(
                   radius: 60,
-                  backgroundColor: primaryColor.withOpacity(0.2),
+                  backgroundColor: primaryColor.withAlpha(51),
                   backgroundImage: _profileImage != null
                       ? FileImage(_profileImage!)
                       : (widget.profileData['profileImageUrl'] != null &&
@@ -355,7 +355,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, 5),
@@ -461,7 +461,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withAlpha(25),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: iconColor, size: 22),
@@ -508,7 +508,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1565C0).withOpacity(0.3),
+            color: const Color(0xFF1565C0).withAlpha(76),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

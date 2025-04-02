@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:intl/intl.dart';
 
 class ManagerOrderList extends StatefulWidget {
   const ManagerOrderList({Key? key}) : super(key: key);
@@ -174,18 +173,6 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       });
     });
   }
-
-  String _formatTimestamp(String timestamp) {
-    // Format timestamp to readable time
-    try {
-      DateTime dateTime = DateTime.parse(timestamp);
-      String formattedTime = DateFormat('hh:mm a').format(dateTime);
-      return formattedTime;
-    } catch (e) {
-      return timestamp;
-    }
-  }
-
   @override
   void dispose() {
     _tabController.dispose();
@@ -769,9 +756,9 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: timeColor.withOpacity(0.1),
+        color: timeColor.withAlpha(25),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: timeColor.withOpacity(0.3)),
+        border: Border.all(color: timeColor.withAlpha(76)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1286,7 +1273,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
             height: 40,
             margin: EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withAlpha(25),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color),

@@ -941,7 +941,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
               option['time'],
               style: TextStyle(
                 color: isSelected
-                    ? Colors.white.withOpacity(0.9)
+                    ? Colors.white.withAlpha(229)
                     : Colors.grey[600],
                 fontSize: 12,
               ),
@@ -1053,7 +1053,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
           child: Container(
             decoration: BoxDecoration(
               color:
-                  isSelected ? app['color'].withOpacity(0.1) : Colors.grey[100],
+                  isSelected ? app['color'].withAlpha(25) : Colors.grey[100],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected ? app['color'] : Colors.grey[300]!,
@@ -1067,7 +1067,7 @@ class CheckOutScreenState extends State<CheckOutScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: app['color'].withOpacity(0.1),
+                    color: app['color'].withAlpha(25),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(app['icon'], color: app['color'], size: 32),
@@ -1845,11 +1845,11 @@ class CheckOutScreenState extends State<CheckOutScreen> {
         .child(orderId)
         .set(orderData);
     await FirebaseDatabase.instance
-        .ref()
-        .child('User')
-        .child(userEmail!)
-        .child('liveOrder')
-        .set(studentOrderData);
+      .ref()
+      .child('User')
+      .child(userEmail!)
+      .child('liveOrder')
+      .update(studentOrderData);
   }
 
   // Helper to get app name from package
