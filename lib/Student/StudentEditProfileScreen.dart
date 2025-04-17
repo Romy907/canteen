@@ -1,3 +1,4 @@
+import 'package:canteen/Firebase/FirebaseManager.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,6 +74,16 @@ class _StudentEditProfileScreenState extends State<StudentEditProfileScreen> {
     if (_profileImage != null) {
       await prefs.setString('profile_image', _profileImage!.path);
     }
+    // Save other profile data as needed
+    Map<String, dynamic> userData = {
+      'name': nameController.text,
+      'email': emailController.text,
+      'phone': phoneController.text,
+      'campus': campusController.text,
+      'meal_preference': selectedMealPreference,
+      'profile_image': _profileImage?.path,
+    };
+    FirebaseManager().saveUserData(userData);
   }
 
   @override

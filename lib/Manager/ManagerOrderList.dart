@@ -26,11 +26,13 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   // Order lists
   List<Map<String, dynamic>> pendingOrders = [];
   List<Map<String, dynamic>> onGoingOrders = [];
+  List<Map<String, dynamic>> readyOrders = []; // New list for ready orders
   List<Map<String, dynamic>> completedOrders = [];
 
   // Lists for filtered results
   late List<Map<String, dynamic>> filteredPendingOrders;
   late List<Map<String, dynamic>> filteredOnGoingOrders;
+  late List<Map<String, dynamic>> filteredReadyOrders; // New filtered list
   late List<Map<String, dynamic>> filteredCompletedOrders;
 
   // Maps to store order timers and estimated delivery times
@@ -45,11 +47,12 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this); // Changed to 4 tabs
 
     // Set up filtered lists
     filteredPendingOrders = List.from(pendingOrders);
     filteredOnGoingOrders = List.from(onGoingOrders);
+    filteredReadyOrders = List.from(readyOrders); // Initialize filtered ready orders
     filteredCompletedOrders = List.from(completedOrders);
 
     // Load ID first, which will trigger loading data
@@ -109,6 +112,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       // Clear current lists
       pendingOrders.clear();
       onGoingOrders.clear();
+      readyOrders.clear(); // Clear ready orders
       completedOrders.clear();
 
       final ordersData = Map<String, dynamic>.from(snapshot.value as Map);
@@ -129,6 +133,9 @@ class _ManagerOrderListState extends State<ManagerOrderList>
           case 'confirmed': // Handle this status as ongoing too
             onGoingOrders.add(orderData);
             break;
+          case 'ready': // Handle ready status
+            readyOrders.add(orderData);
+            break;
           case 'completed':
             completedOrders.add(orderData);
             break;
@@ -138,9 +145,9 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       // Update filtered lists
       filteredPendingOrders = List.from(pendingOrders);
       filteredOnGoingOrders = List.from(onGoingOrders);
+      filteredReadyOrders = List.from(readyOrders); // Update filtered ready orders
       filteredCompletedOrders = List.from(completedOrders);
-      print(filteredPendingOrders.length);
-      print(filteredPendingOrders.toString());
+      
       // Apply filters if any
       if (_searchQuery.isNotEmpty || _selectedPaymentFilter != null) {
         _filterOrders();
@@ -197,6 +204,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       // First filter by search query
       filteredPendingOrders = _filterOrdersByQuery(pendingOrders);
       filteredOnGoingOrders = _filterOrdersByQuery(onGoingOrders);
+      filteredReadyOrders = _filterOrdersByQuery(readyOrders); // Filter ready orders
       filteredCompletedOrders = _filterOrdersByQuery(completedOrders);
 
       // Then filter by payment method if selected
@@ -204,6 +212,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
           _selectedPaymentFilter!.isNotEmpty) {
         filteredPendingOrders = _filterOrdersByPayment(filteredPendingOrders);
         filteredOnGoingOrders = _filterOrdersByPayment(filteredOnGoingOrders);
+        filteredReadyOrders = _filterOrdersByPayment(filteredReadyOrders); // Filter ready orders by payment
         filteredCompletedOrders =
             _filterOrdersByPayment(filteredCompletedOrders);
       }
@@ -243,15 +252,18 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     if (_selectedSortOption == 'Highest Amount') {
       _sortOrdersByAmount(filteredPendingOrders, isAscending: false);
       _sortOrdersByAmount(filteredOnGoingOrders, isAscending: false);
+      _sortOrdersByAmount(filteredReadyOrders, isAscending: false); // Sort ready orders
       _sortOrdersByAmount(filteredCompletedOrders, isAscending: false);
     } else if (_selectedSortOption == 'Lowest Amount') {
       _sortOrdersByAmount(filteredPendingOrders, isAscending: true);
       _sortOrdersByAmount(filteredOnGoingOrders, isAscending: true);
+      _sortOrdersByAmount(filteredReadyOrders, isAscending: true); // Sort ready orders
       _sortOrdersByAmount(filteredCompletedOrders, isAscending: true);
     } else {
       // Default: Newest First - assuming the order IDs are sequential
       filteredPendingOrders.sort((a, b) => b['id'].compareTo(a['id']));
       filteredOnGoingOrders.sort((a, b) => b['id'].compareTo(a['id']));
+      filteredReadyOrders.sort((a, b) => b['id'].compareTo(a['id'])); // Sort ready orders
       filteredCompletedOrders.sort((a, b) => b['id'].compareTo(a['id']));
     }
   }
@@ -273,7 +285,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     final isTabletOrDesktop = screenWidth > 600;
 
     return DefaultTabController(
-      length: 3, // Changed to 3 tabs
+      length: 4, // Changed to 4 tabs
       child: Scaffold(
         backgroundColor: Theme.of(context).brightness == Brightness.light
             ? Colors.grey[50]
@@ -296,6 +308,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                           _searchController.clear();
                           filteredPendingOrders = List.from(pendingOrders);
                           filteredOnGoingOrders = List.from(onGoingOrders);
+                          filteredReadyOrders = List.from(readyOrders); // Reset filtered ready orders
                           filteredCompletedOrders = List.from(completedOrders);
                           _isSearching = false;
                         });
@@ -363,6 +376,16 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(Icons.restaurant), // Icon for ready orders
+                    SizedBox(width: 8),
+                    // Text('Ready (${filteredReadyOrders.length})'),
+                  ],
+                ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     Icon(Icons.check_circle),
                     SizedBox(width: 8),
                     // Text('Completed (${filteredCompletedOrders.length})'),
@@ -388,6 +411,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
             filteredPendingOrders, OrderStatus.pending, isTabletOrDesktop),
         _buildOrdersScreen(
             filteredOnGoingOrders, OrderStatus.ongoing, isTabletOrDesktop),
+        _buildOrdersScreen(
+            filteredReadyOrders, OrderStatus.ready, isTabletOrDesktop), // Add ready orders screen
         _buildOrdersScreen(
             filteredCompletedOrders, OrderStatus.completed, isTabletOrDesktop),
       ],
@@ -421,6 +446,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                     _selectedPaymentFilter = null;
                     filteredPendingOrders = List.from(pendingOrders);
                     filteredOnGoingOrders = List.from(onGoingOrders);
+                    filteredReadyOrders = List.from(readyOrders); // Reset filtered ready orders
                     filteredCompletedOrders = List.from(completedOrders);
                   });
                 },
@@ -449,6 +475,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
         return Icons.pending_actions;
       case OrderStatus.ongoing:
         return Icons.delivery_dining;
+      case OrderStatus.ready: // Icon for ready orders
+        return Icons.restaurant;
       case OrderStatus.completed:
         return Icons.check_circle;
     }
@@ -464,6 +492,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
         return 'No ${filterText}pending orders';
       case OrderStatus.ongoing:
         return 'No ${filterText}ongoing orders';
+      case OrderStatus.ready:
+        return 'No ${filterText}ready orders'; // Text for ready orders
       case OrderStatus.completed:
         return 'No ${filterText}completed orders';
     }
@@ -905,6 +935,28 @@ class _ManagerOrderListState extends State<ManagerOrderList>
         );
 
       case OrderStatus.ongoing:
+        // Changed from "Complete Order" to "Order Ready"
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            icon: Icon(Icons.restaurant),
+            label: Text('Mark as Ready'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              _markOrderReady(order);
+            },
+          ),
+        );
+        
+      case OrderStatus.ready:
+        // Complete order with OTP verification in the Ready tab
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
@@ -961,6 +1013,35 @@ class _ManagerOrderListState extends State<ManagerOrderList>
     }
   }
 
+  // New method for marking an order as ready
+  void _markOrderReady(Map<String, dynamic> order) {
+    final String orderId = order['orderId'] ?? order['id'];
+    final String storeId = order['storeId'];
+
+    // Update Firebase with ready status
+    _ordersRef.child(storeId).child('orders').child(orderId).update({
+      'status': 'ready',
+      'readyAt': _getCurrentTime(),
+      'readyBy': 'navin280123', // Using current user's login
+      'readyDate': DateTime.now().toString()
+    }).then((_) {
+      // Success handling - UI will update via the listener
+      _showNotification(
+        message: 'Order $orderId marked as ready!',
+        isSuccess: true,
+      );
+
+      // Switch to ready tab
+      _tabController.animateTo(2); // Index 2 is the "Ready" tab
+    }).catchError((error) {
+      print('Error marking order as ready: $error');
+      _showNotification(
+        message: 'Failed to mark order as ready: $error',
+        isSuccess: false,
+      );
+    });
+  }
+
   List<Widget> _buildOrderItems(List<dynamic> items) {
     return items.map<Widget>((item) {
       return Padding(
@@ -977,15 +1058,6 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                     decoration: BoxDecoration(
                       color: Colors.grey.withAlpha(51),
                       borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'x${item['quantity']}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
                     ),
                   ),
                   SizedBox(width: 12),
@@ -1018,9 +1090,11 @@ class _ManagerOrderListState extends State<ManagerOrderList>
   String _getTimeText(Map<String, dynamic> order, OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 'Ordered at ${order['time']}';
+        return 'Ordered at ${order['timestamp']}';
       case OrderStatus.ongoing:
         return 'Accepted at ${order['acceptedAt'] ?? _getCurrentTime()}';
+      case OrderStatus.ready:
+        return 'Ready at ${order['readyAt'] ?? _getCurrentTime()}'; // Time for ready status
       case OrderStatus.completed:
         return 'Completed at ${order['completedAt'] ?? _getCurrentTime()}';
     }
@@ -1032,6 +1106,8 @@ class _ManagerOrderListState extends State<ManagerOrderList>
         return Colors.orange;
       case OrderStatus.ongoing:
         return Colors.blue;
+      case OrderStatus.ready:
+        return Colors.amber; // Color for ready status
       case OrderStatus.completed:
         return Colors.green;
     }
@@ -1186,7 +1262,7 @@ class _ManagerOrderListState extends State<ManagerOrderList>
       );
 
       // Switch to completed tab
-      _tabController.animateTo(2); // Index 2 is the "Completed" tab
+      _tabController.animateTo(3); // Index 3 is now the "Completed" tab (was 2 before)
     }).catchError((error) {
       print('Error completing order: $error');
       _showNotification(
@@ -1241,6 +1317,13 @@ class _ManagerOrderListState extends State<ManagerOrderList>
                     order['acceptedAt'],
                     Icons.thumb_up,
                     Colors.green),
+              if (order['readyAt'] != null) // Add timeline item for ready status
+                _buildTimelineItem(
+                    'Order Ready',
+                    'Marked ready by ${order['readyBy'] ?? 'staff'}',
+                    order['readyAt'],
+                    Icons.restaurant,
+                    Colors.amber),
               if (order['completedAt'] != null)
                 _buildTimelineItem(
                     'Order Completed',
@@ -1676,4 +1759,4 @@ class _ManagerOrderListState extends State<ManagerOrderList>
 }
 
 // Enum to represent order status
-enum OrderStatus { pending, ongoing, completed }
+enum OrderStatus { pending, ongoing, ready, completed }

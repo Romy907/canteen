@@ -1,0 +1,2 @@
+D:/Code/Flutter/canteen/android/app/.cxx/Debug/5q4e644q/x86/CMakeFiles/edit_cache.dir
+D:/Code/Flutter/canteen/android/app/.cxx/Debug/5q4e644q/x86/CMakeFiles/rebuild_cache.dir

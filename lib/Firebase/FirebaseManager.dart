@@ -14,6 +14,26 @@ class FirebaseManager {
       print('An error occurred during logout: $e');
     }
   }
+  Future<void> saveUserData(Map<String, dynamic> userData) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? email = prefs.getString('email');
+
+      if (email == null) {
+        print('No email found in SharedPreferences');
+        return;
+      }
+
+      String sanitizedEmail = email.replaceAll(RegExp(r'[.#$[\]]'), '');
+      DatabaseReference userRef = FirebaseDatabase.instance.ref().child('User').child(sanitizedEmail);
+
+      await userRef.update(userData);
+
+      print('User data saved successfully');
+    } catch (e) {
+      print('An error occurred while saving user data: $e');
+    }
+  }
   Future<void> addUniversityDetails(String universityName, String stores) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -420,15 +420,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
   
 
 
-  // Generate a consistent order ID based on date and username
-  // String _generateOrderId(int index) {
-  //   final dateComponents = _currentDate.split(' ')[0].split('-');
-  //   final year = dateComponents[0].substring(2);
-  //   final month = dateComponents[1];
-  //   final day = dateComponents[2];
-  //   return '$year$month$day-${_username.substring(0, 4).toUpperCase()}-${1000 + index}';
-  // }
-
   // Refresh data and check for new orders
   Future<void> _refreshData() async {
     setState(() => _isRefreshing = true);
@@ -908,6 +899,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
       case 'preparing':
         progressValue = 0.8;
         break;
+      case 'ready':
+        progressValue = 0.9;
+        break;
       default:
         progressValue = 1.0;
     }
@@ -1310,7 +1304,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
         return Colors.blue;
       case 'cancelled':
         return Colors.red;
-      case 'pending':
+      case 'ready':
+        return Colors.purple;
       case 'ordered':
         return Colors.amber;
       default:
@@ -1347,6 +1342,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
         return 'Preparing Your Order';
       case 'preparing':
         return 'On The Way';
+      case 'ready':
+        return 'Order is Ready';
       case 'delivered':
         return 'Delivered';
       case 'cancelled':
@@ -1366,6 +1363,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
         return 'Your order has been accepted and is being prepared';
       case 'preparing':
         return 'Your order is being prepared';
+      case 'ready':
+        return 'Your order is ready for pickup';
       case 'delivered':
         return 'Your order has been delivered successfully';
       case 'cancelled':
