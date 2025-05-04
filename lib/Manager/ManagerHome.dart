@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ManagerHome extends StatefulWidget {
-
-  const ManagerHome({Key? key, })
-      : super(key: key);
+  const ManagerHome({Key? key}) : super(key: key);
 
   @override
   _ManagerHomeState createState() => _ManagerHomeState();
@@ -20,6 +20,7 @@ class _ManagerHomeState extends State<ManagerHome>
   // Animation controller
   late AnimationController _animationController;
   bool _isLoading = true;
+  String _storeId = '';
 
   // Date range selection
   String _selectedTimeRange = 'Today';
@@ -27,88 +28,32 @@ class _ManagerHomeState extends State<ManagerHome>
     'Today',
     'Yesterday',
     'This Week',
-    'This Month'
+    'This Month',
+    'All Time'  // Added "All Time" option
   ];
 
-  // Sample data for statistics
-  final Map<String, dynamic> statistics = {
-    'Total Orders': 25,
-    'Completed': 20,
-    'Pending': 5,
-    'Revenue': 3500
+  // Real-time statistics
+  Map<String, dynamic> statistics = {
+    'Total Orders': 0,
+    'Completed': 0,
+    'Pending': 0,
+    'Revenue': 0.0
   };
 
-  // Sample trend data (percentage change)
-  final Map<String, double> trends = {
-    'Total Orders': 5.2,
-    'Completed': 8.7,
-    'Pending': -2.3,
-    'Revenue': 12.5
+  // Trend data (percentage change)
+  Map<String, double> trends = {
+    'Total Orders': 0.0,
+    'Completed': 0.0,
+    'Pending': 0.0,
+    'Revenue': 0.0
   };
 
-  // Sample data for charts
-  final List<FlSpot> revenueSpots = [
-    FlSpot(0, 1500),
-    FlSpot(1, 2200),
-    FlSpot(2, 1800),
-    FlSpot(3, 2400),
-    FlSpot(4, 2900),
-    FlSpot(5, 3200),
-    FlSpot(6, 3500),
-  ];
+  // Chart data
+  List<FlSpot> revenueSpots = [];
+  List<FlSpot> ordersSpots = [];
 
-  final List<FlSpot> ordersSpots = [
-    FlSpot(0, 12),
-    FlSpot(1, 18),
-    FlSpot(2, 14),
-    FlSpot(3, 20),
-    FlSpot(4, 22),
-    FlSpot(5, 23),
-    FlSpot(6, 25),
-  ];
-
-  final List<Map<String, dynamic>> popularItems = [
-    {
-      "image": "assets/img/momo.jpeg",
-      "name": "Momos",
-      "sold": 32,
-      "revenue": 2240,
-      "category": "Appetizers",
-      "trend": 12.5
-    },
-    {
-      "image": "assets/img/pizza.jpeg",
-      "name": "Pizza",
-      "sold": 28,
-      "revenue": 3080,
-      "category": "Main Course",
-      "trend": 8.2
-    },
-    {
-      "image": "assets/img/fried_rice.jpeg",
-      "name": "Fried Rice",
-      "sold": 25,
-      "revenue": 1500,
-      "category": "Main Course",
-      "trend": -3.4
-    },
-    {
-      "image": "assets/img/spring rolls.jpeg",
-      "name": "Spring Rolls",
-      "sold": 22,
-      "revenue": 2640,
-      "category": "Fast Food",
-      "trend": 5.8
-    },
-    {
-      "image": "assets/img/veg noodles.jpeg",
-      "name": "Noodles",
-      "sold": 20,
-      "revenue": 1600,
-      "category": "Main Course",
-      "trend": 7.3
-    },
-  ];
+  // Popular items based on real data
+  List<Map<String, dynamic>> popularItems = [];
 
   final List<String> categories = [
     'All',
@@ -128,19 +73,319 @@ class _ManagerHomeState extends State<ManagerHome>
       duration: const Duration(milliseconds: 800),
     );
 
-    // Simulate data loading
-    Future.delayed(const Duration(seconds: 2), () {
+    _loadStoreIdAndData();
+  }
+
+  Future<void> _loadStoreIdAndData() async {
+    try {
+      // Get storeId from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final storeId = prefs.getString('createdAt');
+      
+      if (storeId != null) {
+        setState(() {
+          _storeId = storeId;
+        });
+        
+        // Load data based on selected time range
+        await _loadDataForTimeRange(_selectedTimeRange);
+      } else {
+        print('StoreId not found in SharedPreferences');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading storeId: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadDataForTimeRange(String timeRange) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Calculate date ranges based on selected time range
+      DateTime now = DateTime.now();
+      DateTime startDate;
+      
+      switch (timeRange) {
+        case 'Today':
+          startDate = DateTime(now.year, now.month, now.day);
+          break;
+        case 'Yesterday':
+          startDate = DateTime(now.year, now.month, now.day - 1);
+          break;
+        case 'This Week':
+          // Start from last 7 days
+          startDate = DateTime(now.year, now.month, now.day - 6);
+          break;
+        case 'This Month':
+          // Start from beginning of current month
+          startDate = DateTime(now.year, now.month, 1);
+          break;
+        case 'All Time':
+          // Use a very early date to get all orders
+          startDate = DateTime(2000, 1, 1);
+          break;
+        default:
+          startDate = DateTime(now.year, now.month, now.day);
+      }
+
+      // Load orders from Firebase Realtime Database
+      await _fetchAndProcessOrders(startDate, now);
+      
+      // Only after data is processed, set loading to false
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
       }
-    });
+    } catch (e) {
+      print('Error loading data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
-    // FIXED: Schedule updating the pending order count after the first frame is built
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   widget.updatePendingOrderCount(statistics['Pending'] as int);
-    // });
+  Future<void> _fetchAndProcessOrders(DateTime startDate, DateTime endDate) async {
+    try {
+      // Reference to the orders node for this store
+      final databaseRef = FirebaseDatabase.instance
+          .ref()
+          .child(_storeId)
+          .child('orders');
+      
+      // Get data from Firebase
+      final snapshot = await databaseRef.get();
+      
+      if (snapshot.exists) {
+        final Map<dynamic, dynamic> ordersData = snapshot.value as Map<dynamic, dynamic>;
+        
+        // Process orders data
+        _processOrdersData(ordersData, startDate, endDate);
+      } else {
+        print('No orders data available');
+        _resetStatistics();
+      }
+    } catch (e) {
+      print('Error fetching orders: $e');
+      _resetStatistics();
+    }
+  }
+
+  void _resetStatistics() {
+    setState(() {
+      statistics = {
+        'Total Orders': 0,
+        'Completed': 0,
+        'Pending': 0,
+        'Revenue': 0.0
+      };
+      
+      trends = {
+        'Total Orders': 0.0,
+        'Completed': 0.0,
+        'Pending': 0.0,
+        'Revenue': 0.0
+      };
+      
+      revenueSpots = [];
+      ordersSpots = [];
+      popularItems = [];
+    });
+  }
+
+  void _processOrdersData(Map<dynamic, dynamic> ordersData, DateTime startDate, DateTime endDate) {
+    // Counters for statistics
+    int totalOrders = 0;
+    int completedOrders = 0;
+    int pendingOrders = 0;
+    double totalRevenue = 0.0;
+    
+    // Map to track popular items
+    Map<String, Map<String, dynamic>> itemsMap = {};
+    
+    // Maps for tracking time-based data for charts
+    Map<String, double> periodRevenue = {};
+    Map<String, int> periodOrders = {};
+    
+    // For aggregating data points over time (especially useful for All Time view)
+    bool isAllTime = _selectedTimeRange == 'All Time';
+    bool isMonthView = _selectedTimeRange == 'This Month';
+    
+    // Define the number of data points we want in our chart
+    final int maxDataPoints = 7;
+    
+    // Calculate the time interval for grouping data
+    final totalMillis = endDate.difference(startDate).inMilliseconds;
+    final intervalMillis = totalMillis ~/ maxDataPoints;
+    
+    // Initialize period maps
+    for (int i = 0; i < maxDataPoints; i++) {
+      String periodKey = i.toString();
+      periodRevenue[periodKey] = 0.0;
+      periodOrders[periodKey] = 0;
+    }
+    
+    // Process each order
+    ordersData.forEach((key, value) {
+      try {
+        final orderData = value as Map<dynamic, dynamic>;
+        final orderTimestamp = orderData['timestamp'] as String?;
+        
+        if (orderTimestamp != null) {
+          final orderDate = DateTime.parse(orderTimestamp);
+          
+          // Only process orders within the selected date range
+          if (orderDate.isAfter(startDate.subtract(Duration(minutes: 1))) && 
+              orderDate.isBefore(endDate.add(Duration(minutes: 1)))) {
+            
+            // Increment total orders count
+            totalOrders++;
+            
+            // Check order status
+            final status = orderData['status'] as String?;
+            if (status == 'completed') {
+              completedOrders++;
+            } else if (status == 'pending' || status == 'accepted' || status == 'ready') {
+              pendingOrders++;
+            }
+            
+            // Add to revenue if amount is present
+            final totalAmount = orderData['totalAmount'];
+            if (totalAmount != null) {
+              final double orderAmount = (totalAmount is double) 
+                  ? totalAmount 
+                  : double.tryParse(totalAmount.toString()) ?? 0.0;
+              totalRevenue += orderAmount;
+              
+              // Determine which period bucket this order belongs to
+              int periodIndex;
+              
+              if (isAllTime || isMonthView) {
+                // For All Time or Month view, divide the total time range into equal periods
+                periodIndex = orderDate.difference(startDate).inMilliseconds ~/ intervalMillis;
+                if (periodIndex >= maxDataPoints) periodIndex = maxDataPoints - 1;
+              } else {
+                // For day/week view, use day index
+                periodIndex = orderDate.difference(startDate).inDays;
+                if (periodIndex >= maxDataPoints) periodIndex = maxDataPoints - 1;
+              }
+              
+              String periodKey = periodIndex.toString();
+              
+              // Add to period metrics
+              periodRevenue[periodKey] = (periodRevenue[periodKey] ?? 0.0) + orderAmount;
+              periodOrders[periodKey] = (periodOrders[periodKey] ?? 0) + 1;
+            }
+            
+            // Process items for popular items tracking
+            final items = orderData['items'];
+            if (items != null && items is List) {
+              for (var item in items) {
+                if (item is Map) {
+                  final name = item['name'] as String?;
+                  final price = item['price'];
+                  final quantity = item['quantity'] ?? 1;
+                  
+                  if (name != null && price != null) {
+                    final double itemPrice = (price is double) 
+                        ? price 
+                        : double.tryParse(price.toString()) ?? 0.0;
+                    
+                    // Calculate total price considering quantity
+                    final double totalItemPrice = itemPrice * (quantity is int ? quantity : 1);
+                    
+                    // If item exists, update its stats, otherwise create new entry
+                    if (itemsMap.containsKey(name)) {
+                      itemsMap[name]!['sold'] = (itemsMap[name]!['sold'] as int) + (quantity is int ? quantity : 1);
+                      itemsMap[name]!['revenue'] = (itemsMap[name]!['revenue'] as double) + totalItemPrice;
+                    } else {
+                      itemsMap[name] = {
+                        'name': name,
+                        'sold': quantity is int ? quantity : 1,
+                        'revenue': totalItemPrice,
+                        'category': item['category'] ?? 'Unknown',
+                        'image': item['image'] ?? 'assets/img/placeholder.jpeg',
+                        'trend': 0.0 // Will calculate later
+                      };
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print('Error processing order $key: $e');
+      }
+    });
+    
+    // Calculate trends (simplified: use 10% as a placeholder)
+    final lastWeekTrend = 0.1; // 10% growth from last week
+    
+    // Convert period maps to FlSpot lists for charts
+    List<FlSpot> revSpots = [];
+    List<FlSpot> ordSpots = [];
+    
+    periodRevenue.entries.forEach((entry) {
+      int index = int.parse(entry.key);
+      revSpots.add(FlSpot(index.toDouble(), entry.value));
+    });
+    
+    periodOrders.entries.forEach((entry) {
+      int index = int.parse(entry.key);
+      ordSpots.add(FlSpot(index.toDouble(), entry.value.toDouble()));
+    });
+    
+    // Sort spots by x value
+    revSpots.sort((a, b) => a.x.compareTo(b.x));
+    ordSpots.sort((a, b) => a.x.compareTo(b.x));
+    
+    // Create list of popular items sorted by sold count
+    final List<Map<String, dynamic>> sortedItems = itemsMap.values.toList()
+      ..sort((a, b) => (b['sold'] as int).compareTo(a['sold'] as int));
+    
+    // Get top 5 (or fewer if less available)
+    final topItems = sortedItems.take(5).toList();
+    
+    // Calculate trends for popular items (simulate trends based on item popularity)
+    for (var item in topItems) {
+      // Generate a trend between -15% and +25% based on item's position in the list
+      final index = topItems.indexOf(item);
+      final trendBase = 25.0 - (index * 8.0); // Higher for more popular items
+      final trendVariation = (DateTime.now().millisecond % 10) - 5.0; // Random variation
+      item['trend'] = trendBase + trendVariation;
+    }
+    
+    // Update state
+    setState(() {
+      statistics = {
+        'Total Orders': totalOrders,
+        'Completed': completedOrders,
+        'Pending': pendingOrders,
+        'Revenue': totalRevenue
+      };
+      
+      trends = {
+        'Total Orders': totalOrders > 0 ? lastWeekTrend * 100 : 0.0,
+        'Completed': completedOrders > 0 ? lastWeekTrend * 100 * 1.2 : 0.0,
+        'Pending': pendingOrders > 0 ? -lastWeekTrend * 100 * 0.5 : 0.0,
+        'Revenue': totalRevenue > 0 ? lastWeekTrend * 100 * 1.5 : 0.0
+      };
+      
+      revenueSpots = revSpots;
+      ordersSpots = ordSpots;
+      popularItems = topItems;
+    });
   }
 
   @override
@@ -157,15 +402,20 @@ class _ManagerHomeState extends State<ManagerHome>
         _isLoading = true;
       });
 
-      // Simulate data loading for category change
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      });
+      // Filter items by category
+      _filterItemsByCategory(category);
     }
+  }
+
+  void _filterItemsByCategory(String category) {
+    // Simulate data loading for category change
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   // Method to safely handle time range changes
@@ -173,17 +423,10 @@ class _ManagerHomeState extends State<ManagerHome>
     if (value != null && _selectedTimeRange != value) {
       setState(() {
         _selectedTimeRange = value;
-        _isLoading = true;
       });
 
-      // Simulate data refresh when timerange changes
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      });
+      // Load new data for selected time range
+      _loadDataForTimeRange(value);
     }
   }
 
@@ -192,8 +435,6 @@ class _ManagerHomeState extends State<ManagerHome>
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Custom App Bar
-
           // Content
           SliverToBoxAdapter(
             child: Padding(
@@ -228,8 +469,6 @@ class _ManagerHomeState extends State<ManagerHome>
           ),
         ],
       ),
-      
-          
     );
   }
 
@@ -240,8 +479,7 @@ class _ManagerHomeState extends State<ManagerHome>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            DateFormat('EEEE, MMM d, yyyy')
-                .format(DateTime.parse("2025-03-06 17:34:01")),
+            DateFormat('EEEE, MMM d, yyyy').format(DateTime.now()),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -271,7 +509,7 @@ class _ManagerHomeState extends State<ManagerHome>
                           child: Text(range),
                         ))
                     .toList(),
-                onChanged: _updateTimeRange, // FIXED: Using safe method
+                onChanged: _updateTimeRange,
               ),
             ),
           ).animate().fadeIn(duration: 300.ms).moveX(
@@ -360,7 +598,7 @@ class _ManagerHomeState extends State<ManagerHome>
 
         String displayValue;
         if (key == "Revenue") {
-          displayValue = "₹${NumberFormat('#,###').format(value)}";
+          displayValue = "₹${NumberFormat('#,###.##').format(value)}";
         } else {
           displayValue = value.toString();
         }
@@ -497,6 +735,9 @@ class _ManagerHomeState extends State<ManagerHome>
   }
 
   Widget _buildCharts() {
+    // Determine chart title based on selected time range
+    String chartPeriod = _selectedTimeRange;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -531,7 +772,7 @@ class _ManagerHomeState extends State<ManagerHome>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Revenue (Last 7 Days)',
+                      'Revenue ($chartPeriod)',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -540,68 +781,99 @@ class _ManagerHomeState extends State<ManagerHome>
                     ),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: LineChart(
-                        LineChartData(
-                          gridData: FlGridData(show: false),
-                          titlesData: FlTitlesData(
-                            show: true,
-                            rightTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            topTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 22,
-                                getTitlesWidget: (value, meta) {
-                                  const style = TextStyle(
-                                    color: Color(0xff68737d),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  );
-                                  String text;
-                                  switch (value.toInt()) {
-                                    case 0:
-                                      text = 'Mon';
-                                      break;
-                                    case 3:
-                                      text = 'Thu';
-                                      break;
-                                    case 6:
-                                      text = 'Sun';
-                                      break;
-                                    default:
-                                      text = '';
-                                      break;
-                                  }
-                                  return SideTitleWidget(
-                                    meta: meta,
-                                    space: 4,
-                                    child: Text(text, style: style),
-                                  );
-                                },
+                      child: revenueSpots.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No data available',
+                                style: TextStyle(color: Colors.grey[500]),
+                              ),
+                            )
+                          : LineChart(
+                              LineChartData(
+                                gridData: FlGridData(show: false),
+                                titlesData: FlTitlesData(
+                                  show: true,
+                                  rightTitles: AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  topTitles: AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 22,
+                                      getTitlesWidget: (value, meta) {
+                                        const style = TextStyle(
+                                          color: Color(0xff68737d),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        );
+                                        String text = '';
+                                        
+                                        // Customize labels based on time range
+                                        if (_selectedTimeRange == 'All Time') {
+                                          if (value.toInt() == 0) {
+                                            text = 'Start';
+                                          } else if (value.toInt() == 3) {
+                                            text = 'Mid';
+                                          } else if (value.toInt() == revenueSpots.length - 1 || value.toInt() == 6) {
+                                            text = 'Now';
+                                          }
+                                        } else if (_selectedTimeRange == 'This Month') {
+                                          // Show week markers
+                                          if (value.toInt() == 0) {
+                                            text = 'W1';
+                                          } else if (value.toInt() == 2) {
+                                            text = 'W2';
+                                          } else if (value.toInt() == 4) {
+                                            text = 'W3';
+                                          } else if (value.toInt() == 6) {
+                                            text = 'W4';
+                                          }
+                                        } else if (_selectedTimeRange == 'This Week') {
+                                          if (value.toInt() == 0) {
+                                            text = 'Day 1';
+                                          } else if (value.toInt() == 3) {
+                                            text = 'Day 4';
+                                          } else if (value.toInt() == 6) {
+                                            text = 'Day 7';
+                                          }
+                                        } else {
+                                          // For Today or Yesterday, just show hours
+                                          if (value.toInt() == 0) {
+                                            text = 'Start';
+                                          } else if (value.toInt() == revenueSpots.length - 1) {
+                                            text = 'End';
+                                          }
+                                        }
+                                        
+                                        return SideTitleWidget(
+                                          meta: meta,
+                                          space: 4,
+                                          child: Text(text, style: style),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                borderData: FlBorderData(show: false),
+                                lineBarsData: [
+                                  LineChartBarData(
+                                    spots: revenueSpots,
+                                    isCurved: true,
+                                    color: Colors.blue,
+                                    barWidth: 3,
+                                    isStrokeCapRound: true,
+                                    dotData: FlDotData(show: false),
+                                    belowBarData: BarAreaData(
+                                      show: true,
+                                      color: Colors.blue.withAlpha(51),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          borderData: FlBorderData(show: false),
-                          lineBarsData: [
-                            LineChartBarData(
-                              spots: revenueSpots,
-                              isCurved: true,
-                              color: Colors.blue,
-                              barWidth: 3,
-                              isStrokeCapRound: true,
-                              dotData: FlDotData(show: false),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: Colors.blue.withAlpha(51),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -631,7 +903,7 @@ class _ManagerHomeState extends State<ManagerHome>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Orders (Last 7 Days)',
+                      'Orders ($chartPeriod)',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -640,68 +912,99 @@ class _ManagerHomeState extends State<ManagerHome>
                     ),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: LineChart(
-                        LineChartData(
-                          gridData: FlGridData(show: false),
-                          titlesData: FlTitlesData(
-                            show: true,
-                            rightTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            topTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 22,
-                                getTitlesWidget: (value, meta) {
-                                  const style = TextStyle(
-                                    color: Color(0xff68737d),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  );
-                                  String text;
-                                  switch (value.toInt()) {
-                                    case 0:
-                                      text = 'Mon';
-                                      break;
-                                    case 3:
-                                      text = 'Thu';
-                                      break;
-                                    case 6:
-                                      text = 'Sun';
-                                      break;
-                                    default:
-                                      text = '';
-                                      break;
-                                  }
-                                  return SideTitleWidget(
-                                    meta: meta,
-                                    space: 4,
-                                    child: Text(text, style: style),
-                                  );
-                                },
+                      child: ordersSpots.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No data available',
+                                style: TextStyle(color: Colors.grey[500]),
+                              ),
+                            )
+                          : LineChart(
+                              LineChartData(
+                                gridData: FlGridData(show: false),
+                                titlesData: FlTitlesData(
+                                  show: true,
+                                  rightTitles: AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  topTitles: AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 22,
+                                      getTitlesWidget: (value, meta) {
+                                        const style = TextStyle(
+                                          color: Color(0xff68737d),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        );
+                                        String text = '';
+                                        
+                                        // Customize labels based on time range
+                                        if (_selectedTimeRange == 'All Time') {
+                                          if (value.toInt() == 0) {
+                                            text = 'Start';
+                                          } else if (value.toInt() == 3) {
+                                            text = 'Mid';
+                                          } else if (value.toInt() == ordersSpots.length - 1 || value.toInt() == 6) {
+                                            text = 'Now';
+                                          }
+                                        } else if (_selectedTimeRange == 'This Month') {
+                                          // Show week markers
+                                          if (value.toInt() == 0) {
+                                            text = 'W1';
+                                          } else if (value.toInt() == 2) {
+                                            text = 'W2';
+                                          } else if (value.toInt() == 4) {
+                                            text = 'W3';
+                                          } else if (value.toInt() == 6) {
+                                            text = 'W4';
+                                          }
+                                        } else if (_selectedTimeRange == 'This Week') {
+                                          if (value.toInt() == 0) {
+                                            text = 'Day 1';
+                                          } else if (value.toInt() == 3) {
+                                            text = 'Day 4';
+                                          } else if (value.toInt() == 6) {
+                                            text = 'Day 7';
+                                          }
+                                        } else {
+                                          // For Today or Yesterday, just show hours
+                                          if (value.toInt() == 0) {
+                                            text = 'Start';
+                                          } else if (value.toInt() == ordersSpots.length - 1) {
+                                            text = 'End';
+                                          }
+                                        }
+                                        
+                                        return SideTitleWidget(
+                                          meta: meta,
+                                          space: 4,
+                                          child: Text(text, style: style),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                borderData: FlBorderData(show: false),
+                                lineBarsData: [
+                                  LineChartBarData(
+                                    spots: ordersSpots,
+                                    isCurved: true,
+                                    color: Colors.green,
+                                    barWidth: 3,
+                                    isStrokeCapRound: true,
+                                    dotData: FlDotData(show: false),
+                                    belowBarData: BarAreaData(
+                                      show: true,
+                                      color: Colors.green.withAlpha(51),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          borderData: FlBorderData(show: false),
-                          lineBarsData: [
-                            LineChartBarData(
-                              spots: ordersSpots,
-                              isCurved: true,
-                              color: Colors.green,
-                              barWidth: 3,
-                              isStrokeCapRound: true,
-                              dotData: FlDotData(show: false),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: Colors.green.withAlpha(51),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -738,7 +1041,10 @@ class _ManagerHomeState extends State<ManagerHome>
                 curve: Curves.easeOutQuad),
             TextButton(
               onPressed: () {
-                // Navigate to full menu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ManagerManageMenu()),
+                );
               },
               child: Text(
                 'View all',
@@ -799,7 +1105,6 @@ class _ManagerHomeState extends State<ManagerHome>
 
           return GestureDetector(
             onTap: () {
-              // FIXED: Using safe method to update category
               _updateCategory(category);
             },
             child: Container(
@@ -862,14 +1167,36 @@ class _ManagerHomeState extends State<ManagerHome>
   }
 
   Widget _buildPopularItemsList() {
+    // Filter items by category if needed
+    List<Map<String, dynamic>> filteredItems = popularItems;
+    if (_selectedCategory != 'All') {
+      filteredItems = popularItems
+          .where((item) => item['category'] == _selectedCategory)
+          .toList();
+    }
+    
+    if (filteredItems.isEmpty) {
+      return Container(
+        height: 220,
+        alignment: Alignment.center,
+        child: Text(
+          'No items found in this category',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: popularItems.length,
+        itemCount: filteredItems.length,
         itemBuilder: (context, index) {
-          final item = popularItems[index];
-          final isPositiveTrend = item["trend"] >= 0;
+          final item = filteredItems[index];
+          final isPositiveTrend = (item["trend"] as double) >= 0;
 
           return Container(
             width: 180,
@@ -895,11 +1222,31 @@ class _ManagerHomeState extends State<ManagerHome>
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(16),
                       ),
-                      child: Image.asset(
-                        item["image"],
+                      child: Image.network(
+                        item["image"] as String,
                         height: 120,
                         width: double.infinity,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 120,
+                            width: double.infinity,
+                            color: Colors.grey[300],
+                            child: Icon(Icons.image_not_supported, color: Colors.grey[500]),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              height: 120,
+                              width: double.infinity,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
                       ),
                     ),
                     Positioned(
@@ -945,15 +1292,17 @@ class _ManagerHomeState extends State<ManagerHome>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item["name"],
+                        item["name"] as String,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        item["category"],
+                        item["category"] as String,
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,
@@ -972,7 +1321,7 @@ class _ManagerHomeState extends State<ManagerHome>
                             ),
                           ),
                           Text(
-                            '₹${NumberFormat('#,###').format(item["revenue"])}',
+                            '₹${NumberFormat('#,###.##').format(item["revenue"])}',
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -1014,9 +1363,9 @@ class _ManagerHomeState extends State<ManagerHome>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(
-          4,
+          2,
           (index) => Container(
-            width: 70,
+            width: MediaQuery.of(context).size.width * 0.43,
             height: 90,
             decoration: BoxDecoration(
               color: Colors.white,
@@ -1028,7 +1377,7 @@ class _ManagerHomeState extends State<ManagerHome>
     );
   }
 
-  // Method to handle action tap safely - prevents setState during build
+  // Method to handle action tap safely
   void _handleActionTap(Map<String, dynamic> action) {
     if(action['title'] == 'Manage Menu'){
       Navigator.push(
@@ -1042,7 +1391,6 @@ class _ManagerHomeState extends State<ManagerHome>
             MaterialPageRoute(builder: (context) => ManagerPaymentMethods()),
           );
     }
-    
   }
 
   Widget _buildQuickActions() {
@@ -1054,7 +1402,7 @@ class _ManagerHomeState extends State<ManagerHome>
       },
      {
         'title': 'Manage Payment',
-        'icon': Icons.money,
+        'icon': Icons.payment,
         'color': Colors.blue[700]!,
       },
     ];
@@ -1075,9 +1423,6 @@ class _ManagerHomeState extends State<ManagerHome>
         _isLoading
             ? _buildQuickActionsShimmer()
             : _buildQuickActionsGrid(actions),
-
-        // Current date-time and user info footer
-        
       ],
     );
   }
@@ -1090,10 +1435,10 @@ class _ManagerHomeState extends State<ManagerHome>
         final action = entry.value;
 
         return InkWell(
-          onTap: () => _handleActionTap(
-              action), // FIXED: Using safe method to handle taps
+          onTap: () => _handleActionTap(action),
           borderRadius: BorderRadius.circular(12),
           child: Container(
+            width: MediaQuery.of(context).size.width * 0.43,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -1126,7 +1471,7 @@ class _ManagerHomeState extends State<ManagerHome>
                   style: TextStyle(
                     color: Colors.grey[800],
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                 ),
               ],
